@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/heaven.png",
+    "alpha": "100",
+    "special": {
+        "background": "#131948",
+        "foreground": "#eee4e7",
+        "cursor": "#eee4e7"
+    },
+    "colors": {
+        "color0": "#131948",
+        "color1": "#6D9EB8",
+        "color2": "#9CA8BC",
+        "color3": "#A5AFC4",
+        "color4": "#D7AAC9",
+        "color5": "#F0B6CF",
+        "color6": "#F9CCD5",
+        "color7": "#eee4e7",
+        "color8": "#a69fa1",
+        "color9": "#6D9EB8",
+        "color10": "#9CA8BC",
+        "color11": "#A5AFC4",
+        "color12": "#D7AAC9",
+        "color13": "#F0B6CF",
+        "color14": "#F9CCD5",
+        "color15": "#eee4e7"
+    }
+}

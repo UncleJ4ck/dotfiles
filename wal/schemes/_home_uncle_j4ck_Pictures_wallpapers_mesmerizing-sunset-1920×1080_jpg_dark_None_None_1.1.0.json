@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/mesmerizing-sunset-1920\u00d71080.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#140f22",
+        "foreground": "#f4e1cf",
+        "cursor": "#f4e1cf"
+    },
+    "colors": {
+        "color0": "#140f22",
+        "color1": "#423F81",
+        "color2": "#625891",
+        "color3": "#957295",
+        "color4": "#D07A82",
+        "color5": "#A68BAD",
+        "color6": "#DFA39B",
+        "color7": "#f4e1cf",
+        "color8": "#aa9d90",
+        "color9": "#423F81",
+        "color10": "#625891",
+        "color11": "#957295",
+        "color12": "#D07A82",
+        "color13": "#A68BAD",
+        "color14": "#DFA39B",
+        "color15": "#f4e1cf"
+    }
+}

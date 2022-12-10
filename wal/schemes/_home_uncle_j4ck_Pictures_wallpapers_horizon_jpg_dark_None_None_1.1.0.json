@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/horizon.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#0B1E28",
+        "foreground": "#a0bbc3",
+        "cursor": "#a0bbc3"
+    },
+    "colors": {
+        "color0": "#0B1E28",
+        "color1": "#5C5B6F",
+        "color2": "#9B506D",
+        "color3": "#C44267",
+        "color4": "#79827C",
+        "color5": "#4E708D",
+        "color6": "#BE6790",
+        "color7": "#a0bbc3",
+        "color8": "#708288",
+        "color9": "#5C5B6F",
+        "color10": "#9B506D",
+        "color11": "#C44267",
+        "color12": "#79827C",
+        "color13": "#4E708D",
+        "color14": "#BE6790",
+        "color15": "#a0bbc3"
+    }
+}

@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/mountains_river_sunset_184411_1920x1080.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#1c1019",
+        "foreground": "#f3e4dd",
+        "cursor": "#f3e4dd"
+    },
+    "colors": {
+        "color0": "#1c1019",
+        "color1": "#A998A7",
+        "color2": "#DBB5B5",
+        "color3": "#DDC0BD",
+        "color4": "#F9D0B6",
+        "color5": "#FCE7BA",
+        "color6": "#C8B2C3",
+        "color7": "#f3e4dd",
+        "color8": "#aa9f9a",
+        "color9": "#A998A7",
+        "color10": "#DBB5B5",
+        "color11": "#DDC0BD",
+        "color12": "#F9D0B6",
+        "color13": "#FCE7BA",
+        "color14": "#C8B2C3",
+        "color15": "#f3e4dd"
+    }
+}

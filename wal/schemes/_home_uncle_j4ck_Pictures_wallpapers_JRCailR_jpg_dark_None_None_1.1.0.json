@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/JRCailR.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#212e3e",
+        "foreground": "#cedecf",
+        "cursor": "#cedecf"
+    },
+    "colors": {
+        "color0": "#212e3e",
+        "color1": "#A2BE40",
+        "color2": "#14AAAB",
+        "color3": "#67A494",
+        "color4": "#93C39E",
+        "color5": "#A5C59E",
+        "color6": "#96C7A6",
+        "color7": "#cedecf",
+        "color8": "#909b90",
+        "color9": "#A2BE40",
+        "color10": "#14AAAB",
+        "color11": "#67A494",
+        "color12": "#93C39E",
+        "color13": "#A5C59E",
+        "color14": "#96C7A6",
+        "color15": "#cedecf"
+    }
+}

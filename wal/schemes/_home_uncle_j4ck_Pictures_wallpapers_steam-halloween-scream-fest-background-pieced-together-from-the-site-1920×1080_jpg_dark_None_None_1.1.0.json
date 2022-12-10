@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/steam-halloween-scream-fest-background-pieced-together-from-the-site-1920\u00d71080.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#0C0619",
+        "foreground": "#84e6c3",
+        "cursor": "#84e6c3"
+    },
+    "colors": {
+        "color0": "#0C0619",
+        "color1": "#1A5160",
+        "color2": "#474154",
+        "color3": "#1F9A76",
+        "color4": "#123084",
+        "color5": "#136186",
+        "color6": "#15A18A",
+        "color7": "#84e6c3",
+        "color8": "#5ca188",
+        "color9": "#1A5160",
+        "color10": "#474154",
+        "color11": "#1F9A76",
+        "color12": "#123084",
+        "color13": "#136186",
+        "color14": "#15A18A",
+        "color15": "#84e6c3"
+    }
+}

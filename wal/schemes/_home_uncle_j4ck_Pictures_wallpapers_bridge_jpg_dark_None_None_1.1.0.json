@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/bridge.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#001A21",
+        "foreground": "#d8f5f1",
+        "cursor": "#d8f5f1"
+    },
+    "colors": {
+        "color0": "#001A21",
+        "color1": "#88B9DE",
+        "color2": "#A3D1D4",
+        "color3": "#99D0FE",
+        "color4": "#ACDBFF",
+        "color5": "#BCE5FD",
+        "color6": "#CDD6DC",
+        "color7": "#d8f5f1",
+        "color8": "#97aba8",
+        "color9": "#88B9DE",
+        "color10": "#A3D1D4",
+        "color11": "#99D0FE",
+        "color12": "#ACDBFF",
+        "color13": "#BCE5FD",
+        "color14": "#CDD6DC",
+        "color15": "#d8f5f1"
+    }
+}

@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/ready-player-one-easter-egg-hunt-edition-1920\u00d71080.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#050606",
+        "foreground": "#77ceee",
+        "cursor": "#77ceee"
+    },
+    "colors": {
+        "color0": "#050606",
+        "color1": "#24A04E",
+        "color2": "#BBB111",
+        "color3": "#20388C",
+        "color4": "#55468E",
+        "color5": "#86429F",
+        "color6": "#1C9AC2",
+        "color7": "#77ceee",
+        "color8": "#5390a6",
+        "color9": "#24A04E",
+        "color10": "#BBB111",
+        "color11": "#20388C",
+        "color12": "#55468E",
+        "color13": "#86429F",
+        "color14": "#1C9AC2",
+        "color15": "#77ceee"
+    }
+}

@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/lnunp7iezyw91.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#101511",
+        "foreground": "#c2e1e1",
+        "cursor": "#c2e1e1"
+    },
+    "colors": {
+        "color0": "#101511",
+        "color1": "#4F798D",
+        "color2": "#6696A3",
+        "color3": "#77B8C6",
+        "color4": "#78CCCA",
+        "color5": "#97A4A4",
+        "color6": "#9DB9C0",
+        "color7": "#c2e1e1",
+        "color8": "#879d9d",
+        "color9": "#4F798D",
+        "color10": "#6696A3",
+        "color11": "#77B8C6",
+        "color12": "#78CCCA",
+        "color13": "#97A4A4",
+        "color14": "#9DB9C0",
+        "color15": "#c2e1e1"
+    }
+}

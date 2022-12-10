@@ -1,0 +1,23 @@
+" Special
+let wallpaper  = "/home/uncle_j4ck/Pictures/wallpapers/Wallpaper-Snake-Ouroboros-Chun-Lo-Bones-Serpent-Digit19.jpg"
+let background = "#0d0c0d"
+let foreground = "#e4d8d5"
+let cursor     = "#e4d8d5"
+
+" Colors
+let color0  = "#0d0c0d"
+let color1  = "#C2313B"
+let color2  = "#AC5259"
+let color3  = "#AA7E80"
+let color4  = "#B28C8E"
+let color5  = "#C89B9C"
+let color6  = "#CDAEAF"
+let color7  = "#e4d8d5"
+let color8  = "#9f9795"
+let color9  = "#C2313B"
+let color10 = "#AC5259"
+let color11 = "#AA7E80"
+let color12 = "#B28C8E"
+let color13 = "#C89B9C"
+let color14 = "#CDAEAF"
+let color15 = "#e4d8d5"

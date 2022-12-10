@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/castle-town-in-the-sky-by-yoshinori-somei-1920\u00d71080.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#10161f",
+        "foreground": "#c8dee6",
+        "cursor": "#c8dee6"
+    },
+    "colors": {
+        "color0": "#10161f",
+        "color1": "#638EAA",
+        "color2": "#6EA9CB",
+        "color3": "#7DC2DC",
+        "color4": "#9AA5A3",
+        "color5": "#C6C4B2",
+        "color6": "#90B6CF",
+        "color7": "#c8dee6",
+        "color8": "#8c9ba1",
+        "color9": "#638EAA",
+        "color10": "#6EA9CB",
+        "color11": "#7DC2DC",
+        "color12": "#9AA5A3",
+        "color13": "#C6C4B2",
+        "color14": "#90B6CF",
+        "color15": "#c8dee6"
+    }
+}

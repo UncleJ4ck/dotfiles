@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/berserk-aj.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#0C0907",
+        "foreground": "#ddbcae",
+        "cursor": "#ddbcae"
+    },
+    "colors": {
+        "color0": "#0C0907",
+        "color1": "#6A594C",
+        "color2": "#88271D",
+        "color3": "#912E24",
+        "color4": "#AC352B",
+        "color5": "#B95443",
+        "color6": "#FB6253",
+        "color7": "#ddbcae",
+        "color8": "#9a8379",
+        "color9": "#6A594C",
+        "color10": "#88271D",
+        "color11": "#912E24",
+        "color12": "#AC352B",
+        "color13": "#B95443",
+        "color14": "#FB6253",
+        "color15": "#ddbcae"
+    }
+}

@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/room-with-a-view-3-1366\u00d7768.png",
+    "alpha": "100",
+    "special": {
+        "background": "#0E0E0E",
+        "foreground": "#dadada",
+        "cursor": "#dadada"
+    },
+    "colors": {
+        "color0": "#0E0E0E",
+        "color1": "#5F5C56",
+        "color2": "#64645A",
+        "color3": "#6F6E6C",
+        "color4": "#8F8675",
+        "color5": "#91908F",
+        "color6": "#B9B9B9",
+        "color7": "#dadada",
+        "color8": "#989898",
+        "color9": "#5F5C56",
+        "color10": "#64645A",
+        "color11": "#6F6E6C",
+        "color12": "#8F8675",
+        "color13": "#91908F",
+        "color14": "#B9B9B9",
+        "color15": "#dadada"
+    }
+}

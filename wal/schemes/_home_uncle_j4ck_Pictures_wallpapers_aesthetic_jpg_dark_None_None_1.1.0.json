@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/aesthetic.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#040230",
+        "foreground": "#a7dff5",
+        "cursor": "#a7dff5"
+    },
+    "colors": {
+        "color0": "#040230",
+        "color1": "#0661B0",
+        "color2": "#4248A5",
+        "color3": "#0477C6",
+        "color4": "#9A6CB1",
+        "color5": "#059DE3",
+        "color6": "#42A4E1",
+        "color7": "#a7dff5",
+        "color8": "#749cab",
+        "color9": "#0661B0",
+        "color10": "#4248A5",
+        "color11": "#0477C6",
+        "color12": "#9A6CB1",
+        "color13": "#059DE3",
+        "color14": "#42A4E1",
+        "color15": "#a7dff5"
+    }
+}

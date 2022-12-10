@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/wallpapersden.com_desert-vector-art_1920x1080.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#1a0f15",
+        "foreground": "#f2e6d1",
+        "cursor": "#f2e6d1"
+    },
+    "colors": {
+        "color0": "#1a0f15",
+        "color1": "#EE3158",
+        "color2": "#FD4C4B",
+        "color3": "#FD506B",
+        "color4": "#FD6E6F",
+        "color5": "#FB877C",
+        "color6": "#F8AD98",
+        "color7": "#f2e6d1",
+        "color8": "#a9a192",
+        "color9": "#EE3158",
+        "color10": "#FD4C4B",
+        "color11": "#FD506B",
+        "color12": "#FD6E6F",
+        "color13": "#FB877C",
+        "color14": "#F8AD98",
+        "color15": "#f2e6d1"
+    }
+}

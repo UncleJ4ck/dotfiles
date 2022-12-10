@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/mountains_sunset_landscape_163014_1920x1080.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#191809",
+        "foreground": "#e4ebdc",
+        "cursor": "#e4ebdc"
+    },
+    "colors": {
+        "color0": "#191809",
+        "color1": "#92A068",
+        "color2": "#A9B68D",
+        "color3": "#B6C29D",
+        "color4": "#BBC7A4",
+        "color5": "#C8D5B3",
+        "color6": "#D4E3BB",
+        "color7": "#e4ebdc",
+        "color8": "#9fa49a",
+        "color9": "#92A068",
+        "color10": "#A9B68D",
+        "color11": "#B6C29D",
+        "color12": "#BBC7A4",
+        "color13": "#C8D5B3",
+        "color14": "#D4E3BB",
+        "color15": "#e4ebdc"
+    }
+}

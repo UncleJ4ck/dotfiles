@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/wallpapertip_phone-desktop-wallpaper_1623047.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#11122b",
+        "foreground": "#d5cad9",
+        "cursor": "#d5cad9"
+    },
+    "colors": {
+        "color0": "#11122b",
+        "color1": "#515883",
+        "color2": "#726A8C",
+        "color3": "#666E95",
+        "color4": "#797C9A",
+        "color5": "#8E748C",
+        "color6": "#AB96AA",
+        "color7": "#d5cad9",
+        "color8": "#958d97",
+        "color9": "#515883",
+        "color10": "#726A8C",
+        "color11": "#666E95",
+        "color12": "#797C9A",
+        "color13": "#8E748C",
+        "color14": "#AB96AA",
+        "color15": "#d5cad9"
+    }
+}

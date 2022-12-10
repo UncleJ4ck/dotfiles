@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/dino.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#2c2534",
+        "foreground": "#cae4d9",
+        "cursor": "#cae4d9"
+    },
+    "colors": {
+        "color0": "#2c2534",
+        "color1": "#299B93",
+        "color2": "#37A499",
+        "color3": "#59B4A6",
+        "color4": "#68C8B7",
+        "color5": "#52CCC9",
+        "color6": "#93CEBB",
+        "color7": "#cae4d9",
+        "color8": "#8d9f97",
+        "color9": "#299B93",
+        "color10": "#37A499",
+        "color11": "#59B4A6",
+        "color12": "#68C8B7",
+        "color13": "#52CCC9",
+        "color14": "#93CEBB",
+        "color15": "#cae4d9"
+    }
+}

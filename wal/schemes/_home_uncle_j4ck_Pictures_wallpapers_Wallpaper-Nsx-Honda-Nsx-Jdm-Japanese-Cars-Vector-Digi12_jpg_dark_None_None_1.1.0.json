@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/Wallpaper-Nsx-Honda-Nsx-Jdm-Japanese-Cars-Vector-Digi12.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#0C0C0C",
+        "foreground": "#f0cec8",
+        "cursor": "#f0cec8"
+    },
+    "colors": {
+        "color0": "#0C0C0C",
+        "color1": "#F8648C",
+        "color2": "#82B89E",
+        "color3": "#AAB6A7",
+        "color4": "#DB9E9F",
+        "color5": "#FC9A9C",
+        "color6": "#F9A49E",
+        "color7": "#f0cec8",
+        "color8": "#a8908c",
+        "color9": "#F8648C",
+        "color10": "#82B89E",
+        "color11": "#AAB6A7",
+        "color12": "#DB9E9F",
+        "color13": "#FC9A9C",
+        "color14": "#F9A49E",
+        "color15": "#f0cec8"
+    }
+}

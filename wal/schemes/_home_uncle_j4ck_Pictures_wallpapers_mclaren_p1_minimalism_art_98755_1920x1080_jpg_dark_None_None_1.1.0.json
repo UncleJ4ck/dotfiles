@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/mclaren_p1_minimalism_art_98755_1920x1080.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#161312",
+        "foreground": "#f2e1af",
+        "cursor": "#f2e1af"
+    },
+    "colors": {
+        "color0": "#161312",
+        "color1": "#AC924E",
+        "color2": "#D4AB55",
+        "color3": "#E7B445",
+        "color4": "#F9D253",
+        "color5": "#F9D253",
+        "color6": "#FCD558",
+        "color7": "#f2e1af",
+        "color8": "#a99d7a",
+        "color9": "#AC924E",
+        "color10": "#D4AB55",
+        "color11": "#E7B445",
+        "color12": "#F9D253",
+        "color13": "#F9D253",
+        "color14": "#FCD558",
+        "color15": "#f2e1af"
+    }
+}

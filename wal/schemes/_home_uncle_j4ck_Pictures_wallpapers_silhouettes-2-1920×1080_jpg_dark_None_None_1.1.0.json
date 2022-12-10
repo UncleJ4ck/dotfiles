@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/silhouettes-2-1920\u00d71080.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#07144A",
+        "foreground": "#d3c4d2",
+        "cursor": "#d3c4d2"
+    },
+    "colors": {
+        "color0": "#07144A",
+        "color1": "#032EB2",
+        "color2": "#3D43BA",
+        "color3": "#164DD4",
+        "color4": "#5E64DA",
+        "color5": "#9C629B",
+        "color6": "#8F75D0",
+        "color7": "#d3c4d2",
+        "color8": "#938993",
+        "color9": "#032EB2",
+        "color10": "#3D43BA",
+        "color11": "#164DD4",
+        "color12": "#5E64DA",
+        "color13": "#9C629B",
+        "color14": "#8F75D0",
+        "color15": "#d3c4d2"
+    }
+}

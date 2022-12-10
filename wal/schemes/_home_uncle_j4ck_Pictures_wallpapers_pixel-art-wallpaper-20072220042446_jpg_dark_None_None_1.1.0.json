@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/pixel-art-wallpaper-20072220042446.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#240b00",
+        "foreground": "#f5e5be",
+        "cursor": "#f5e5be"
+    },
+    "colors": {
+        "color0": "#240b00",
+        "color1": "#E45501",
+        "color2": "#DF7208",
+        "color3": "#E27602",
+        "color4": "#F19F18",
+        "color5": "#FEB818",
+        "color6": "#F4BC4F",
+        "color7": "#f5e5be",
+        "color8": "#aba085",
+        "color9": "#E45501",
+        "color10": "#DF7208",
+        "color11": "#E27602",
+        "color12": "#F19F18",
+        "color13": "#FEB818",
+        "color14": "#F4BC4F",
+        "color15": "#f5e5be"
+    }
+}

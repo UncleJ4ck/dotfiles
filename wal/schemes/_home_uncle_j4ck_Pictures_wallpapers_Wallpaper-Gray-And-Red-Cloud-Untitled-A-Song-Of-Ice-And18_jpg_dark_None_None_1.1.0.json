@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/Wallpaper-Gray-And-Red-Cloud-Untitled-A-Song-Of-Ice-And18.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#211f28",
+        "foreground": "#efddc9",
+        "cursor": "#efddc9"
+    },
+    "colors": {
+        "color0": "#211f28",
+        "color1": "#84807D",
+        "color2": "#DDA168",
+        "color3": "#6F7C83",
+        "color4": "#798388",
+        "color5": "#9F9694",
+        "color6": "#D3B19E",
+        "color7": "#efddc9",
+        "color8": "#a79a8c",
+        "color9": "#84807D",
+        "color10": "#DDA168",
+        "color11": "#6F7C83",
+        "color12": "#798388",
+        "color13": "#9F9694",
+        "color14": "#D3B19E",
+        "color15": "#efddc9"
+    }
+}

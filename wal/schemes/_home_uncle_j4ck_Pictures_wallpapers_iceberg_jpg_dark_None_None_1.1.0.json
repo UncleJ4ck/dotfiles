@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/iceberg.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#0f1214",
+        "foreground": "#e0dfe0",
+        "cursor": "#e0dfe0"
+    },
+    "colors": {
+        "color0": "#0f1214",
+        "color1": "#5D718A",
+        "color2": "#677B93",
+        "color3": "#7A899C",
+        "color4": "#7E8DA1",
+        "color5": "#9DA3AB",
+        "color6": "#B9C2CB",
+        "color7": "#e0dfe0",
+        "color8": "#9c9c9c",
+        "color9": "#5D718A",
+        "color10": "#677B93",
+        "color11": "#7A899C",
+        "color12": "#7E8DA1",
+        "color13": "#9DA3AB",
+        "color14": "#B9C2CB",
+        "color15": "#e0dfe0"
+    }
+}

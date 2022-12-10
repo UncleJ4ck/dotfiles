@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/firewatch-tower.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#01132C",
+        "foreground": "#c6ced4",
+        "cursor": "#c6ced4"
+    },
+    "colors": {
+        "color0": "#01132C",
+        "color1": "#083E85",
+        "color2": "#105493",
+        "color3": "#27669B",
+        "color4": "#4D759B",
+        "color5": "#5E89AC",
+        "color6": "#69A1C4",
+        "color7": "#c6ced4",
+        "color8": "#8a9094",
+        "color9": "#083E85",
+        "color10": "#105493",
+        "color11": "#27669B",
+        "color12": "#4D759B",
+        "color13": "#5E89AC",
+        "color14": "#69A1C4",
+        "color15": "#c6ced4"
+    }
+}

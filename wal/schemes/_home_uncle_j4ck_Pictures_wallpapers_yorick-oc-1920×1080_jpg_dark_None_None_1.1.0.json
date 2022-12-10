@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/yorick-oc-1920\u00d71080.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#0a0a0b",
+        "foreground": "#ccc7c0",
+        "cursor": "#ccc7c0"
+    },
+    "colors": {
+        "color0": "#0a0a0b",
+        "color1": "#897963",
+        "color2": "#988870",
+        "color3": "#A59377",
+        "color4": "#437194",
+        "color5": "#6090B0",
+        "color6": "#AA9C86",
+        "color7": "#ccc7c0",
+        "color8": "#8e8b86",
+        "color9": "#897963",
+        "color10": "#988870",
+        "color11": "#A59377",
+        "color12": "#437194",
+        "color13": "#6090B0",
+        "color14": "#AA9C86",
+        "color15": "#ccc7c0"
+    }
+}

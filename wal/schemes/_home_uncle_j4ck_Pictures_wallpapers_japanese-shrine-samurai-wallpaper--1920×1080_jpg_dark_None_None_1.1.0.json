@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/japanese-shrine-samurai-wallpaper--1920\u00d71080.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#0c0b19",
+        "foreground": "#cdaca7",
+        "cursor": "#cdaca7"
+    },
+    "colors": {
+        "color0": "#0c0b19",
+        "color1": "#4E3355",
+        "color2": "#6B3B54",
+        "color3": "#4B3464",
+        "color4": "#704456",
+        "color5": "#E0693A",
+        "color6": "#994C4C",
+        "color7": "#cdaca7",
+        "color8": "#8f7874",
+        "color9": "#4E3355",
+        "color10": "#6B3B54",
+        "color11": "#4B3464",
+        "color12": "#704456",
+        "color13": "#E0693A",
+        "color14": "#994C4C",
+        "color15": "#cdaca7"
+    }
+}

@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/land.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#03142C",
+        "foreground": "#d8d2ce",
+        "cursor": "#d8d2ce"
+    },
+    "colors": {
+        "color0": "#03142C",
+        "color1": "#EEB179",
+        "color2": "#1F6E8B",
+        "color3": "#606E88",
+        "color4": "#2D94A8",
+        "color5": "#5AA5B2",
+        "color6": "#57BEC9",
+        "color7": "#d8d2ce",
+        "color8": "#979390",
+        "color9": "#EEB179",
+        "color10": "#1F6E8B",
+        "color11": "#606E88",
+        "color12": "#2D94A8",
+        "color13": "#5AA5B2",
+        "color14": "#57BEC9",
+        "color15": "#d8d2ce"
+    }
+}

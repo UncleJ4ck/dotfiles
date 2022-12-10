@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/above-the-clouds-6-1920\u00d71080.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#190a18",
+        "foreground": "#eac4c4",
+        "cursor": "#eac4c4"
+    },
+    "colors": {
+        "color0": "#190a18",
+        "color1": "#675788",
+        "color2": "#A46C8D",
+        "color3": "#CF7687",
+        "color4": "#8789A0",
+        "color5": "#9590A4",
+        "color6": "#F58F8D",
+        "color7": "#eac4c4",
+        "color8": "#a38989",
+        "color9": "#675788",
+        "color10": "#A46C8D",
+        "color11": "#CF7687",
+        "color12": "#8789A0",
+        "color13": "#9590A4",
+        "color14": "#F58F8D",
+        "color15": "#eac4c4"
+    }
+}

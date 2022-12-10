@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/stretch.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#081517",
+        "foreground": "#dadedf",
+        "cursor": "#dadedf"
+    },
+    "colors": {
+        "color0": "#081517",
+        "color1": "#637586",
+        "color2": "#788B9E",
+        "color3": "#879BB3",
+        "color4": "#92A1B2",
+        "color5": "#B0BAC2",
+        "color6": "#BAC2C5",
+        "color7": "#dadedf",
+        "color8": "#989b9c",
+        "color9": "#637586",
+        "color10": "#788B9E",
+        "color11": "#879BB3",
+        "color12": "#92A1B2",
+        "color13": "#B0BAC2",
+        "color14": "#BAC2C5",
+        "color15": "#dadedf"
+    }
+}

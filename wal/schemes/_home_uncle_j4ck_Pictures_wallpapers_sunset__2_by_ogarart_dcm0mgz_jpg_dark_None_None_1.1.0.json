@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/sunset__2_by_ogarart_dcm0mgz.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#220008",
+        "foreground": "#f6d9b2",
+        "cursor": "#f6d9b2"
+    },
+    "colors": {
+        "color0": "#220008",
+        "color1": "#CE3B4B",
+        "color2": "#C63F58",
+        "color3": "#D7504C",
+        "color4": "#DD665E",
+        "color5": "#EF925E",
+        "color6": "#F8A966",
+        "color7": "#f6d9b2",
+        "color8": "#ac977c",
+        "color9": "#CE3B4B",
+        "color10": "#C63F58",
+        "color11": "#D7504C",
+        "color12": "#DD665E",
+        "color13": "#EF925E",
+        "color14": "#F8A966",
+        "color15": "#f6d9b2"
+    }
+}

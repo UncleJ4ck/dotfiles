@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/boy.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#0f193b",
+        "foreground": "#e5c9de",
+        "cursor": "#e5c9de"
+    },
+    "colors": {
+        "color0": "#0f193b",
+        "color1": "#36A1F1",
+        "color2": "#6C8ACC",
+        "color3": "#52A6F0",
+        "color4": "#71ABF0",
+        "color5": "#C88FBD",
+        "color6": "#9CAEE9",
+        "color7": "#e5c9de",
+        "color8": "#a08c9b",
+        "color9": "#36A1F1",
+        "color10": "#6C8ACC",
+        "color11": "#52A6F0",
+        "color12": "#71ABF0",
+        "color13": "#C88FBD",
+        "color14": "#9CAEE9",
+        "color15": "#e5c9de"
+    }
+}

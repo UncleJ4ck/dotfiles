@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/blue-night.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#030A10",
+        "foreground": "#a2c3e1",
+        "cursor": "#a2c3e1"
+    },
+    "colors": {
+        "color0": "#030A10",
+        "color1": "#235FB2",
+        "color2": "#417DB5",
+        "color3": "#1E5DC0",
+        "color4": "#3276C5",
+        "color5": "#4883BA",
+        "color6": "#3D82CA",
+        "color7": "#a2c3e1",
+        "color8": "#71889d",
+        "color9": "#235FB2",
+        "color10": "#417DB5",
+        "color11": "#1E5DC0",
+        "color12": "#3276C5",
+        "color13": "#4883BA",
+        "color14": "#3D82CA",
+        "color15": "#a2c3e1"
+    }
+}

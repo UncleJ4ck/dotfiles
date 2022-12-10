@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/wallpapers/vector-wallpaper-20112621504219.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#0c0c15",
+        "foreground": "#b3b9c4",
+        "cursor": "#b3b9c4"
+    },
+    "colors": {
+        "color0": "#0c0c15",
+        "color1": "#F1CF6A",
+        "color2": "#3E5B81",
+        "color3": "#526689",
+        "color4": "#687391",
+        "color5": "#9D7786",
+        "color6": "#C57D82",
+        "color7": "#b3b9c4",
+        "color8": "#7d8189",
+        "color9": "#F1CF6A",
+        "color10": "#3E5B81",
+        "color11": "#526689",
+        "color12": "#687391",
+        "color13": "#9D7786",
+        "color14": "#C57D82",
+        "color15": "#b3b9c4"
+    }
+}
