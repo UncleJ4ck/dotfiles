@@ -4,7 +4,7 @@
 UNIX Ricing Stuff
 
 
-<img src="https://i.imgur.com/IEA9y86.png">
+<img src="https://i.imgur.com/zffUlwN.png">
 
 > i'm using [AstroNvim](https://astronvim.github.io/) as a Text Editor
 
