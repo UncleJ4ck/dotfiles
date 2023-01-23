@@ -1,0 +1,23 @@
+" Special
+let wallpaper  = "/home/uncle_j4ck/Pictures/Wallpapers/968265.png"
+let background = "#100f0f"
+let foreground = "#dd9c8a"
+let cursor     = "#dd9c8a"
+
+" Colors
+let color0  = "#100f0f"
+let color1  = "#5C4831"
+let color2  = "#9A241D"
+let color3  = "#8F3227"
+let color4  = "#AF3628"
+let color5  = "#CA2F21"
+let color6  = "#A5452D"
+let color7  = "#dd9c8a"
+let color8  = "#9a6d60"
+let color9  = "#5C4831"
+let color10 = "#9A241D"
+let color11 = "#8F3227"
+let color12 = "#AF3628"
+let color13 = "#CA2F21"
+let color14 = "#A5452D"
+let color15 = "#dd9c8a"

@@ -1,0 +1,27 @@
+{
+    "wallpaper": "/home/uncle_j4ck/Pictures/Wallpapers/wallpaperforu-1920x1080.jpg",
+    "alpha": "100",
+    "special": {
+        "background": "#0d0d0d",
+        "foreground": "#dfd7d6",
+        "cursor": "#dfd7d6"
+    },
+    "colors": {
+        "color0": "#0d0d0d",
+        "color1": "#C13543",
+        "color2": "#957171",
+        "color3": "#A67F80",
+        "color4": "#B09191",
+        "color5": "#C79A9D",
+        "color6": "#CCAEAF",
+        "color7": "#dfd7d6",
+        "color8": "#9c9695",
+        "color9": "#C13543",
+        "color10": "#957171",
+        "color11": "#A67F80",
+        "color12": "#B09191",
+        "color13": "#C79A9D",
+        "color14": "#CCAEAF",
+        "color15": "#dfd7d6"
+    }
+}
