@@ -28,10 +28,6 @@ source $ZSH/oh-my-zsh.sh
 ENABLE_CORRECTION="true"
 CASE_SENSITIVE="true"
 
-# 42 Header
-export USER="amazguit"
-export MAIL="amazguit@student.42.fr"
-
 # francinette
 alias francinette="$HOME"/francinette/tester.sh
 alias paco="$HOME"/francinette/tester.sh
