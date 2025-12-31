@@ -1,0 +1,7 @@
+# do not version caches/history
+**/.zcompdump*
+**/*.zwc
+**/history
+**/.cache/
+**/.local/state/
+**/.local/share/zsh/history

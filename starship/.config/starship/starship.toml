@@ -1,0 +1,134 @@
+# ================
+# Starship Prompt 
+# ================
+
+format = """
+$username\
+$hostname\
+$directory\
+$git_branch\
+$git_state\
+$git_status\
+$python\
+$rust\
+$golang\
+$nodejs\
+$lua\
+$docker_context\
+$kubernetes\
+$cmd_duration\
+$line_break\
+$jobs\
+$character"""
+
+right_format = "$time"
+add_newline = true
+command_timeout = 1000
+
+[character]
+# no colors; uses terminal default fg
+success_symbol = "[❯](none)"
+error_symbol   = "[✗](none)"
+vimcmd_symbol  = "[❮](none)"
+# If you want the error to be visually different without colors, change it:
+# error_symbol = "[✗](none)"
+
+[directory]
+style = "none"
+truncation_length = 5
+truncation_symbol = "…/"
+truncate_to_repo = true
+read_only = " 🔒"
+home_symbol = "~"
+
+[git_branch]
+style = "none"
+format = "[$symbol$branch]($style) "
+symbol = " "
+truncation_length = 20
+
+[git_state]
+style = "none"
+format = '[\($state( $progress_current/$progress_total)\)]($style) '
+
+[git_status]
+style = "none"
+format = '([$all_status$ahead_behind]($style))'
+conflicted = "⚔️"
+ahead = "⇡${count}"
+behind = "⇣${count}"
+diverged = "⇕⇡${ahead_count}⇣${behind_count}"
+untracked = "?${count}"
+stashed = "📦"
+modified = "!${count}"
+staged = "+${count}"
+deleted = "✘${count}"
+
+[python]
+style = "none"
+format = '[${symbol}(${version})(\($virtualenv\))]($style) '
+symbol = "🐍 "
+
+[rust]
+style = "none"
+format = "[$symbol($version)]($style) "
+symbol = "🦀 "
+
+[golang]
+style = "none"
+format = "[$symbol($version)]($style) "
+symbol = "🐹 "
+
+[nodejs]
+style = "none"
+format = "[$symbol($version)]($style) "
+symbol = "⬢ "
+
+[lua]
+style = "none"
+format = "[$symbol($version)]($style) "
+symbol = "🌙 "
+
+[docker_context]
+style = "none"
+format = "[$symbol$context]($style) "
+symbol = "🐳 "
+only_with_files = true
+
+[kubernetes]
+disabled = false
+style = "none"
+format = '[$symbol$context(\($namespace\))]($style) '
+symbol = "☸ "
+
+[cmd_duration]
+style = "none"
+min_time = 2_000
+format = "took [$duration]($style) "
+
+[jobs]
+style = "none"
+symbol = "✦"
+number_threshold = 1
+format = "[$symbol$number]($style) "
+
+[time]
+disabled = false
+style = "none"
+format = "[$time]($style)"
+time_format = "%H:%M"
+
+[username]
+style_user = "none"
+style_root = "none"
+format = "[$user]($style)@"
+show_always = false
+
+[hostname]
+style = "none"
+format = "[$hostname]($style) "
+ssh_only = true
+
+[package]
+disabled = true
+
