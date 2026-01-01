@@ -192,6 +192,7 @@ alias ipa='command ip -c -br a'
 alias localip="command ip -4 -o addr show scope global | awk '{print \$4}' | cut -d/ -f1 | head -1"
 alias ports='ss -tulanp'
 alias myip='curl -s ifconfig.me'
+alias reflector='sudo reflector --verbose --sort rate --age 12 -l 20 --fastest 15 --save /etc/pacman.d/mirrorlist'
 
 # Misc
 alias cls='clear'
