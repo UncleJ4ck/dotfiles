@@ -1,0 +1,3 @@
+/* matugen gtk4 shim: keep existing base theme + overlay generated colors */
+@import url("gtk.css.base");
+@import url("colors.css");

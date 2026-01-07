@@ -12,7 +12,7 @@ export LESS="-FRXi --mouse"
 export LESSHISTFILE="$XDG_STATE_HOME/less/history"
 
 # Starship
-export STARSHIP_CONFIG="$XDG_CONFIG_HOME/starship/starship.toml"
+export STARSHIP_CONFIG="/home/j4kuuu/.config/starship/starship.toml"
 
 # GPG
 [[ -t 1 ]] && export GPG_TTY="$(tty)"

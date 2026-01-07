@@ -5,3 +5,5 @@
 **/.cache/
 **/.local/state/
 **/.local/share/zsh/history
+gtk/.config/gtk-3.0/colors.css
+gtk/.config/gtk-4.0/colors.css

@@ -1,7 +1,9 @@
-# ================
-# Starship Prompt 
-# ================
+"$schema" = "https://starship.rs/config-schema.json"
 
+palette = "matugen"
+add_newline = true
+
+# Left prompt
 format = """
 $username\
 $hostname\
@@ -17,118 +19,165 @@ $lua\
 $docker_context\
 $kubernetes\
 $cmd_duration\
-$line_break\
 $jobs\
+$status\
+$fill\
+$line_break\
 $character"""
 
-right_format = "$time"
-add_newline = true
-command_timeout = 1000
+# Right prompt
+right_format = """
+$time\
+$battery"""
 
-[character]
-# no colors; uses terminal default fg
-success_symbol = "[❯](none)"
-error_symbol   = "[✗](none)"
-vimcmd_symbol  = "[❮](none)"
-# If you want the error to be visually different without colors, change it:
-# error_symbol = "[✗](none)"
+# Matugen-driven palette
+[palettes.matugen]
+bg        = "#1a1110"
+fg        = "#f1dedc"
+muted     = "#d8c2be"
+primary   = "#ffb4aa"
+secondary = "#e7bdb7"
+tertiary  = "#dfc38c"
+error     = "#ffb4ab"
+
+# Your custom colors defined in matugen config.toml as:
+# [config.custom_colors.warning] / info / success
+# Available in templates as: colors.warning.default.hex (etc.) :contentReference[oaicite:5]{index=5}
+warning   = "#f5bd6f"
+info      = "#b8c4ff"
+success   = "#b1d18a"
+
+# ---------------------------
+# Identity / Path
+# ---------------------------
+
+[username]
+show_always = false
+format = "[$user]($style)"
+style_user = "bold primary"
+style_root = "bold error"
+
+[hostname]
+ssh_only = true
+format = "[@$hostname]($style) "
+style = "muted"
 
 [directory]
-style = "none"
-truncation_length = 5
+format = "[$path]($style)[$read_only]($read_only_style) "
+style = "bold fg"
+truncation_length = 4
 truncation_symbol = "…/"
 truncate_to_repo = true
-read_only = " 🔒"
+read_only = " 󰌾"
+read_only_style = "error"
 home_symbol = "~"
 
+# ---------------------------
+# Git
+# ---------------------------
+
 [git_branch]
-style = "none"
+symbol = " "
 format = "[$symbol$branch]($style) "
-symbol = " "
-truncation_length = 20
+style = "bold secondary"
+truncation_length = 24
 
 [git_state]
-style = "none"
 format = '[\($state( $progress_current/$progress_total)\)]($style) '
+style = "muted"
 
 [git_status]
-style = "none"
-format = '([$all_status$ahead_behind]($style))'
-conflicted = "⚔️"
-ahead = "⇡${count}"
-behind = "⇣${count}"
-diverged = "⇕⇡${ahead_count}⇣${behind_count}"
-untracked = "?${count}"
-stashed = "📦"
-modified = "!${count}"
-staged = "+${count}"
-deleted = "✘${count}"
+# This is what was showing as: ✘1!7?50 in your old config.
+# Now: clean Nerd Font icons + spacing.
+format = "([$all_status$ahead_behind]($style) )"
+style = "muted"
+conflicted = "󰞇 ${count} "
+ahead      = "⇡${count} "
+behind     = "⇣${count} "
+diverged   = "⇕⇡${ahead_count}⇣${behind_count} "
+untracked  = "󰞋 ${count} "
+stashed    = "󰏗 ${count} "
+modified   = "󰏫 ${count} "
+staged     = "󰐗 ${count} "
+renamed    = "󰑕 ${count} "
+deleted    = "󰍶 ${count} "
+
+# ---------------------------
+# Languages (your modules + icons)
+# ---------------------------
 
 [python]
-style = "none"
-format = '[${symbol}(${version})(\($virtualenv\))]($style) '
-symbol = "🐍 "
+symbol = " "
+format = '[$symbol($version)(\($virtualenv\))]($style) '
+style = "info"
 
 [rust]
-style = "none"
+symbol = " "
 format = "[$symbol($version)]($style) "
-symbol = "🦀 "
+style = "warning"
 
 [golang]
-style = "none"
+symbol = " "
 format = "[$symbol($version)]($style) "
-symbol = "🐹 "
+style = "success"
 
 [nodejs]
-style = "none"
+symbol = " "
 format = "[$symbol($version)]($style) "
-symbol = "⬢ "
+style = "tertiary"
 
 [lua]
-style = "none"
+symbol = " "
 format = "[$symbol($version)]($style) "
-symbol = "🌙 "
+style = "secondary"
+
+# ---------------------------
+# Containers / Orchestration
+# ---------------------------
 
 [docker_context]
-style = "none"
+symbol = " "
 format = "[$symbol$context]($style) "
-symbol = "🐳 "
+style = "primary"
 only_with_files = true
 
 [kubernetes]
 disabled = false
-style = "none"
+symbol = "󱃾 "
 format = '[$symbol$context(\($namespace\))]($style) '
-symbol = "☸ "
+style = "secondary"
+
+# ---------------------------
+# Runtime info
+# ---------------------------
 
 [cmd_duration]
-style = "none"
-min_time = 2_000
-format = "took [$duration]($style) "
+min_time = 2000
+format = "[󰔟 $duration]($style) "
+style = "warning"
 
 [jobs]
-style = "none"
-symbol = "✦"
+symbol = "󰜎 "
 number_threshold = 1
 format = "[$symbol$number]($style) "
+style = "muted"
 
-[time]
+[status]
 disabled = false
-style = "none"
-format = "[$time]($style)"
-time_format = "%H:%M"
+symbol = "󰅚 "
+format = "[$symbol$status]($style) "
+style = "error"
 
-[username]
-style_user = "none"
-style_root = "none"
-format = "[$user]($style)@"
-show_always = false
-
-[hostname]
+# Push right prompt
+[fill]
+symbol = " "
 style = "none"
-format = "[$hostname]($style) "
-ssh_only = true
+
+# Prompt char
+[character]
+success_symbol = "[❯](primary)"
+error_symbol   = "[❯](error)"
+vimcmd_symbol  = "[❮](info)"
 
 [package]
 disabled = true
-
