@@ -1,0 +1,581 @@
+/***
+ * ┏┓┏┓┳┓┏┳┓┳┓┏┓┓ ┏┓┏┓┳┓┏┳┓┏┓┳┓
+ * ┃ ┃┃┃┃ ┃ ┣┫┃┃┃ ━━┃ ┣ ┃┃ ┃ ┣ ┣┫
+ * ┗┛┗┛┛┗ ┻ ┛┗┗┛┗┛ ┗┛┗┛┛┗ ┻ ┗┛┛┗
+ * Enhanced control center with glassmorphism + Material Design
+ ***/
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COLOR MAPPINGS - Semantic aliases for matugen colors
+   ═══════════════════════════════════════════════════════════════════════════ */
+@define-color text @on_surface;
+@define-color text-dim @on_surface_variant;
+@define-color background-alt @surface_container_highest;
+@define-color background-alt-alpha alpha(@surface_bright, .65);
+@define-color background-sec alpha(@surface, 0.65);
+@define-color background-glass alpha(@surface_container, 0.85);
+@define-color selected @primary;
+@define-color accent @tertiary;
+@define-color text-alt @surface;
+@define-color hover alpha(@selected, .55);
+@define-color hover-light alpha(@selected, .25);
+@define-color urgent @error;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL SETTINGS
+   ═══════════════════════════════════════════════════════════════════════════ */
+* {
+  color: @text;
+  all: unset;
+  font-size: 14px;
+  font-family: "JetBrainsMono Nerd Font", "Fira Sans", sans-serif;
+  font-weight: 600;
+  transition: all 200ms ease-in-out;
+}
+
+.blank-window {
+  background: transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONTROL CENTER - Main container with glassmorphism
+   ═══════════════════════════════════════════════════════════════════════════ */
+.control-center {
+  background: @background-glass;
+  border-radius: 20px;
+  border: 1px solid alpha(@selected, 0.6);
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 0 alpha(@surface_bright, 0.1);
+  margin: 12px;
+  padding: 14px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NOTIFICATIONS - Cards inside control center
+   ═══════════════════════════════════════════════════════════════════════════ */
+.control-center .notification-row .notification-background {
+  background-color: alpha(@surface_container_low, 0.7);
+  border-radius: 14px;
+  border: 1px solid alpha(@outline_variant, 0.4);
+  margin: 4px 0px;
+  padding: 4px;
+  transition: all 200ms ease;
+}
+
+.control-center .notification-row .notification-background:hover {
+  background-color: alpha(@surface_container, 0.85);
+  border-color: alpha(@selected, 0.4);
+}
+
+.control-center .notification-row .notification-background .notification.critical {
+  background-color: alpha(@error_container, 0.8);
+  color: @on_error_container;
+  border: 1px solid @urgent;
+  border-radius: 12px;
+}
+
+.control-center .notification-row .notification-background .notification .notification-content {
+  margin: 6px;
+  padding: 8px 6px 2px 2px;
+}
+
+.control-center .notification-row .notification-background .notification > *:last-child > * {
+  min-height: 2.8em;
+}
+
+/* Notification action buttons */
+.control-center .notification-row .notification-background .notification > *:last-child > * .notification-action {
+  background: alpha(@secondary_container, .7);
+  color: @on_secondary_container;
+  border-radius: 10px;
+  margin: 4px;
+  padding: 6px 12px;
+  border: 1px solid transparent;
+}
+
+.control-center .notification-row .notification-background .notification > *:last-child > * .notification-action:hover {
+  background: @selected;
+  color: @on_primary;
+  box-shadow: 0 0 8px alpha(@selected, 0.4);
+}
+
+.control-center .notification-row .notification-background .notification > *:last-child > * .notification-action:active {
+  background-color: @primary_container;
+  color: @on_primary_container;
+}
+
+/* Close button */
+.control-center .notification-row .notification-background .close-button {
+  background: transparent;
+  border-radius: 8px;
+  color: @text-dim;
+  margin: 2px;
+  padding: 4px;
+}
+
+.control-center .notification-row .notification-background .close-button:hover {
+  background-color: alpha(@error_container, 0.8);
+  color: @on_error_container;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NOTIFICATION GROUPS
+   ═══════════════════════════════════════════════════════════════════════════ */
+.notification-group {
+  margin: 4px 8px;
+}
+
+.notification-group-headers {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: @text;
+  letter-spacing: 1px;
+}
+
+.notification-group-icon {
+  color: @accent;
+}
+
+.notification-group-collapse-button,
+.notification-group-close-all-button {
+  background: alpha(@surface_container_high, 0.6);
+  color: @text;
+  margin: 4px;
+  border-radius: 8px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+}
+
+.notification-group-collapse-button:hover,
+.notification-group-close-all-button:hover {
+  background: @hover;
+  border-color: alpha(@selected, 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   WIDGETS - Labels and titles
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Calendar label - Large date display */
+#calendar {
+  background: alpha(@surface_container_low, 0.6);
+  border-radius: 16px;
+  padding: 16px 20px;
+  margin: 4px 4px 8px 4px;
+  border: 1px solid alpha(@outline_variant, 0.2);
+}
+
+#calendar > label {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: @text;
+  letter-spacing: 1px;
+}
+
+/* Weather label */
+#weather {
+  background: alpha(@tertiary_container, 0.4);
+  border-radius: 14px;
+  padding: 12px 16px;
+  margin: 4px 4px 8px 4px;
+  border: 1px solid alpha(@tertiary, 0.3);
+}
+
+#weather > label {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: @tertiary;
+  letter-spacing: 0.5px;
+}
+
+/* Generic label fallback */
+.widget-label {
+  margin: 8px 6px;
+  font-size: 1.2rem;
+  color: @accent;
+  letter-spacing: 2px;
+}
+
+/* Notification title bar */
+.widget-title {
+  color: @text;
+  font-size: 1.1em;
+  font-weight: 700;
+  margin: 8px 6px;
+}
+
+.widget-title button {
+  background: alpha(@surface_container_high, 0.7);
+  border-radius: 8px;
+  padding: 6px 14px;
+  border: 1px solid alpha(@outline_variant, 0.3);
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.widget-title button:hover {
+  background-color: alpha(@error_container, 0.8);
+  color: @on_error_container;
+  border-color: alpha(@error, 0.5);
+}
+
+.widget-title button:active {
+  background-color: @error;
+  color: @on_error;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DO NOT DISTURB TOGGLE
+   ═══════════════════════════════════════════════════════════════════════════ */
+.widget-dnd {
+  color: @text;
+  margin: 8px 6px;
+  font-size: 1.1rem;
+}
+
+.widget-dnd > switch {
+  background: alpha(@surface_container_highest, 0.7);
+  font-size: initial;
+  border-radius: 14px;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+  padding: 3px;
+  min-width: 50px;
+  min-height: 26px;
+}
+
+.widget-dnd > switch:hover {
+  background: alpha(@surface_container_high, 0.9);
+}
+
+.widget-dnd > switch:checked {
+  background: linear-gradient(135deg, @selected, @primary_container);
+  background: @selected;
+}
+
+.widget-dnd > switch:checked:hover {
+  background: alpha(@selected, 0.85);
+}
+
+.widget-dnd > switch slider {
+  background: @text;
+  border-radius: 50%;
+  min-width: 20px;
+  min-height: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.widget-dnd > switch:checked slider {
+  background: @on_primary;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BUTTONS GRID - Quick toggles
+   ═══════════════════════════════════════════════════════════════════════════ */
+.widget-buttons-grid {
+  font-size: 1.4rem;
+  padding: 8px;
+  margin: 8px 4px;
+  border-radius: 14px;
+  background: alpha(@surface_container_low, 0.6);
+  border: 1px solid alpha(@outline_variant, 0.2);
+}
+
+.widget-buttons-grid>flowbox>flowboxchild>button {
+  margin: 4px 6px;
+  padding: 10px 14px;
+  background: alpha(@surface_container_high, 0.5);
+  border-radius: 12px;
+  border: 1px solid transparent;
+  color: @text;
+}
+
+.widget-buttons-grid>flowbox>flowboxchild>button:hover {
+  background: @hover-light;
+  border-color: alpha(@selected, 0.4);
+  box-shadow: 0 0 8px alpha(@selected, 0.2);
+}
+
+.widget-buttons-grid > flowbox > flowboxchild > button.toggle:checked {
+  background: @selected;
+  color: @on_primary;
+  border-color: @selected;
+  box-shadow: 0 0 12px alpha(@selected, 0.4);
+}
+
+.widget-buttons-grid > flowbox > flowboxchild > button.toggle:checked:hover {
+  background: alpha(@selected, 0.85);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MUSIC PLAYER (MPRIS)
+   ═══════════════════════════════════════════════════════════════════════════ */
+.widget-mpris {
+  background: alpha(@surface_container_low, 0.5);
+  border-radius: 16px;
+  border: 1px solid alpha(@outline_variant, 0.3);
+  padding: 8px;
+  margin: 10px 4px;
+}
+
+.widget-mpris-player {
+  background: alpha(@accent, 0.9);
+  padding: 8px 12px;
+  margin: 6px;
+  border-radius: 14px;
+  box-shadow: 0 4px 12px alpha(@shadow, 0.3);
+}
+
+.widget-mpris-album-art {
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
+.widget-mpris-title {
+  font-weight: 700;
+  font-size: 1rem;
+  color: @on_tertiary;
+}
+
+.widget-mpris-subtitle {
+  font-weight: 500;
+  font-size: 0.85rem;
+  color: alpha(@on_tertiary, 0.8);
+}
+
+.widget-mpris button {
+  color: @on_tertiary;
+  border-radius: 8px;
+  padding: 6px;
+  margin: 2px;
+}
+
+.widget-mpris button:hover {
+  background: alpha(@on_tertiary, 0.2);
+}
+
+.widget-mpris button:active {
+  background: alpha(@on_tertiary, 0.3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   VOLUME & BACKLIGHT SLIDERS - Enhanced with distinct colors
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Shared container styles */
+.widget-volume,
+.widget-backlight {
+  background: alpha(@surface_container_low, 0.6);
+  color: @text;
+  padding: 12px 14px;
+  margin: 6px 4px;
+  border-radius: 14px;
+  border: 1px solid alpha(@outline_variant, 0.2);
+}
+
+.widget-volume label,
+.widget-backlight label {
+  font-size: 1.3rem;
+  margin-right: 12px;
+  min-width: 28px;
+}
+
+/* Base scale/trough styles */
+.widget-volume scale,
+.widget-backlight scale {
+  min-height: 20px;
+}
+
+.widget-volume scale trough,
+.widget-backlight scale trough {
+  background: alpha(@surface_container_highest, 0.8);
+  border-radius: 10px;
+  min-height: 10px;
+  padding: 0;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   VOLUME SLIDER - Secondary color (muted green tones)
+   ───────────────────────────────────────────────────────────────────────────── */
+.widget-volume scale trough highlight {
+  background: linear-gradient(90deg, alpha(@secondary, 0.8), @secondary);
+  border-radius: 10px;
+  box-shadow: 0 0 8px alpha(@secondary, 0.4);
+}
+
+.widget-volume scale trough slider {
+  background: @secondary;
+  border: 2px solid @text;
+  border-radius: 50%;
+  min-height: 18px;
+  min-width: 18px;
+  margin: -4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  transition: all 150ms ease;
+}
+
+.widget-volume scale trough slider:hover {
+  background: @secondary_container;
+  border-color: @secondary;
+  min-height: 20px;
+  min-width: 20px;
+  margin: -5px;
+  box-shadow: 0 0 12px alpha(@secondary, 0.5);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   BRIGHTNESS SLIDER - Tertiary color (teal/cyan tones)
+   ───────────────────────────────────────────────────────────────────────────── */
+.widget-backlight scale trough highlight {
+  background: linear-gradient(90deg, alpha(@tertiary, 0.8), @tertiary);
+  border-radius: 10px;
+  box-shadow: 0 0 8px alpha(@tertiary, 0.4);
+}
+
+.widget-backlight scale trough slider {
+  background: @tertiary;
+  border: 2px solid @text;
+  border-radius: 50%;
+  min-height: 18px;
+  min-width: 18px;
+  margin: -4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+  transition: all 150ms ease;
+}
+
+.widget-backlight scale trough slider:hover {
+  background: @tertiary_container;
+  border-color: @tertiary;
+  min-height: 20px;
+  min-width: 20px;
+  margin: -5px;
+  box-shadow: 0 0 12px alpha(@tertiary, 0.5);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   PER-APP VOLUME - Nested sliders
+   ───────────────────────────────────────────────────────────────────────────── */
+.widget-volume .per-app-volume {
+  background: alpha(@surface_container_high, 0.5);
+  border-radius: 10px;
+  padding: 8px 10px;
+  margin-top: 8px;
+  border: 1px solid alpha(@outline_variant, 0.15);
+}
+
+.widget-volume .per-app-volume scale trough {
+  min-height: 6px;
+}
+
+.widget-volume .per-app-volume scale trough highlight {
+  background: alpha(@secondary, 0.7);
+}
+
+.widget-volume .per-app-volume scale trough slider {
+  min-height: 12px;
+  min-width: 12px;
+  margin: -3px;
+}
+
+.widget-volume .per-app-volume scale trough slider:hover {
+  min-height: 14px;
+  min-width: 14px;
+  margin: -4px;
+}
+
+/* Volume expand/collapse buttons */
+.widget-volume button {
+  background: alpha(@surface_container_high, 0.5);
+  border-radius: 8px;
+  padding: 4px 8px;
+  margin-left: 8px;
+}
+
+.widget-volume button:hover {
+  background: @hover-light;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GENERIC PROGRESS BARS (notifications)
+   ═══════════════════════════════════════════════════════════════════════════ */
+progressbar,
+progress,
+trough {
+  border-radius: 12px;
+  background: transparent;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCROLLBAR STYLING
+   ═══════════════════════════════════════════════════════════════════════════ */
+scrollbar {
+  background: transparent;
+}
+
+scrollbar slider {
+  background: alpha(@outline, 0.4);
+  border-radius: 50px;
+  min-width: 4px;
+  min-height: 30px;
+  border: none;
+}
+
+scrollbar slider:hover {
+  background: alpha(@selected, 0.6);
+  min-width: 6px;
+}
+
+scrollbar trough {
+  background: transparent;
+  border: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   EMPTY STATE - No notifications placeholder
+   ═══════════════════════════════════════════════════════════════════════════ */
+.notification-placeholder,
+.notification-placeholder label {
+  color: @text-dim;
+  opacity: 0.8;
+  font-style: italic;
+}
+
+/* Force icon color in empty state */
+.widget-notifications label,
+.widget-notifications image,
+.widget-notifications .icon {
+  color: alpha(@accent, 0.7);
+}
+
+/* Reset for actual notifications */
+.widget-notifications .notification-row label,
+.widget-notifications .notification-row .summary {
+  color: @text;
+}
+
+.widget-notifications .notification-row .body,
+.widget-notifications .notification-row .time {
+  color: @text-dim;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   UTILITY - Fix background issues
+   ═══════════════════════════════════════════════════════════════════════════ */
+listbox {
+  background: transparent;
+}
+
+listbox > row {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin: 0px;
+}
+
+listbox > row:selected,
+listbox > row:focus,
+listbox > row:hover {
+  background: transparent !important;
+  outline: none !important;
+}

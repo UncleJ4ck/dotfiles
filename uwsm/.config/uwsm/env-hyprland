@@ -1,0 +1,2 @@
+# Force Hyprland to use Intel iGPU for scanout/compositing
+export AQ_DRM_DEVICES="/dev/dri/card1"

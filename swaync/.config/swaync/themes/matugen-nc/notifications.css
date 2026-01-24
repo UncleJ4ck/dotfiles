@@ -1,0 +1,171 @@
+/***
+ * ┳┓┏┓┏┳┓┳┏┓┳┏┓┏┓┏┳┓┳┏┓┳┓
+ * ┃┃┃┃ ┃ ┃┣ ┃┃ ┣┫ ┃ ┃┃┃┃┃
+ * ┛┗┗┛ ┻ ┻┻ ┻┗┛┛┗ ┻ ┻┗┛┛┗
+ * Enhanced floating notifications with glassmorphism
+ ***/
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COLOR MAPPINGS
+   ═══════════════════════════════════════════════════════════════════════════ */
+@define-color text @on_surface;
+@define-color text-dim @on_surface_variant;
+@define-color background-alt @surface_bright;
+@define-color background-glass alpha(@surface_container, 0.92);
+@define-color selected @primary;
+@define-color hover alpha(@selected, .45);
+@define-color urgent @error;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
+* {
+  color: @text;
+  all: unset;
+  font-size: 14px;
+  font-family: "JetBrainsMono Nerd Font", "Fira Sans", sans-serif;
+  font-weight: 600;
+  transition: all 200ms ease-in-out;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FLOATING NOTIFICATIONS - Popup toasts
+   ═══════════════════════════════════════════════════════════════════════════ */
+.notification-row {
+  color: @text;
+  outline: none;
+  margin: 0;
+  padding: 0px;
+}
+
+.floating-notifications.background .notification-row .notification-background {
+  background: @background-glass;
+  box-shadow:
+    0 8px 24px 0 rgba(0,0,0,0.5),
+    inset 0 1px 0 0 alpha(@surface_bright, 0.15);
+  border: 1px solid alpha(@selected, 0.6);
+  border-radius: 18px;
+  margin: 12px;
+  padding: 0;
+}
+
+.floating-notifications.background .notification-row .notification-background .notification {
+  padding: 8px;
+  border-radius: 14px;
+}
+
+/* Critical notification styling */
+.floating-notifications.background .notification-row .notification-background .notification.critical {
+  background-color: alpha(@error_container, 0.3);
+  border: 2px solid @urgent;
+  border-radius: 14px;
+}
+
+.floating-notifications.background .notification-row .notification-background .notification .notification-content {
+  margin: 12px;
+}
+
+.floating-notifications.background .notification-row .notification-background .notification > *:last-child > * {
+  min-height: 2.8em;
+}
+
+/* Action buttons in floating notifications */
+.floating-notifications.background .notification-row .notification-background .notification > *:last-child > * .notification-action {
+  border-radius: 10px;
+  background-color: alpha(@surface_container_high, 0.7);
+  margin: 4px;
+  padding: 6px 12px;
+  border: 1px solid alpha(@outline_variant, 0.3);
+}
+
+.floating-notifications.background .notification-row .notification-background .notification > *:last-child > * .notification-action:hover {
+  background-color: @selected;
+  color: @on_primary;
+  border: 1px solid @selected;
+  box-shadow: 0 0 8px alpha(@selected, 0.4);
+}
+
+.floating-notifications.background .notification-row .notification-background .notification > *:last-child > * .notification-action:active {
+  background-color: @primary_container;
+  color: @on_primary_container;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NOTIFICATION CONTENT
+   ═══════════════════════════════════════════════════════════════════════════ */
+.image {
+  margin: 8px 16px 8px 0px;
+  border-radius: 8px;
+}
+
+.summary {
+  font-weight: 800;
+  font-size: 1rem;
+  color: @text;
+  margin-bottom: 2px;
+}
+
+.body {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: @text-dim;
+  line-height: 1.4;
+}
+
+.time {
+  font-size: 0.75rem;
+  color: @text-dim;
+  opacity: 0.8;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CLOSE BUTTON
+   ═══════════════════════════════════════════════════════════════════════════ */
+.floating-notifications.background .notification-row .notification-background .close-button {
+  margin: 6px;
+  padding: 4px;
+  border-radius: 8px;
+  background-color: transparent;
+  border: 1px solid transparent;
+  color: @text-dim;
+}
+
+.floating-notifications.background .notification-row .notification-background .close-button:hover {
+  background-color: alpha(@error_container, 0.8);
+  color: @on_error_container;
+  border-color: alpha(@error, 0.4);
+}
+
+.floating-notifications.background .notification-row .notification-background .close-button:active {
+  background-color: @error;
+  color: @on_error;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PROGRESS BARS
+   ═══════════════════════════════════════════════════════════════════════════ */
+.notification.critical progress {
+  background-color: @error;
+  border-radius: 4px;
+}
+
+.notification.low progress {
+  background-color: @tertiary;
+  border-radius: 4px;
+}
+
+.notification.normal progress {
+  background-color: @selected;
+  border-radius: 4px;
+}
+
+progress {
+  min-height: 4px;
+  border-radius: 4px;
+}
+
+trough {
+  background: alpha(@surface_container_highest, 0.6);
+  border-radius: 4px;
+  min-height: 4px;
+}

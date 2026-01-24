@@ -299,3 +299,40 @@ port() {
   [[ -n "${1-}" ]] || { echo "Usage: port <port>"; return 1; }
   command -v ss &>/dev/null && ss -tulanp | grep ":$1 " || netstat -tulpn | grep ":$1 "
 }
+
+# Image viewer using Kitty's icat
+icat() {
+  if [[ $# -eq 0 ]]; then
+    echo "Usage: icat <image_file(s)>"
+    return 1
+  fi
+  kitty +kitten icat "$@"
+}
+
+# Smart cat - shows images if it's an image file, otherwise uses bat -pp
+scat() {
+  if [[ $# -eq 0 ]]; then
+    command -v bat &>/dev/null && bat -pp || cat
+    return
+  fi
+
+  local file="$1"
+  if [[ ! -f "$file" ]]; then
+    echo "scat: $file: No such file"
+    return 1
+  fi
+
+  # Check if it's an image by file extension and mime type
+  local mime
+  mime=$(file --mime-type -b "$file" 2>/dev/null)
+
+  if [[ "$mime" =~ ^image/ ]]; then
+    kitty +kitten icat "$file"
+  else
+    if command -v bat &>/dev/null; then
+      bat -pp "$file"
+    else
+      cat "$file"
+    fi
+  fi
+}

@@ -1,0 +1,31 @@
+# XDG
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_CACHE_HOME="$HOME/.cache"
+export XDG_STATE_HOME="$HOME/.local/state"
+export XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}:/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share"
+
+# Qt / Kvantum
+export QT_QPA_PLATFORMTHEME="qt5ct:qt6ct"
+export QT_STYLE_OVERRIDE="kvantum"
+
+# Cursor
+export XCURSOR_THEME="macOS"
+export XCURSOR_SIZE="24"
+export HYPRCURSOR_THEME="macOS-hypr"
+export HYPRCURSOR_SIZE="24"
+export HYPRCURSOR_THEME="macOS-hypr"
+export HYPRCURSOR_SIZE="24"
+
+# GTK2 rc file
+export GTK2_RC_FILES="$HOME/.config/gtk-2.0/gtkrc-2.0"
+
+# Mesa shader cache
+export MESA_SHADER_CACHE_DIR="$XDG_CACHE_HOME/mesa_shader_cache"
+
+# Icons
+# export ICON_SOURCE=tertiary
+
+# OpenCL
+export RUSTICL_ENABLE=iris
+

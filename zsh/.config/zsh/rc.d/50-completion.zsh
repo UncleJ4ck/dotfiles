@@ -33,6 +33,30 @@ zstyle ':completion:*:*:kill:*' menu yes select
 
 # --- fzf-tab ---
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath 2>/dev/null || ls -1 --color=always $realpath'
-zstyle ':fzf-tab:complete:*:*' fzf-preview 'bat --color=always --style=numbers --line-range=:100 $realpath 2>/dev/null || cat $realpath 2>/dev/null || eza -1 --color=always $realpath 2>/dev/null'
+zstyle ':fzf-tab:complete:*:*' fzf-preview '
+  preview_path=${realpath:-$word}
+  if [[ "$preview_path" == "~/"* ]]; then
+    preview_path="$HOME/${preview_path#~/}"
+  fi
+  if [[ -d "$preview_path" ]]; then
+    eza -1 --color=always "$preview_path" 2>/dev/null || ls -1 --color=always "$preview_path"
+    exit
+  fi
+  case "$preview_path" in
+    (*.[pP][nN][gG]|*.[jJ][pP][gG]|*.[jJ][pP][eE][gG]|*.[gG][iI][fF]|*.[wW][eE][bB][pP]|*.[bB][mM][pP]|*.[tT][iI][fF]|*.[tT][iI][fF][fF]|*.[aA][vV][iI][fF]|*.[hH][eE][iI][cC]|*.[hH][eE][iI][fF])
+      kitty +kitten icat --clear --transfer-mode=memory --stdin=no --place=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0 "$preview_path" 2>/dev/null
+      ;;
+    (*)
+      mime=$(file --mime-type -b "$preview_path" 2>/dev/null)
+      if [[ "$mime" == image/* ]]; then
+        kitty +kitten icat --clear --transfer-mode=memory --stdin=no --place=${FZF_PREVIEW_COLUMNS}x${FZF_PREVIEW_LINES}@0x0 "$preview_path" 2>/dev/null
+      elif command -v bat &>/dev/null; then
+        bat --color=always --style=numbers --line-range=:100 "$preview_path"
+      else
+        cat "$preview_path"
+      fi
+      ;;
+  esac
+'
 zstyle ':fzf-tab:*' fzf-flags --height=50% --layout=reverse
 zstyle ':fzf-tab:*' switch-group '<' '>'

@@ -1,0 +1,22 @@
+configuration {
+ font: "JetBrainsMono Nerd Font Propo 16";
+ modi: "drun,run,emoji";
+ fixed-num-lines: true;
+ show-icons: true;
+ icon-theme: "Papirus-Dark-Matugen";
+ eh: 2;
+ dpi: 100;
+ click-to-exit: true;
+ drun-use-desktop-cache: false;
+ drun-reload-desktop-cache: true;
+ drun-display-format: "{name}";
+ display-drun: "";
+ display-run: "";
+ display-filebrowser: "󱧷";
+ location: 0;
+/* hover-select: true;
+ me-select-entry: '';
+ me-accept-entry: "MousePrimary"; */
+}
+
+@theme "~/.config/rofi/theme.rasi"

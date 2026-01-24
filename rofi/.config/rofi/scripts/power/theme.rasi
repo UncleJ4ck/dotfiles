@@ -1,0 +1,93 @@
+@import "~/.config/rofi/colors/colors.rasi"
+@import "~/.config/rofi/colors/radius.rasi"
+
+window {
+  width: 22em;
+
+  padding: 0;
+  border: 0;
+  border-radius: var(borderradius);
+
+  transparency: "real";
+  background-color: var(surface);
+
+  x-offset: -10px;
+  y-offset: 10px;
+}
+
+error-message {
+  enabled: false;
+}
+
+mainbox {
+  background-color: transparent;
+  padding: 8px;
+  children: [ listview ];
+}
+
+listview {
+  columns: 3;
+  lines: 2;
+
+  /* Grid layout */
+  layout: vertical;
+  flow: horizontal;
+
+  fixed-columns: true;
+  fixed-height: true;
+
+  spacing: 7px;
+  background-color: transparent;
+  scrollbar: false;
+  cycle: false;
+
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+element {
+  orientation: vertical;
+
+  padding: 7px 9px;
+  margin: 0;
+
+  border: 1px;
+  border-color: var(surface-container-highest);
+  border-radius: var(buttonradius);
+
+  background-color: var(surface);
+}
+
+element-text {
+  background-color: transparent;
+  text-color: inherit;
+
+  padding: 0;
+  horizontal-align: 0.5;
+  vertical-align: 0.5;
+
+  markup: true;
+  highlight: bold;
+}
+
+/* Style BOTH normal and alternate states (prevents black icons/text) */
+element normal.normal,
+element normal.active,
+element normal.urgent,
+element alternate.normal,
+element alternate.active,
+element alternate.urgent {
+  background-color: var(surface);
+  text-color: var(secondary);
+}
+
+element selected.normal,
+element selected.active,
+element selected.urgent {
+  background-color: var(surface-container-highest);
+  text-color: var(secondary);
+
+  border: 1px;
+  border-color: var(primary);
+}

@@ -14,8 +14,17 @@ fi
 
 # FZF enhancements (no hardcoded colors - Matugen ready)
 if command -v fzf &>/dev/null; then
-  command -v bat &>/dev/null && \
-    export FZF_CTRL_T_OPTS="--preview 'bat --style=numbers --color=always --line-range :300 {}'"
+  # Smart preview: images with kitty icat, text files with bat
+  export FZF_CTRL_T_OPTS="--preview '
+    mime=\$(file --mime-type -b {} 2>/dev/null)
+    if [[ \$mime =~ ^image/ ]]; then
+      kitty +kitten icat --clear --transfer-mode=memory --stdin=no --place=\${FZF_PREVIEW_COLUMNS}x\${FZF_PREVIEW_LINES}@0x0 {} 2>/dev/null
+    elif command -v bat &>/dev/null; then
+      bat --style=numbers --color=always --line-range :300 {}
+    else
+      cat {}
+    fi
+  '"
 
   command -v eza &>/dev/null && \
     export FZF_ALT_C_OPTS="--preview 'eza --tree --level=2 --color=always {}'"

@@ -35,9 +35,9 @@ else
   alias la='ls -A'
 fi
 
-# cat -> bat
+# cat -> smart cat (scat: images with icat, text with bat -pp)
 if command -v bat &>/dev/null; then
-  alias cat='bat -pp'
+  alias cat='scat'
   alias catn='bat'
   alias catl='bat --style=numbers'
 fi
@@ -195,7 +195,7 @@ alias myip='curl -s ifconfig.me'
 alias reflector='sudo reflector --verbose --sort rate --age 12 -l 20 --fastest 15 --save /etc/pacman.d/mirrorlist'
 
 # Misc
-alias cls='clear'
+alias clear='printf "\033[3J\033[H\033[2J"'
 alias c='clear'
 alias h='history'
 alias hg='history | grep'

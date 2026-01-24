@@ -1,0 +1,27 @@
+configuration{
+  font: "JetBrainsMono Nerd Font Propo 19";
+  modi: "dmenu";
+  markup-rows: true;
+
+  show-icons: false;
+  icon-theme: "Icons";
+
+  /* 2 rows x 3 columns (6 entries) */
+  lines: 2;
+  columns: 3;
+  fixed-num-lines: true;
+
+  /* Enough height for icon + label */
+  eh: 3;
+
+  dpi: 100;
+  click-to-exit: true;
+
+  hover-select: true;
+  me-select-entry: "";
+  me-accept-entry: "MousePrimary";
+
+  location: 0;
+}
+
+@theme "~/.config/rofi/scripts/power/theme.rasi"

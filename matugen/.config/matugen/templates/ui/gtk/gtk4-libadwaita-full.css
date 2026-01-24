@@ -1,0 +1,223 @@
+/*
+ * GTK4 / libadwaita CSS Variables (Matugen) - FULL
+ *
+ * Output: ~/.config/gtk-4.0/colors.css
+ *
+ * This file defines the full set of libadwaita "UI Colors" variables.
+ * Light values live in :root; dark overrides are in prefers-color-scheme: dark.
+ */
+
+:root {
+  /* Accent */
+  --accent-bg-color: {{colors.primary.light.hex}};
+  --accent-fg-color: {{colors.on_primary.light.hex}};
+  --accent-color: oklab(from var(--accent-bg-color) var(--standalone-color-oklab));
+
+  /* Destructive */
+  --destructive-bg-color: {{colors.error.light.hex}};
+  --destructive-fg-color: {{colors.on_error.light.hex}};
+  --destructive-color: oklab(from var(--destructive-bg-color) var(--standalone-color-oklab));
+
+  /* Success */
+  --success-bg-color: {{colors.secondary.light.hex}};
+  --success-fg-color: {{colors.on_secondary.light.hex}};
+  --success-color: oklab(from var(--success-bg-color) var(--standalone-color-oklab));
+
+  /* Warning */
+  --warning-bg-color: {{colors.tertiary.light.hex}};
+  --warning-fg-color: rgb(0 0 0 / 80%);
+  --warning-color: oklab(from var(--warning-bg-color) var(--standalone-color-oklab));
+
+  /* Error */
+  --error-bg-color: {{colors.error.light.hex}};
+  --error-fg-color: {{colors.on_error.light.hex}};
+  --error-color: oklab(from var(--error-bg-color) var(--standalone-color-oklab));
+
+  /* Window / view */
+  --window-bg-color: {{colors.surface.light.hex}};
+  --window-fg-color: {{colors.on_surface.light.hex}};
+  --view-bg-color: {{colors.surface.light.hex}};
+  --view-fg-color: {{colors.on_surface.light.hex}};
+
+  /* Header bar */
+  --headerbar-bg-color: {{colors.surface_container.light.hex}};
+  --headerbar-fg-color: {{colors.on_surface.light.hex}};
+  --headerbar-border-color: {{colors.on_surface.light.hex}};
+  --headerbar-backdrop-color: {{colors.surface_dim.light.hex}};
+  --headerbar-shade-color: rgb(0 0 0 / 12%);
+  --headerbar-darker-shade-color: rgb(0 0 0 / 12%);
+
+  /* Sidebar */
+  --sidebar-bg-color: {{colors.surface_container_low.light.hex}};
+  --sidebar-fg-color: {{colors.on_surface.light.hex}};
+  --sidebar-backdrop-color: {{colors.surface_container_lowest.light.hex}};
+  --sidebar-border-color: rgb(0 0 0 / 7%);
+  --sidebar-shade-color: rgb(0 0 0 / 7%);
+
+  /* Secondary sidebar */
+  --secondary-sidebar-bg-color: {{colors.surface_container.light.hex}};
+  --secondary-sidebar-fg-color: {{colors.on_surface.light.hex}};
+  --secondary-sidebar-backdrop-color: {{colors.surface_container_low.light.hex}};
+  --secondary-sidebar-border-color: rgb(0 0 0 / 7%);
+  --secondary-sidebar-shade-color: rgb(0 0 0 / 7%);
+
+  /* Card */
+  --card-bg-color: {{colors.surface_container_high.light.hex}};
+  --card-fg-color: {{colors.on_surface.light.hex}};
+  --card-shade-color: rgb(0 0 0 / 7%);
+
+  /* Tab overview + thumbnails */
+  --overview-bg-color: {{colors.surface_container.light.hex}};
+  --overview-fg-color: {{colors.on_surface.light.hex}};
+  --thumbnail-bg-color: {{colors.surface_container_high.light.hex}};
+  --thumbnail-fg-color: {{colors.on_surface.light.hex}};
+
+  /* Active toggle */
+  --active-toggle-bg-color: {{colors.surface_container_high.light.hex}};
+  --active-toggle-fg-color: {{colors.on_surface.light.hex}};
+
+  /* Dialog */
+  --dialog-bg-color: {{colors.surface_container_high.light.hex}};
+  --dialog-fg-color: {{colors.on_surface.light.hex}};
+
+  /* Popover */
+  --popover-bg-color: {{colors.surface_container_high.light.hex}};
+  --popover-fg-color: {{colors.on_surface.light.hex}};
+  --popover-shade-color: rgb(0 0 0 / 7%);
+
+  /* Misc */
+  --shade-color: rgb(0 0 0 / 7%);
+  --scrollbar-outline-color: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Accent */
+    --accent-bg-color: {{colors.primary.dark.hex}};
+    --accent-fg-color: {{colors.on_primary.dark.hex}};
+    --accent-color: oklab(from var(--accent-bg-color) var(--standalone-color-oklab));
+
+    /* Destructive */
+    --destructive-bg-color: {{colors.error.dark.hex}};
+    --destructive-fg-color: {{colors.on_error.dark.hex}};
+    --destructive-color: oklab(from var(--destructive-bg-color) var(--standalone-color-oklab));
+
+    /* Success */
+    --success-bg-color: {{colors.secondary.dark.hex}};
+    --success-fg-color: {{colors.on_secondary.dark.hex}};
+    --success-color: oklab(from var(--success-bg-color) var(--standalone-color-oklab));
+
+    /* Warning */
+    --warning-bg-color: {{colors.tertiary.dark.hex}};
+    --warning-fg-color: rgb(0 0 0 / 80%);
+    --warning-color: oklab(from var(--warning-bg-color) var(--standalone-color-oklab));
+
+    /* Error */
+    --error-bg-color: {{colors.error.dark.hex}};
+    --error-fg-color: {{colors.on_error.dark.hex}};
+    --error-color: oklab(from var(--error-bg-color) var(--standalone-color-oklab));
+
+    /* Window / view */
+    --window-bg-color: {{colors.surface.dark.hex}};
+    --window-fg-color: {{colors.on_surface.dark.hex}};
+    --view-bg-color: {{colors.surface.dark.hex}};
+    --view-fg-color: {{colors.on_surface.dark.hex}};
+
+    /* Header bar */
+    --headerbar-bg-color: {{colors.surface_container.dark.hex}};
+    --headerbar-fg-color: {{colors.on_surface.dark.hex}};
+    --headerbar-border-color: {{colors.on_surface.dark.hex}};
+    --headerbar-backdrop-color: {{colors.surface_dim.dark.hex}};
+    --headerbar-shade-color: rgb(0 0 0 / 36%);
+    --headerbar-darker-shade-color: rgb(0 0 0 / 90%);
+
+    /* Sidebar */
+    --sidebar-bg-color: {{colors.surface_container_low.dark.hex}};
+    --sidebar-fg-color: {{colors.on_surface.dark.hex}};
+    --sidebar-backdrop-color: {{colors.surface_container_lowest.dark.hex}};
+    --sidebar-border-color: rgb(0 0 0 / 36%);
+    --sidebar-shade-color: rgb(0 0 0 / 25%);
+
+    /* Secondary sidebar */
+    --secondary-sidebar-bg-color: {{colors.surface_container.dark.hex}};
+    --secondary-sidebar-fg-color: {{colors.on_surface.dark.hex}};
+    --secondary-sidebar-backdrop-color: {{colors.surface_container_low.dark.hex}};
+    --secondary-sidebar-border-color: rgb(0 0 0 / 36%);
+    --secondary-sidebar-shade-color: rgb(0 0 0 / 25%);
+
+    /* Card */
+    --card-bg-color: {{colors.surface_container_high.dark.hex}};
+    --card-fg-color: {{colors.on_surface.dark.hex}};
+    --card-shade-color: rgb(0 0 0 / 36%);
+
+    /* Tab overview + thumbnails */
+    --overview-bg-color: {{colors.surface_container.dark.hex}};
+    --overview-fg-color: {{colors.on_surface.dark.hex}};
+    --thumbnail-bg-color: {{colors.surface_container_high.dark.hex}};
+    --thumbnail-fg-color: {{colors.on_surface.dark.hex}};
+
+    /* Active toggle */
+    --active-toggle-bg-color: {{colors.surface_container_high.dark.hex}};
+    --active-toggle-fg-color: {{colors.on_surface.dark.hex}};
+
+    /* Dialog */
+    --dialog-bg-color: {{colors.surface_container_high.dark.hex}};
+    --dialog-fg-color: {{colors.on_surface.dark.hex}};
+
+    /* Popover */
+    --popover-bg-color: {{colors.surface_container_high.dark.hex}};
+    --popover-fg-color: {{colors.on_surface.dark.hex}};
+    --popover-shade-color: rgb(0 0 0 / 25%);
+
+    /* Misc */
+    --shade-color: rgb(0 0 0 / 25%);
+    --scrollbar-outline-color: rgb(0 0 0 / 50%);
+  }
+}
+
+/* Optional compatibility named colors (GTK supports @define-color) */
+@define-color accent_bg_color        var(--accent-bg-color);
+@define-color accent_fg_color        var(--accent-fg-color);
+@define-color accent_color           var(--accent-color);
+
+@define-color destructive_bg_color   var(--destructive-bg-color);
+@define-color destructive_fg_color   var(--destructive-fg-color);
+@define-color destructive_color      var(--destructive-color);
+
+@define-color success_bg_color       var(--success-bg-color);
+@define-color success_fg_color       var(--success-fg-color);
+@define-color success_color          var(--success-color);
+
+@define-color warning_bg_color       var(--warning-bg-color);
+@define-color warning_fg_color       var(--warning-fg-color);
+@define-color warning_color          var(--warning-color);
+
+@define-color error_bg_color         var(--error-bg-color);
+@define-color error_fg_color         var(--error-fg-color);
+@define-color error_color            var(--error-color);
+
+@define-color window_bg_color        var(--window-bg-color);
+@define-color window_fg_color        var(--window-fg-color);
+@define-color view_bg_color          var(--view-bg-color);
+@define-color view_fg_color          var(--view-fg-color);
+
+@define-color headerbar_bg_color     var(--headerbar-bg-color);
+@define-color headerbar_fg_color     var(--headerbar-fg-color);
+@define-color headerbar_border_color var(--headerbar-border-color);
+@define-color headerbar_backdrop_color var(--headerbar-backdrop-color);
+@define-color headerbar_shade_color  var(--headerbar-shade-color);
+
+@define-color sidebar_bg_color       var(--sidebar-bg-color);
+@define-color sidebar_fg_color       var(--sidebar-fg-color);
+@define-color sidebar_backdrop_color var(--sidebar-backdrop-color);
+
+/* Small extras */
+.navigation-sidebar {
+  background-color: var(--sidebar-bg-color);
+  color: var(--sidebar-fg-color);
+}
+
+window.csd,
+window.csd decoration {
+  box-shadow: none;
+}

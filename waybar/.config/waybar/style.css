@@ -1,0 +1,390 @@
+@import "colors/colors.css";
+
+* {
+    font-family: JetBrainsMono Nerd Font Propo;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    outline: none;
+    box-shadow: none;
+    text-shadow: none;
+    transition: all 0.3s ease;
+}
+
+window#waybar {
+    background: alpha(@background, 0.9);
+    border-radius: 16px;
+}
+
+/* ===================== WORKSPACES ===================== */
+#workspaces {
+    background: @surface_container;
+    border-radius: 12px;
+    padding: 0 4px;
+    margin: 5px 3px;
+}
+
+#workspaces button {
+    background: transparent;
+    color: @on_surface_variant;
+    padding: 0 8px;
+    margin: 6px 2px;
+    border-radius: 8px;
+    min-width: 20px;
+}
+
+#workspaces button.active {
+    background: @primary;
+    color: @on_primary;
+    padding: 0 16px;
+}
+
+#workspaces button:hover {
+    background: @surface_container_highest;
+    color: @on_surface;
+}
+
+#workspaces button.active:hover {
+    background: @primary;
+    color: @on_primary;
+}
+
+/* ===================== PLAYER MODULE ===================== */
+#custom-player {
+    background: @surface_container;
+    border-radius: 12px;
+    margin: 5px 3px;
+    padding: 0 12px;
+    color: @on_surface;
+}
+
+#custom-player:hover {
+    background: @surface_container_high;
+    color: @primary;
+}
+
+#custom-player.Playing {
+    color: @primary;
+}
+
+#custom-player.Paused {
+    color: @on_surface_variant;
+}
+
+#custom-player.Stopped,
+#custom-player:not(.Playing):not(.Paused) {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+    min-height: 0;
+    opacity: 0;
+    font-size: 0;
+}
+
+/* ===================== CLIPBOARD ===================== */
+#custom-clipboard {
+    background: @surface_container;
+    color: @secondary;
+    font-size: 16px;
+    padding: 0 12px;
+    margin: 5px 3px;
+    border-radius: 12px;
+}
+
+#custom-clipboard:hover {
+    color: @primary;
+    background: @surface_container_high;
+}
+
+/* ===================== LANGUAGE / KEYBOARD ===================== */
+#language {
+    background: @surface_container;
+    color: @secondary;
+    padding: 0 12px;
+    margin: 5px 3px;
+    border-radius: 12px;
+}
+
+#language:hover {
+    color: @primary;
+    background: @surface_container_high;
+}
+
+/* ===================== AUDIO GROUP ===================== */
+#audio {
+    background: @surface_container;
+    border-radius: 12px;
+    margin: 5px 3px;
+    padding: 0;
+}
+
+#pulseaudio {
+    background: transparent;
+    color: @tertiary;
+    padding: 0 12px;
+    border-radius: 12px;
+    min-width: 24px;
+    font-size: 16px;
+}
+
+#pulseaudio:hover {
+    color: @primary;
+    background: @surface_container_high;
+}
+
+#pulseaudio.muted {
+    color: @error;
+}
+
+#pulseaudio-slider {
+    background: transparent;
+    padding: 0 12px 0 4px;
+    margin: 0;
+}
+
+#pulseaudio-slider slider {
+    background: @primary;
+    min-height: 12px;
+    min-width: 12px;
+    border-radius: 50%;
+}
+
+#pulseaudio-slider slider:hover {
+    background: @tertiary;
+    min-height: 14px;
+    min-width: 14px;
+}
+
+#pulseaudio-slider trough {
+    background: @surface_container_high;
+    min-width: 100px;
+    min-height: 6px;
+    border-radius: 6px;
+}
+
+#pulseaudio-slider highlight {
+    background: @primary;
+    border-radius: 6px;
+}
+
+/* ===================== CENTER: NOTIFICATIONS ===================== */
+#custom-notifications {
+    background: @surface_container;
+    color: @secondary;
+    font-size: 16px;
+    padding: 0 12px;
+    margin: 5px 3px;
+    border-radius: 12px;
+}
+
+#custom-notifications:hover {
+    color: @primary;
+    background: @surface_container_high;
+}
+
+/* ===================== CENTER: CLOCK ===================== */
+#clock {
+    background: @surface_container;
+    color: @secondary;
+    padding: 0 14px;
+    margin: 5px 3px;
+    border-radius: 12px;
+}
+
+#clock:hover {
+    color: @primary;
+    background: @surface_container_high;
+}
+
+/* ===================== CENTER: ACTIVE APP ICON ONLY ===================== */
+#window {
+    background: @surface_container;
+    padding: 0 12px;
+    margin: 5px 3px;
+    border-radius: 12px;
+    min-width: 0;
+}
+
+#window label {
+    font-size: 0;
+    padding: 0;
+    margin: 0;
+}
+
+window#waybar.empty #window {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+#window:hover {
+    background: @surface_container_high;
+}
+
+/* ===================== IP ADDRESS (network#ip) ===================== */
+#ipaddr {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+}
+
+#ipaddr #network.ip {
+    background: @surface_container;
+    border-radius: 12px;
+    margin: 5px 3px;
+    padding: 0 12px;
+    color: @secondary;
+}
+
+#ipaddr #network.ip:hover {
+    color: @primary;
+    background: @surface_container_high;
+}
+
+#ipaddr #network.ip.disconnected,
+#ipaddr #network.ip.disabled,
+#ipaddr #network.ip.linked {
+    background: transparent;
+    padding: 0;
+    margin: 0;
+    min-width: 0;
+    min-height: 0;
+    opacity: 0;
+    font-size: 0;
+}
+
+/* ===================== HARDWARE GROUP ===================== */
+#hardware {
+    background: @surface_container;
+    border-radius: 12px;
+    margin: 5px 3px;
+    padding: 0 4px;
+}
+
+#cpu,
+#memory,
+#temperature {
+    background: transparent;
+    padding: 0 8px;
+    font-size: 14px;
+}
+
+#cpu { color: @primary; }
+#memory { color: @secondary; }
+#temperature { color: @tertiary; }
+
+#cpu:hover,
+#memory:hover,
+#temperature:hover {
+    color: @on_surface;
+    background: @surface_container_high;
+}
+
+#temperature.critical {
+    color: @error;
+}
+
+/* ===================== BATTERY ===================== */
+#battery {
+    background: @surface_container;
+    color: @primary;
+    padding: 0 12px;
+    margin: 5px 3px;
+    border-radius: 12px;
+}
+
+#battery:hover {
+    color: @tertiary;
+    background: @surface_container_high;
+}
+
+#battery.warning {
+    color: @on_warning_container;
+    background: @warning_container;
+}
+
+#battery.critical {
+    color: @on_error;
+    background: @error;
+}
+
+/* ===================== CONNECTIVITY (tray nm-applet + bluetooth) ===================== */
+#connectivity {
+    background: @surface_container;
+    border-radius: 12px;
+    margin: 5px 3px;
+    padding: 0 4px;
+}
+
+#connectivity #tray {
+    background: transparent;
+    padding: 0 6px;
+    margin: 0;
+}
+
+/* tray item classes are documented by Waybar (active/passive/needs-attention) :contentReference[oaicite:3]{index=3} */
+#connectivity #tray > .active,
+#connectivity #tray > .passive,
+#connectivity #tray > .needs-attention {
+    padding: 0 6px;
+    border-radius: 8px;
+}
+
+#connectivity #tray > .active:hover,
+#connectivity #tray > .passive:hover,
+#connectivity #tray > .needs-attention:hover {
+    background: @surface_container_high;
+}
+
+#connectivity #bluetooth {
+    background: transparent;
+    color: @tertiary;
+    padding: 0 8px;
+    margin: 0;
+    border-radius: 8px;
+}
+
+#connectivity #bluetooth:hover {
+    color: @primary;
+    background: @surface_container_high;
+}
+
+#connectivity #bluetooth.connected {
+    color: @primary;
+}
+
+#connectivity #bluetooth.disabled,
+#connectivity #bluetooth.off {
+    color: @on_surface_variant;
+}
+
+/* ===================== POWER MENU ===================== */
+#custom-powermenu {
+    background: @surface_container;
+    color: @error;
+    font-size: 14px;
+    padding: 0 12px;
+    margin: 5px 3px;
+    margin-right: 6px;
+    border-radius: 12px;
+}
+
+#custom-powermenu:hover {
+    background: @error;
+    color: @on_error;
+}
+
+/* ===================== TOOLTIP ===================== */
+tooltip {
+    background: @surface_container;
+    color: @on_surface;
+    border-radius: 12px;
+    padding: 8px 12px;
+    border: 1px solid @outline_variant;
+}
+
+tooltip label {
+    color: @on_surface;
+    padding: 4px;
+}

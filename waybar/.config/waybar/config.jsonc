@@ -1,0 +1,250 @@
+{
+  "layer": "top",
+  "position": "top",
+  "height": 30,
+  "spacing": 0,
+  "margin-top": 10,
+  "margin-left": 10,
+  "margin-right": 10,
+  "margin-bottom": 0,
+  "reload_style_on_change": true,
+
+  "modules-left": [
+    "hyprland/workspaces",
+    "custom/player",
+    "hyprland/language",
+    "custom/clipboard"
+  ],
+
+  "modules-center": [
+    "custom/notifications",
+    "clock",
+    "hyprland/window"
+  ],
+
+  "modules-right": [
+    "group/ipaddr",
+    "group/hardware",
+    "battery",
+    "group/connectivity",
+    "custom/powermenu"
+  ],
+
+  "hyprland/workspaces": {
+    "disable-scroll": true,
+    "all-outputs": false,
+    "format": "{name}",
+    "persistent-workspaces": {
+      "1": [],
+      "2": [],
+      "3": [],
+      "4": [],
+      "5": []
+    }
+  },
+
+  "custom/player": {
+    "exec": "playerctl -a metadata --format '{\"text\": \"{{artist}} - {{markup_escape(title)}}\", \"tooltip\": \"{{playerName}}: {{markup_escape(title)}}\", \"alt\": \"{{status}}\", \"class\": \"{{status}}\"}' -F 2>/dev/null",
+    "format": "{icon}  {text}",
+    "format-icons": {
+      "Playing": "󰏤",
+      "Paused": "󰐊",
+      "Stopped": ""
+    },
+    "return-type": "json",
+    "max-length": 40,
+    "on-click": "playerctl play-pause",
+    "on-click-right": "playerctl next",
+    "on-click-middle": "playerctl previous",
+    "on-scroll-up": "playerctl position 5+",
+    "on-scroll-down": "playerctl position 5-"
+  },
+
+  "custom/clipboard": {
+    "tooltip": false,
+    "format": "󰅌",
+    "on-click": "setsid ~/.config/rofi/scripts/clipboard/clipboard.sh"
+  },
+
+  "clock": {
+    "timezone": "Europe/Berlin",
+    "tooltip-format": "<big>{:L%Y %B}</big>\n<tt><small>{calendar}</small></tt>",
+    "format": "{:L%a %d %b %H:%M}",
+    "format-alt": "{:L%Y-%m-%d %H:%M}",
+    "calendar": {
+      "mode": "year",
+      "mode-mon-col": 3,
+      "weeks-pos": "right",
+      "on-scroll": 1,
+      "format": {
+        "months": "<span><b>{}</b></span>",
+        "days": "<span><b>{}</b></span>",
+        "weeks": "<span><b>W{}</b></span>",
+        "weekdays": "<span><b>{}</b></span>",
+        "today": "<span><b><u>{}</u></b></span>"
+      }
+    }
+  },
+
+  "group/audio": {
+    "orientation": "horizontal",
+    "drawer": {
+      "transition-duration": 300,
+      "transition-left-to-right": true,
+      "click-to-reveal": false
+    },
+    "modules": [
+      "pulseaudio",
+      "pulseaudio/slider"
+    ]
+  },
+
+  "pulseaudio": {
+    "tooltip": true,
+    "tooltip-format": "Volume: {volume}%",
+    "scroll-step": 5,
+    "format": "{icon}",
+    "format-muted": "󰝟",
+    "format-icons": {
+      "headphone": "󰋋",
+      "hands-free": "󰋋",
+      "headset": "󰋋",
+      "phone": "",
+      "portable": "",
+      "car": "",
+      "default": ["󰕿", "󰖀", "󰕾"]
+    },
+    "on-click": "pamixer -t",
+    "on-click-right": "pavucontrol",
+    "on-scroll-up": "pamixer -i 5",
+    "on-scroll-down": "pamixer -d 5"
+  },
+
+  "pulseaudio/slider": {
+    "tooltip": false,
+    "min": 0,
+    "max": 100,
+    "orientation": "horizontal"
+  },
+
+  "hyprland/language": {
+    "format": "{}",
+    "format-en": "󰌌 US",
+    "format-fr": "󰌌 FR",
+    "format-de": "󰌌 DE",
+    "tooltip": true,
+    "tooltip-format": "Keyboard Layout: {}",
+    "keyboard-name": "at-translated-set-2-keyboard",
+    "on-click": "hyprctl switchxkblayout at-translated-set-2-keyboard next"
+  },
+
+  "custom/notifications": {
+    "tooltip": true,
+    "format": "{icon}",
+    "format-icons": {
+      "notification": "󱅫",
+      "none": "󰂚",
+      "dnd-notification": "󰂛",
+      "dnd-none": "󰪑",
+      "inhibited-notification": "󱅫",
+      "inhibited-none": "󰂚",
+      "dnd-inhibited-notification": "󰂛",
+      "dnd-inhibited-none": "󰪑"
+    },
+    "return-type": "json",
+    "exec-if": "which swaync-client",
+    "exec": "swaync-client -swb",
+    "on-click": "swaync-client -t -sw",
+    "on-click-right": "swaync-client -d -sw",
+    "escape": true
+  },
+
+  "hyprland/window": {
+    "icon": true,
+    "icon-size": 20,
+    "format": ""
+  },
+
+  "group/ipaddr": {
+    "orientation": "horizontal",
+    "modules": [
+      "network#ip"
+    ]
+  },
+
+  "network#ip": {
+    "tooltip": true,
+    "format": " {ipaddr}",
+    "format-wifi": " {ipaddr}",
+    "format-ethernet": " {ipaddr}",
+    "format-disconnected": "",
+    "format-linked": "",
+    "format-disabled": "",
+    "tooltip-format": "{ifname} - {ipaddr}",
+    "max-length": 32
+  },
+
+  "group/hardware": {
+    "orientation": "horizontal",
+    "modules": [
+      "cpu",
+      "memory",
+      "temperature"
+    ]
+  },
+
+  "cpu": {
+    "format": " {usage}%",
+    "tooltip": true,
+    "tooltip-format": "CPU Usage: {usage}%",
+    "interval": 2
+  },
+
+  "memory": {
+    "format": " {percentage}%",
+    "tooltip": true,
+    "tooltip-format": "RAM: {used:0.1f}GB / {total:0.1f}GB",
+    "interval": 2
+  },
+
+  "temperature": {
+    "interval": 2,
+    "hwmon-path": "/sys/class/hwmon/hwmon3/temp1_input",
+    "critical-threshold": 80,
+    "format-critical": "󰔏 {temperatureC}°C",
+    "format": "󰔏 {temperatureC}°C",
+    "tooltip-format": "CPU Temperature: {temperatureC}°C"
+  },
+
+  "battery": {
+    "states": {
+      "good": 95,
+      "warning": 30,
+      "critical": 15
+    },
+    "format": "{icon} {capacity}%",
+    "format-charging": "󰂄 {capacity}%",
+    "format-plugged": "󰂄 {capacity}%",
+    "format-icons": ["󰁺", "󰁻", "󰁼", "󰁽", "󰁾", "󰁿", "󰂀", "󰂁", "󰂂", "󰁹"],
+    "tooltip-format": "Battery: {capacity}% - {timeTo}"
+  },
+
+  "group/connectivity": {
+    "orientation": "horizontal",
+    "modules": [
+      "tray"
+    ]
+  },
+
+  "tray": {
+    "icon-size": 18,
+    "spacing": 8,
+    "show-passive-items": false
+  },
+
+  "custom/powermenu": {
+    "tooltip": false,
+    "format": "⏻",
+    "on-click": "setsid /home/j4kuuu/.config/rofi/scripts/power/power.sh"
+  }
+}

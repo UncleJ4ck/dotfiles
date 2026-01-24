@@ -39,3 +39,6 @@ export ANTIDOTE_HOME="$XDG_CACHE_HOME/antidote"
 # zsh-you-should-use
 export YSU_MESSAGE_POSITION="after"
 export YSU_MODE=ALL
+
+# Claude code
+export CLAUDE_CODE_OAUTH_TOKEN="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"

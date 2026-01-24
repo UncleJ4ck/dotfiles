@@ -4,7 +4,7 @@ palette = "matugen"
 add_newline = true
 
 # Left prompt
-format = """
+format = """\
 $username\
 $hostname\
 $directory\
@@ -26,11 +26,13 @@ $line_break\
 $character"""
 
 # Right prompt
-right_format = """
+right_format = """\
 $time\
 $battery"""
 
+# --------------------------------------------------------------------
 # Matugen-driven palette
+# --------------------------------------------------------------------
 [palettes.matugen]
 bg        = "#1a1110"
 fg        = "#f1dedc"
@@ -40,57 +42,89 @@ secondary = "#e7bdb7"
 tertiary  = "#dfc38c"
 error     = "#ffb4ab"
 
-# Your custom colors defined in matugen config.toml as:
-# [config.custom_colors.warning] / info / success
-# Available in templates as: colors.warning.default.hex (etc.) :contentReference[oaicite:5]{index=5}
 warning   = "#f5bd6f"
 info      = "#b8c4ff"
 success   = "#b1d18a"
 
-# ---------------------------
-# Identity / Path
-# ---------------------------
+# Light-ish bubble backgrounds (Matugen will keep them coherent)
+id_bg        = "#271d1c"
+dir_bg       = "#322826"
+git_bg       = "#271d1c"
+git_status_bg= "#322826"
+lang_bg      = "#322826"
+cloud_bg     = "#271d1c"
+runtime_bg   = "#271d1c"
+time_bg      = "#322826"
+battery_bg   = "#322826"
 
+# Bubble text colors
+id_fg   = "#f1dedc"
+dir_fg  = "#f1dedc"
+git_fg  = "#f1dedc"
+lang_fg = "#f1dedc"
+
+# Accents inside bubbles
+dir_icon     = "#ffb4aa"
+dir_repo_fg  = "#ffb4aa"
+git_icon     = "#e7bdb7"
+
+# Status / character bubbles
+status_bg    = "#93000a"
+status_fg    = "#ffdad6"
+char_bg      = "#ffb4aa"
+char_fg      = "#561e18"
+char_err_bg  = "#93000a"
+char_err_fg  = "#ffdad6"
+char_vim_bg  = "#dfc38c"
+char_vim_fg  = "#3e2e04"
+
+
+# --------------------------------------------------------------------
+# Identity bubbles
+# --------------------------------------------------------------------
 [username]
 show_always = false
-format = "[$user]($style)"
-style_user = "bold primary"
-style_root = "bold error"
+style_user = "bold fg:primary bg:id_bg"
+style_root = "bold fg:error bg:id_bg"
+format = "[](fg:id_bg)[ $user ]($style)[](fg:id_bg) "
 
 [hostname]
 ssh_only = true
-format = "[@$hostname]($style) "
-style = "muted"
+style = "fg:muted bg:id_bg"
+format = "[](fg:id_bg)[ @$hostname ]($style)[](fg:id_bg) "
 
+
+# --------------------------------------------------------------------
+# Directory bubble (always, including in git repos)
+# --------------------------------------------------------------------
 [directory]
-format = "[$path]($style)[$read_only]($read_only_style) "
-style = "bold fg"
-truncation_length = 4
-truncation_symbol = "…/"
-truncate_to_repo = true
-read_only = " 󰌾"
-read_only_style = "error"
 home_symbol = "~"
+truncation_length = 0
+truncate_to_repo = false
 
-# ---------------------------
-# Git
-# ---------------------------
+read_only = " 󰌾"
+read_only_style = "bold fg:error bg:dir_bg"
 
+style = "bold fg:dir_fg bg:dir_bg"
+format = "[](fg:dir_bg)[ 󰉋 ](bold fg:dir_icon bg:dir_bg)[ $path ]($style)[$read_only]($read_only_style)[](fg:dir_bg) "
+
+# --------------------------------------------------------------------
+# Git bubbles
+# --------------------------------------------------------------------
 [git_branch]
 symbol = " "
-format = "[$symbol$branch]($style) "
-style = "bold secondary"
+style = "bold fg:git_fg bg:git_bg"
+format = "[](fg:git_bg)[ $symbol$branch ]($style)[](fg:git_bg) "
 truncation_length = 24
 
 [git_state]
-format = '[\($state( $progress_current/$progress_total)\)]($style) '
-style = "muted"
+style = "fg:muted bg:git_bg"
+format = "([](fg:git_bg)[ $state( $progress_current/$progress_total) ]($style)[](fg:git_bg) )"
 
 [git_status]
-# This is what was showing as: ✘1!7?50 in your old config.
-# Now: clean Nerd Font icons + spacing.
-format = "([$all_status$ahead_behind]($style) )"
-style = "muted"
+style = "fg:muted bg:git_status_bg"
+format = "([](fg:git_status_bg)[ $all_status$ahead_behind ]($style)[](fg:git_status_bg) )"
+
 conflicted = "󰞇 ${count} "
 ahead      = "⇡${count} "
 behind     = "⇣${count} "
@@ -102,82 +136,86 @@ staged     = "󰐗 ${count} "
 renamed    = "󰑕 ${count} "
 deleted    = "󰍶 ${count} "
 
-# ---------------------------
-# Languages (your modules + icons)
-# ---------------------------
 
+# --------------------------------------------------------------------
+# Language bubbles
+# --------------------------------------------------------------------
 [python]
 symbol = " "
-format = '[$symbol($version)(\($virtualenv\))]($style) '
-style = "info"
+style = "bold fg:info bg:lang_bg"
+format = '[](fg:lang_bg)[ $symbol($version)(\($virtualenv\)) ]($style)[](fg:lang_bg) '
 
 [rust]
 symbol = " "
-format = "[$symbol($version)]($style) "
-style = "warning"
+style = "bold fg:warning bg:lang_bg"
+format = "[](fg:lang_bg)[ $symbol($version) ]($style)[](fg:lang_bg) "
 
 [golang]
 symbol = " "
-format = "[$symbol($version)]($style) "
-style = "success"
+style = "bold fg:success bg:lang_bg"
+format = "[](fg:lang_bg)[ $symbol($version) ]($style)[](fg:lang_bg) "
 
 [nodejs]
 symbol = " "
-format = "[$symbol($version)]($style) "
-style = "tertiary"
+style = "bold fg:tertiary bg:lang_bg"
+format = "[](fg:lang_bg)[ $symbol($version) ]($style)[](fg:lang_bg) "
 
 [lua]
 symbol = " "
-format = "[$symbol($version)]($style) "
-style = "secondary"
+style = "bold fg:secondary bg:lang_bg"
+format = "[](fg:lang_bg)[ $symbol($version) ]($style)[](fg:lang_bg) "
 
-# ---------------------------
-# Containers / Orchestration
-# ---------------------------
 
+# --------------------------------------------------------------------
+# Containers / Orchestration bubbles
+# --------------------------------------------------------------------
 [docker_context]
 symbol = " "
-format = "[$symbol$context]($style) "
-style = "primary"
 only_with_files = true
+style = "bold fg:primary bg:cloud_bg"
+format = "[](fg:cloud_bg)[ $symbol$context ]($style)[](fg:cloud_bg) "
 
 [kubernetes]
 disabled = false
 symbol = "󱃾 "
-format = '[$symbol$context(\($namespace\))]($style) '
-style = "secondary"
+style = "bold fg:secondary bg:cloud_bg"
+format = '[](fg:cloud_bg)[ $symbol$context(\($namespace\)) ]($style)[](fg:cloud_bg) '
 
-# ---------------------------
-# Runtime info
-# ---------------------------
 
+# --------------------------------------------------------------------
+# Runtime bubbles
+# --------------------------------------------------------------------
 [cmd_duration]
 min_time = 2000
-format = "[󰔟 $duration]($style) "
-style = "warning"
+style = "bold fg:warning bg:runtime_bg"
+format = "[](fg:runtime_bg)[ 󰔟 $duration ]($style)[](fg:runtime_bg) "
 
 [jobs]
 symbol = "󰜎 "
 number_threshold = 1
-format = "[$symbol$number]($style) "
-style = "muted"
+style = "fg:muted bg:runtime_bg"
+format = "[](fg:runtime_bg)[ $symbol$number ]($style)[](fg:runtime_bg) "
 
 [status]
 disabled = false
 symbol = "󰅚 "
-format = "[$symbol$status]($style) "
-style = "error"
+style = "bold fg:status_fg bg:status_bg"
+format = "[](fg:status_bg)[ $symbol$status ]($style)[](fg:status_bg) "
+
 
 # Push right prompt
 [fill]
 symbol = " "
 style = "none"
 
-# Prompt char
+# --------------------------------------------------------------------
+# Prompt character (also bubbled)
+# --------------------------------------------------------------------
 [character]
-success_symbol = "[❯](primary)"
-error_symbol   = "[❯](error)"
-vimcmd_symbol  = "[❮](info)"
+success_symbol = "[╰─](muted)[](fg:char_bg)[ ❯ ](bold fg:char_fg bg:char_bg)[](fg:char_bg) "
+error_symbol   = "[╰─](muted)[](fg:char_err_bg)[ ❯ ](bold fg:char_err_fg bg:char_err_bg)[](fg:char_err_bg) "
+vimcmd_symbol  = "[╰─](muted)[](fg:char_vim_bg)[ ❮ ](bold fg:char_vim_fg bg:char_vim_bg)[](fg:char_vim_bg) "
+
 
 [package]
 disabled = true
