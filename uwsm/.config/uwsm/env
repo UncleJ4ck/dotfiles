@@ -5,17 +5,27 @@ export XDG_CACHE_HOME="$HOME/.cache"
 export XDG_STATE_HOME="$HOME/.local/state"
 export XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}:/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share"
 
+# Wayland backends
+export GDK_BACKEND="wayland,x11,*"
+export SDL_VIDEODRIVER="wayland"
+export CLUTTER_BACKEND="wayland"
+export MOZ_ENABLE_WAYLAND=1
+export ELECTRON_OZONE_PLATFORM_HINT="auto"
+
 # Qt / Kvantum
+export QT_QPA_PLATFORM="wayland;xcb"
 export QT_QPA_PLATFORMTHEME="qt5ct:qt6ct"
 export QT_STYLE_OVERRIDE="kvantum"
+export QT_WAYLAND_DISABLE_WINDOWDECORATION=1
 
 # Cursor
 export XCURSOR_THEME="macOS"
 export XCURSOR_SIZE="24"
 export HYPRCURSOR_THEME="macOS-hypr"
 export HYPRCURSOR_SIZE="24"
-export HYPRCURSOR_THEME="macOS-hypr"
-export HYPRCURSOR_SIZE="24"
+
+# Screenshots
+export HYPRSHOT_DIR="$HOME/Pictures/Screenshots"
 
 # GTK2 rc file
 export GTK2_RC_FILES="$HOME/.config/gtk-2.0/gtkrc-2.0"

@@ -6,8 +6,17 @@ command -v brightnessctl >/dev/null 2>&1 || {
   exit 0
 }
 
-cur="$(brightnessctl --class=backlight get 2>/dev/null || true)"
-max="$(brightnessctl --class=backlight max 2>/dev/null || true)"
+# Timeout wrapper to prevent hangs
+run_cmd() {
+  if command -v timeout >/dev/null 2>&1; then
+    timeout 1s "$@" 2>/dev/null || true
+  else
+    "$@" 2>/dev/null || true
+  fi
+}
+
+cur="$(run_cmd brightnessctl --class=backlight get)"
+max="$(run_cmd brightnessctl --class=backlight max)"
 
 [[ -n "$cur" && -n "$max" ]] || {
   echo ""

@@ -6,9 +6,8 @@
     font-weight: bold;
     border: none;
     outline: none;
-    box-shadow: none;
     text-shadow: none;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease-out;
 }
 
 window#waybar {
@@ -16,37 +15,83 @@ window#waybar {
     border-radius: 16px;
 }
 
-/* ===================== WORKSPACES ===================== */
-#workspaces {
+/* ===================== WORKSPACE GROUPS ===================== */
+#custom-ws1,
+#custom-ws2,
+#custom-ws3,
+#custom-ws4,
+#custom-ws5,
+#custom-ws6,
+#custom-ws7,
+#custom-ws8,
+#custom-ws9 {
     background: @surface_container;
-    border-radius: 12px;
-    padding: 0 4px;
-    margin: 5px 3px;
-}
-
-#workspaces button {
-    background: transparent;
     color: @on_surface_variant;
-    padding: 0 8px;
-    margin: 6px 2px;
+    padding: 2px 8px;
+    margin: 5px 2px;
     border-radius: 8px;
-    min-width: 20px;
+    min-width: 18px;
+    min-height: 18px;
+    font-weight: bold;
+    border: 1px solid transparent;
+    box-shadow: none;
+    transition: all 0.2s ease-out;
 }
 
-#workspaces button.active {
+#custom-ws1:first-child {
+    margin-left: 6px;
+    border-radius: 10px 8px 8px 10px;
+}
+
+#custom-ws9 {
+    border-radius: 8px 10px 10px 8px;
+}
+
+#custom-ws1.active,
+#custom-ws2.active,
+#custom-ws3.active,
+#custom-ws4.active,
+#custom-ws5.active,
+#custom-ws6.active,
+#custom-ws7.active,
+#custom-ws8.active,
+#custom-ws9.active {
     background: @primary;
     color: @on_primary;
-    padding: 0 16px;
+    padding: 2px 10px;
+    border: 1px solid @primary_fixed_dim;
+    border-radius: 10px;
+    box-shadow: 0 0 4px 1px alpha(@primary, 0.4);
+    transition: all 0.2s ease-out;
 }
 
-#workspaces button:hover {
+#custom-ws1:hover,
+#custom-ws2:hover,
+#custom-ws3:hover,
+#custom-ws4:hover,
+#custom-ws5:hover,
+#custom-ws6:hover,
+#custom-ws7:hover,
+#custom-ws8:hover,
+#custom-ws9:hover {
     background: @surface_container_highest;
     color: @on_surface;
+    border: 1px solid @outline_variant;
 }
 
-#workspaces button.active:hover {
-    background: @primary;
+#custom-ws1.active:hover,
+#custom-ws2.active:hover,
+#custom-ws3.active:hover,
+#custom-ws4.active:hover,
+#custom-ws5.active:hover,
+#custom-ws6.active:hover,
+#custom-ws7.active:hover,
+#custom-ws8.active:hover,
+#custom-ws9.active:hover {
+    background: @primary_fixed_dim;
     color: @on_primary;
+    border-radius: 10px;
+    box-shadow: 0 0 5px 1px alpha(@primary, 0.5);
 }
 
 /* ===================== PLAYER MODULE ===================== */

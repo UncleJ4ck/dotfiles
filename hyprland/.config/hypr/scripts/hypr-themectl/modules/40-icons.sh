@@ -3,25 +3,26 @@
 set -Eeuo pipefail
 
 # =============================================================================
-# Color Matching (hex -> nearest Catppuccin accent)
+# Color Matching (hex -> nearest available Papirus folder color)
 # =============================================================================
-closest_catpp_accent() {
+# Dynamically extracts colors from SVG files and matches to the closest one
+closest_folder_color() {
   local hex="$1"
+  local theme_dir="$2"
   local py
   py="$(get_python)"
 
-  "$py" - "$hex" "$FLAVOR" "$PALETTE_JSON" 2>/dev/null <<'PYTHON' || echo "blue"
-import json, sys, math
+  "$py" - "$hex" "$theme_dir" 2>/dev/null <<'PYTHON' || echo "blue"
+import sys, math, os, re
+from pathlib import Path
 
-hex_in, flavor, palette_path = sys.argv[1], sys.argv[2], sys.argv[3]
-
-ACCENTS = [
-    "rosewater", "flamingo", "pink", "mauve", "red", "maroon", "peach",
-    "yellow", "green", "teal", "sky", "sapphire", "blue", "lavender"
-]
+hex_in = sys.argv[1]
+theme_dir = sys.argv[2]
 
 def hex_to_rgb(h):
     h = h.lstrip("#")
+    if len(h) < 6:
+        return (128, 128, 128)
     return (int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16))
 
 def rgb_to_lab(r, g, b):
@@ -48,31 +49,112 @@ def rgb_to_lab(r, g, b):
 def delta_e(l1, l2):
     return math.sqrt(sum((a - b) ** 2 for a, b in zip(l1, l2)))
 
-try:
-    data = json.load(open(palette_path, "r", encoding="utf-8"))
-except Exception:
-    print("blue")
+def extract_folder_color(svg_path):
+    """Extract the main folder body color from a folder SVG."""
+    try:
+        with open(svg_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        # The main folder body in Papirus/Catppuccin is a rect with width="40" height="26"
+        # Pattern: <rect style="fill:#HEXCOLOR" width="40" height="26" ...>
+        main_rect = re.search(r'<rect[^>]*style="fill:(#[0-9a-fA-F]{6})"[^>]*width="40"[^>]*height="26"', content)
+        if main_rect:
+            return main_rect.group(1)
+        # Fallback: try alternate attribute order
+        main_rect = re.search(r'<rect[^>]*width="40"[^>]*height="26"[^>]*style="fill:(#[0-9a-fA-F]{6})"', content)
+        if main_rect:
+            return main_rect.group(1)
+        # Last fallback: find any fill color that's not too light/dark
+        fills = re.findall(r'fill:(#[0-9a-fA-F]{6})', content)
+        for fill in fills:
+            r, g, b = hex_to_rgb(fill)
+            lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+            sat = (max(r, g, b) - min(r, g, b)) / 255 if max(r, g, b) > 0 else 0
+            if 0.2 < lum < 0.8 and sat > 0.1:
+                return fill
+    except Exception:
+        pass
+    return None
+
+def get_color_name_from_svg(filename):
+    """Extract color name from folder-{color}.svg or folder-{color}-*.svg"""
+    base = os.path.basename(filename)
+    if not base.startswith('folder-'):
+        return None
+    # Remove folder- prefix and .svg suffix
+    name = base[7:-4] if base.endswith('.svg') else base[7:]
+    # For folder-blue-documents.svg, we want "blue"
+    # For folder-cat-mocha-blue.svg, we want "cat-mocha-blue"
+    # Check if it's a base folder (folder-{color}.svg)
+    return name
+
+# Find all unique folder color variants
+places_dir = Path(theme_dir) / "48x48" / "places"
+if not places_dir.exists():
+    # Try other sizes
+    for size in ["64x64", "32x32", "24x24", "22x22"]:
+        places_dir = Path(theme_dir) / size / "places"
+        if places_dir.exists():
+            break
+
+color_hex_map = {}
+
+if places_dir.exists():
+    # Find colors by looking at folder-{color}-documents.svg files
+    # This works for both standard (folder-blue-documents.svg) and
+    # Catppuccin (folder-cat-mocha-blue-documents.svg) naming schemes
+    seen_colors = set()
+    for svg_file in places_dir.glob("folder-*-documents.svg"):
+        # Extract color name: folder-{color}-documents.svg -> {color}
+        stem = svg_file.stem  # e.g., "folder-cat-mocha-blue-documents"
+        if stem.startswith("folder-") and stem.endswith("-documents"):
+            color = stem[7:-10]  # Remove "folder-" prefix and "-documents" suffix
+            if color and color not in seen_colors:
+                seen_colors.add(color)
+                # Get hex from the documents variant itself
+                hex_color = extract_folder_color(svg_file)
+                if hex_color:
+                    color_hex_map[color] = hex_color
+
+if not color_hex_map:
+    print("cat-mocha-blue")
     sys.exit(0)
 
-pal = data.get(flavor, {})
-if isinstance(pal, dict) and "colors" in pal:
-    pal = pal["colors"]
+# Separate Catppuccin and standard Papirus colors
+catpp_colors = {k: v for k, v in color_hex_map.items() if k.startswith("cat-")}
+standard_colors = {k: v for k, v in color_hex_map.items() if not k.startswith("cat-")}
 
 lab1 = rgb_to_lab(*hex_to_rgb(hex_in))
-best, best_d = "blue", float("inf")
 
-for name in ACCENTS:
-    entry = pal.get(name)
-    if not entry:
-        continue
-    h = entry.get("hex", "") if isinstance(entry, dict) else (entry if isinstance(entry, str) else "")
-    if not h:
-        continue
-    d = delta_e(lab1, rgb_to_lab(*hex_to_rgb(h)))
-    if d < best_d:
-        best_d, best = d, name
+def find_best(colors):
+    best, best_d = None, float("inf")
+    for name, h in colors.items():
+        try:
+            d = delta_e(lab1, rgb_to_lab(*hex_to_rgb(h)))
+            if d < best_d:
+                best_d, best = d, name
+        except Exception:
+            continue
+    return best, best_d
 
-print(best)
+# CATPPUCCIN PRIORITY: Prefer Catppuccin colors
+# Only fall back to standard Papirus if:
+# 1. No Catppuccin colors available, OR
+# 2. Standard color is SIGNIFICANTLY closer (delta-E difference > 25)
+
+best_catpp, catpp_d = find_best(catpp_colors) if catpp_colors else (None, float("inf"))
+best_std, std_d = find_best(standard_colors) if standard_colors else (None, float("inf"))
+
+# Use Catppuccin unless standard is much closer
+FALLBACK_THRESHOLD = 25  # Only use standard if it's 25+ delta-E closer
+
+if best_catpp and (not best_std or catpp_d <= std_d + FALLBACK_THRESHOLD):
+    print(best_catpp)
+elif best_std:
+    print(best_std)
+elif best_catpp:
+    print(best_catpp)
+else:
+    print("cat-mocha-blue")
 PYTHON
 }
 
@@ -150,10 +232,34 @@ EOF
   fi
 }
 
-ensure_catpp_variants() {
+ensure_all_color_variants() {
+  local base_papirus="/usr/share/icons/$BASE_PAPIRUS_THEME"
+
+  # First: sync standard Papirus color variants from places folders only
+  # Use -L to follow symlinks (Papirus-Dark symlinks to Papirus)
+  if [[ -d "$base_papirus" ]]; then
+    dbg "Syncing standard Papirus color variants"
+    local size
+    for size in 22x22 24x24 32x32 48x48 64x64; do
+      local src_places="$base_papirus/$size/places"
+      local dst_places="$THEME_DIR/$size/places"
+      if [[ -d "$src_places" ]] || [[ -L "$src_places" ]]; then
+        mkdir -p "$dst_places"
+        # Use -L to dereference symlinks, copy folder-* SVGs only
+        rsync -aL --include='folder-*.svg' --exclude='*' "$src_places/" "$dst_places/" 2>/dev/null || true
+      fi
+    done
+  fi
+
+  # Then: overlay Catppuccin colors on top (without --delete to preserve standard colors)
   [[ -d "$CATPP_REPO_DIR/src" ]] || ensure_catpp_repo
   dbg "Syncing Catppuccin variants"
-  rsync -a --delete --exclude='index.theme' "$CATPP_REPO_DIR/src/" "$THEME_DIR/"
+  rsync -a --exclude='index.theme' "$CATPP_REPO_DIR/src/" "$THEME_DIR/"
+}
+
+# Keep old function name for compatibility
+ensure_catpp_variants() {
+  ensure_all_color_variants
 }
 
 # =============================================================================
@@ -305,22 +411,16 @@ apply_icons() {
   local wall="$1"
   info "Setting up icon theme"
 
-  local wall_type color
-  wall_type="$(detect_grayscale_wallpaper "$wall")"
-  dbg "Wallpaper type: $wall_type"
+  # Ensure theme directory and all color variants exist first
+  ensure_catpp_repo
+  ensure_theme_dir
+  ensure_all_color_variants
 
-  if [[ "$wall_type" == "grayscale-dark" ]]; then
-    color="$GRAY_DARK_COLOR"
-  elif [[ "$wall_type" == "grayscale-light" ]]; then
-    color="$GRAY_LIGHT_COLOR"
-  else
-    local hex accent
-    hex="$(pick_icon_hex)"
-    ensure_palette_json
-    accent="$(closest_catpp_accent "$hex")"
-    color="cat-${FLAVOR}-${accent}"
-    dbg "Icon color: $hex -> $accent -> $color"
-  fi
+  # Get matugen color and find the closest available folder color
+  local hex color
+  hex="$(pick_icon_hex)"
+  color="$(closest_folder_color "$hex" "$THEME_DIR")"
+  dbg "Icon color: $hex -> $color"
 
   local current
   current="$(theme_current_color)"
@@ -329,11 +429,6 @@ apply_icons() {
   fix_publicshare_icon
 
   if [[ "$current" != "$color" ]]; then
-    ensure_catpp_repo
-    ensure_palette_json
-    ensure_theme_dir
-    ensure_catpp_variants
-
     info "Applying folder color: $color"
     local pf
     pf="$(ensure_papirus_folders_bin)"

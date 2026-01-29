@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Timeout wrapper to prevent hangs
+run_cmd() {
+  if command -v timeout >/dev/null 2>&1; then
+    timeout 1s "$@" 2>/dev/null || true
+  else
+    "$@" 2>/dev/null || true
+  fi
+}
+
 if command -v wpctl >/dev/null 2>&1; then
-  out="$(wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null || true)"
+  out="$(run_cmd wpctl get-volume @DEFAULT_AUDIO_SINK@)"
   [[ -n "$out" ]] || { echo ""; exit 0; }
 
   vol="$(awk '{print $2}' <<<"$out" | tr -d '[:space:]')"
@@ -22,8 +31,8 @@ if command -v wpctl >/dev/null 2>&1; then
 fi
 
 if command -v pactl >/dev/null 2>&1; then
-  pct="$(pactl get-sink-volume @DEFAULT_SINK@ 2>/dev/null | grep -oP '\d+(?=%)' | head -1 || true)"
-  muted="$(pactl get-sink-mute @DEFAULT_SINK@ 2>/dev/null | awk '{print $2}' || true)"
+  pct="$(run_cmd pactl get-sink-volume @DEFAULT_SINK@ | grep -oP '\d+(?=%)' | head -1 || true)"
+  muted="$(run_cmd pactl get-sink-mute @DEFAULT_SINK@ | awk '{print $2}' || true)"
   [[ -n "$pct" ]] || { echo ""; exit 0; }
   [[ "$muted" == "yes" ]] && echo "󰝟 Muted" || echo "󰕾 ${pct}%"
   exit 0

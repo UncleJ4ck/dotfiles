@@ -45,6 +45,11 @@
   input_path  = "~/.config/matugen/templates/wm/hyprlock.conf"
   output_path = "~/.config/hypr/hyprlock/matugen/matugen-hyprlock.conf"
 
+[templates.hyprland]
+  input_path  = "~/.config/matugen/templates/wm/hyprland.conf"
+  output_path = "~/.config/hypr/matugen/colors.conf"
+  post_hook   = 'hyprctl reload'
+
 [templates.waybar]
   input_path  = "~/.config/matugen/templates/ui/waybar/colors.css"
   output_path = "~/.config/waybar/colors/colors.css"
@@ -61,7 +66,26 @@
 [templates.swaync]
   input_path  = "~/.config/matugen/templates/ui/swaync/colors.css"
   output_path = "~/.config/swaync/colors.css"
-  post_hook   = 'pkill -SIGUSR2 swaync'
+  post_hook   = 'swaync-client -rs 2>/dev/null || true'
+
+[templates.evercal]
+  input_path  = "~/.config/matugen/templates/ui/evercal/colors.css"
+  output_path = "~/.config/EverCal/colors.css"
+
+[templates.pywal_colors]
+  input_path  = "~/.config/matugen/templates/pywal/colors"
+  output_path = "~/.cache/wal/colors.tmp"
+  post_hook   = "mv -f ~/.cache/wal/colors.tmp ~/.cache/wal/colors && pywalfox update >/dev/null 2>&1 || true"
+
+[templates.pywal_colors_json]
+  input_path  = "~/.config/matugen/templates/pywal/colors.full.json"
+  output_path = "~/.cache/wal/colors.json.tmp"
+  post_hook   = "mv -f ~/.cache/wal/colors.json.tmp ~/.cache/wal/colors.json"
+
+[templates.discord_midnight]
+  input_path  = "~/.config/matugen/templates/apps/discord-midnight-matugen.theme.css"
+  output_path = "~/.config/vesktop/themes/midnight-matugen.theme.css"
+
 
 [config.custom_colors.warning]
   color = "#f9e2af"

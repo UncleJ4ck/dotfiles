@@ -31,8 +31,6 @@
   "script-fail-notify": true,
 
   "widgets": [
-    "label#calendar",
-    "label#weather",
     "buttons-grid",
     "volume",
     "backlight",
@@ -50,14 +48,6 @@
     },
     "dnd": {
       "text": "Do not disturb"
-    },
-    "label#calendar": {
-      "max-lines": 1,
-      "text": "󰃭  Loading..."
-    },
-    "label#weather": {
-      "max-lines": 1,
-      "text": "󰖐  Loading..."
     },
     "mpris": {
       "image-size": 96,
@@ -93,7 +83,7 @@
         },
         {
           "label": "󰄀",
-          "command": "sh -c 'grim -g \"$(slurp)\" - | wl-copy && notify-send \"Screenshot\" \"Copied to clipboard\"'"
+          "command": "sh -c 'region=$(slurp) && [ -n \"$region\" ] && grim -g \"$region\" - | wl-copy && notify-send \"Screenshot\" \"Copied to clipboard\"'"
         },
         {
           "label": "󰕾",

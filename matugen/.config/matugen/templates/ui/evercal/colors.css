@@ -1,0 +1,49 @@
+/* EverCal Matugen Colors */
+@define-color ec-dark-background {{colors.background.dark.hex}};
+@define-color ec-dark-surface {{colors.surface.dark.hex}};
+@define-color ec-dark-surface-variant {{colors.surface_variant.dark.hex}};
+@define-color ec-dark-on-surface-variant {{colors.on_surface_variant.dark.hex}};
+@define-color ec-dark-primary {{colors.primary.dark.hex}};
+@define-color ec-dark-primary-container {{colors.primary_container.dark.hex}};
+@define-color ec-dark-secondary {{colors.secondary.dark.hex}};
+@define-color ec-dark-tertiary {{colors.tertiary.dark.hex}};
+@define-color ec-dark-on-background {{colors.on_background.dark.hex}};
+@define-color ec-dark-on-surface {{colors.on_surface.dark.hex}};
+@define-color ec-dark-on-primary {{colors.on_primary.dark.hex}};
+@define-color ec-dark-on-primary-container {{colors.on_primary_container.dark.hex}};
+@define-color ec-dark-error {{colors.error.dark.hex}};
+@define-color ec-dark-outline {{colors.outline.dark.hex}};
+
+@define-color ec-light-background {{colors.background.light.hex}};
+@define-color ec-light-surface {{colors.surface.light.hex}};
+@define-color ec-light-surface-variant {{colors.surface_variant.light.hex}};
+@define-color ec-light-on-surface-variant {{colors.on_surface_variant.light.hex}};
+@define-color ec-light-primary {{colors.primary.light.hex}};
+@define-color ec-light-primary-container {{colors.primary_container.light.hex}};
+@define-color ec-light-secondary {{colors.secondary.light.hex}};
+@define-color ec-light-tertiary {{colors.tertiary.light.hex}};
+@define-color ec-light-on-background {{colors.on_background.light.hex}};
+@define-color ec-light-on-surface {{colors.on_surface.light.hex}};
+@define-color ec-light-on-primary {{colors.on_primary.light.hex}};
+@define-color ec-light-on-primary-container {{colors.on_primary_container.light.hex}};
+@define-color ec-light-error {{colors.error.light.hex}};
+@define-color ec-light-outline {{colors.outline.light.hex}};
+
+/* Optional event palette */
+@define-color ec-dark-event-1 {{colors.primary.dark.hex}};
+@define-color ec-dark-event-2 {{colors.secondary.dark.hex}};
+@define-color ec-dark-event-3 {{colors.tertiary.dark.hex}};
+@define-color ec-dark-event-4 {{colors.error.dark.hex}};
+@define-color ec-dark-event-5 {{colors.primary_container.dark.hex}};
+@define-color ec-dark-event-6 {{colors.secondary_container.dark.hex}};
+@define-color ec-dark-event-7 {{colors.tertiary_container.dark.hex}};
+@define-color ec-dark-event-8 {{colors.surface_variant.dark.hex}};
+
+@define-color ec-light-event-1 {{colors.primary.light.hex}};
+@define-color ec-light-event-2 {{colors.secondary.light.hex}};
+@define-color ec-light-event-3 {{colors.tertiary.light.hex}};
+@define-color ec-light-event-4 {{colors.error.light.hex}};
+@define-color ec-light-event-5 {{colors.primary_container.light.hex}};
+@define-color ec-light-event-6 {{colors.secondary_container.light.hex}};
+@define-color ec-light-event-7 {{colors.tertiary_container.light.hex}};
+@define-color ec-light-event-8 {{colors.surface_variant.light.hex}};

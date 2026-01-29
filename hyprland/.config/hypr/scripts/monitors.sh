@@ -26,7 +26,7 @@ set -euo pipefail
 #   POLL_INTERVAL    default: 1
 # -----------------------------------------------------------------------------
 
-DEBUG=0
+DEBUG="${DEBUG:-1}"
 ONCE=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -224,6 +224,13 @@ width_for() {
   echo 1920
 }
 
+monitor_has_mode() {
+  local name="$1"
+  jq -r --arg n "$name" '
+    (.[] | select(.name == $n) | ((.width // 0) > 0 and (.height // 0) > 0)) // false
+  ' <<<"$MONJSON"
+}
+
 scaled_px() {
   # scaled_px <pixels> <scale> -> integer pixels
   awk -v p="$1" -v s="$2" 'BEGIN { if (s==0) s=1; printf "%d", (p/s) }'
@@ -248,12 +255,22 @@ apply_layout() {
 
     # Re-read monitors to get latest state
     read_monitors
+    log "apply_layout: invoked (ONCE=${ONCE:-0} DEBUG=${DEBUG:-0})"
 
-    local lid ext_names=() ext n disable_lid lid_open
+    local lid ext_names=() ext n disable_lid lid_open lid_valid
     lid="$(detect_lid)"
     lid_open=1
-    if [[ -n "$lid" ]] && ! lid_is_open; then
-      lid_open=0
+    lid_valid=1
+    if [[ -n "$lid" ]]; then
+      if [[ "$(monitor_has_mode "$lid")" != "true" ]]; then
+        lid_valid=0
+      fi
+      if ! lid_is_open; then
+        lid_open=0
+      fi
+      if [[ "$lid_valid" -eq 0 ]]; then
+        lid_open=0
+      fi
     fi
 
     while IFS= read -r ext; do
@@ -266,14 +283,16 @@ apply_layout() {
     # or when lid is closed and at least one external is present.
     disable_lid=0
     if [[ -n "$lid" ]]; then
-      if [[ "$n" -ge "$LID_DISABLE_AT" ]]; then
+      if [[ "$lid_valid" -eq 0 ]]; then
+        disable_lid=1
+      elif [[ "$n" -ge "$LID_DISABLE_AT" ]]; then
         disable_lid=1
       elif [[ "$n" -ge 1 && "$lid_open" -eq 0 ]]; then
         disable_lid=1
       fi
     fi
 
-    log "Lid: ${lid:-<none>} | lid_open: $lid_open | externals(enabled): $n | disable_lid: $disable_lid"
+    log "Lid: ${lid:-<none>} | lid_open: $lid_open | lid_valid: $lid_valid | externals(enabled): $n | disable_lid: $disable_lid"
 
     local -a cmds=()
     local pos_x=0
@@ -301,17 +320,30 @@ apply_layout() {
     fi
 
     ((${#cmds[@]})) || exit 0
+    log "Commands: ${cmds[*]}"
     local batch
     batch="$(printf '%s ; ' "${cmds[@]}")"
     batch="${batch% ; }"
 
     local last_batch=""
+    local force_apply=0
     if [[ -f "$LAST_BATCH_FILE" ]]; then
       last_batch="$(cat "$LAST_BATCH_FILE" 2>/dev/null || true)"
     fi
+    if [[ "$disable_lid" -eq 1 ]] && [[ -n "$lid" ]]; then
+      local lid_disabled
+      lid_disabled="$(jq -r --arg n "$lid" '(.[] | select(.name==$n) | (.disabled // false))' <<<"$MONJSON")"
+      if [[ "$lid_disabled" != "true" ]]; then
+        force_apply=1
+        log "Forcing apply because ${lid} is still enabled"
+      fi
+    fi
     if [[ "$batch" == "$last_batch" ]]; then
-      log "Layout unchanged; skipping apply"
-      exit 0
+      if [[ "$force_apply" -eq 0 ]]; then
+        log "Layout unchanged; skipping apply"
+        exit 0
+      fi
+      log "Layout unchanged but forcing apply"
     fi
 
     local now last=0
@@ -329,17 +361,10 @@ apply_layout() {
     printf '%s\n' "$batch" > "$LAST_BATCH_FILE"
     printf '%s\n' "$now" > "$APPLY_TS_FILE"
 
-    # Restart waybar to match new monitor layout
-    if command -v waybar &>/dev/null; then
-      pkill -x waybar 2>/dev/null || true
-      sleep 0.3
-      # Use uwsm if available, otherwise direct launch
-      if command -v uwsm &>/dev/null; then
-        uwsm app -- waybar &>/dev/null &
-      else
-        waybar &>/dev/null &
-      fi
-      log "Waybar restarted"
+    # Signal waybar to reload (don't kill - uwsm manages lifecycle)
+    if command -v waybar &>/dev/null && pgrep -x waybar &>/dev/null; then
+      killall -SIGUSR2 waybar 2>/dev/null || true
+      log "Waybar signaled to reload"
     fi
 
     # Reapply wallpaper from cache (awww/swww)
@@ -410,12 +435,13 @@ SOCK="${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
       fi
     fi
     if [[ "$now" != "$last" || "$lid_state" != "$last_lid" ]]; then
-      last="$now"
-      last_lid="$lid_state"
       [[ "$DEBUG" -eq 1 ]] && log "Active-set or lid state changed: $now | lid: $lid_state"
       # Wait briefly for Hyprland to stabilize
       sleep 0.5
       apply_layout
+      # Only update last state after apply_layout completes (fixes cooldown skip bug)
+      last="$now"
+      last_lid="$lid_state"
     fi
     sleep "$POLL_INTERVAL"
   done
