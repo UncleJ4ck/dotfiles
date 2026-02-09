@@ -9,7 +9,7 @@ set -euo pipefail
 # - Treat all OTHER connected monitors as external (enabled or disabled)
 # - Place enabled externals left-to-right
 # - Place lid after externals when lid is enabled
-# - Disable lid when externals >= 3, or when lid is closed and externals >= 1
+# - Disable lid when externals >= 2, or when lid is closed and externals >= 1
 # - React to hotplug events via socket2 + poll fallback
 #
 # Flags:
@@ -18,12 +18,12 @@ set -euo pipefail
 #
 # Env overrides:
 #   LID_REGEX        default: ^(eDP|LVDS|DSI)-
-#   LID_DISABLE_AT   default: 3      (disable lid if externals >= 3)
+#   LID_DISABLE_AT   default: 2      (disable lid if externals >= 2)
 #   SCALE_EXT        default: 1
 #   SCALE_LID        default: 1
 #   GAP_PX           default: 0
 #   FORCE_MODE       default: ""     (e.g. 1920x1080@60)
-#   POLL_INTERVAL    default: 1
+#   POLL_INTERVAL    default: 3
 # -----------------------------------------------------------------------------
 
 DEBUG="${DEBUG:-1}"
@@ -45,8 +45,8 @@ Usage:
 
 Dynamic Hyprland monitor layout:
 - Enabled externals left-to-right
-- Lid enabled when <= 2 externals
-- Lid disabled when >= 3 externals (default)
+- Lid enabled when <= 1 external
+- Lid disabled when >= 2 externals (default)
 
 Env:
   LID_REGEX, LID_DISABLE_AT, SCALE_EXT, SCALE_LID, GAP_PX, FORCE_MODE, POLL_INTERVAL
@@ -62,12 +62,12 @@ done
 
 # Tuneables (env overrides supported)
 LID_REGEX="${LID_REGEX:-^(eDP|LVDS|DSI)-}"
-LID_DISABLE_AT="${LID_DISABLE_AT:-3}" # 3+ externals -> disable lid (your setup)
+LID_DISABLE_AT="${LID_DISABLE_AT:-2}" # 2+ externals -> disable lid (desk+mobile)
 SCALE_EXT="${SCALE_EXT:-1}"
 SCALE_LID="${SCALE_LID:-1}"
 GAP_PX="${GAP_PX:-0}"
 FORCE_MODE="${FORCE_MODE:-}"
-POLL_INTERVAL="${POLL_INTERVAL:-1}"
+POLL_INTERVAL="${POLL_INTERVAL:-3}"
 
 # Debug logging
 XDG_CACHE_HOME="${XDG_CACHE_HOME:-$HOME/.cache}"
@@ -78,9 +78,15 @@ STATE_DIR="${LOG_DIR}"
 APPLY_TS_FILE="${STATE_DIR}/monitors.last_apply"
 LAST_BATCH_FILE="${STATE_DIR}/monitors.last_batch"
 
-ts() { date '+%Y-%m-%d %H:%M:%S'; }
+ts() { printf '%(%Y-%m-%d %H:%M:%S)T' -1; }
+_rotate_log() {
+  local size
+  size="$(stat -c%s "$LOG_FILE" 2>/dev/null)" || return 0
+  (( size > 524288 )) && rm -f "$LOG_FILE" || true
+}
 log() {
   [[ "$DEBUG" -eq 1 ]] || return 0
+  _rotate_log
   printf '[%s] %s\n' "$(ts)" "$*" | tee -a "$LOG_FILE" >&2
 }
 
@@ -105,7 +111,8 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 # ---- single instance lock (prevents duplicate daemons) ----
-exec 8>/tmp/hypr-monitors-daemon.lock
+# NOTE: close fd 8 in child/background processes to avoid lock inheritance.
+exec 8>/tmp/hypr-monitors-daemon-${UID}.lock
 flock -n 8 || exit 0
 
 MONJSON='[]'
@@ -127,16 +134,11 @@ read_monitors() {
       echo '[]'
   )"
 
-  if jq -e . >/dev/null 2>&1 <<<"$out"; then
+  # hyprctl returns JSON arrays on success; quick prefix check avoids a jq fork
+  if [[ "$out" == "["* ]]; then
     MONJSON="$out"
   else
     MONJSON='[]'
-  fi
-
-  if [[ "$DEBUG" -eq 1 ]]; then
-    local enabled
-    enabled="$(jq -r '[.[] | select((.disabled // false)==false) | .name] | join(",")' <<<"$MONJSON" 2>/dev/null || true)"
-    log "Enabled monitors: ${enabled:-<none>}"
   fi
 }
 
@@ -147,10 +149,11 @@ detect_lid() {
 }
 
 lid_is_open() {
-  local state seat lid_closed
+  local line state seat lid_closed
 
   if compgen -G "/proc/acpi/button/lid/*/state" >/dev/null; then
-    state="$(awk -F': *' '{print $2}' /proc/acpi/button/lid/*/state 2>/dev/null | head -n1 | tr '[:upper:]' '[:lower:]' | tr -d '\r' | xargs)"
+    read -r _ state < /proc/acpi/button/lid/*/state 2>/dev/null || true
+    state="${state,,}" # lowercase via bash parameter expansion
     case "$state" in
       open) return 0 ;;
       closed) return 1 ;;
@@ -195,7 +198,7 @@ mode_for() {
   # If FORCE_MODE is set and supported, use it
   if [[ -n "$FORCE_MODE" ]]; then
     if jq -r --arg n "$name" '.[] | select(.name==$n) | .availableModes[]? // empty' \
-      <<<"$MONJSON" | grep -q "^${FORCE_MODE}"; then
+      <<<"$MONJSON" | grep -qF "${FORCE_MODE}"; then
       echo "$FORCE_MODE"
       return 0
     fi
@@ -238,16 +241,6 @@ scaled_px() {
 
 APPLY_COOLDOWN="${APPLY_COOLDOWN:-1}" # seconds between applies
 
-ensure_awww_daemon() {
-  command -v awww-daemon &>/dev/null || return 1
-  if command -v pgrep &>/dev/null; then
-    pgrep -x awww-daemon &>/dev/null && return 0
-  fi
-  awww-daemon --no-cache </dev/null >/dev/null 2>&1 &
-  disown 2>/dev/null || true
-  return 0
-}
-
 apply_layout() {
   # Per-apply lock (file-based, works across subshells)
   (
@@ -279,7 +272,7 @@ apply_layout() {
 
     n="${#ext_names[@]}"
 
-    # Disable lid when externals >= LID_DISABLE_AT (default 3),
+    # Disable lid when externals >= LID_DISABLE_AT (default 2),
     # or when lid is closed and at least one external is present.
     disable_lid=0
     if [[ -n "$lid" ]]; then
@@ -361,10 +354,10 @@ apply_layout() {
     printf '%s\n' "$batch" > "$LAST_BATCH_FILE"
     printf '%s\n' "$now" > "$APPLY_TS_FILE"
 
-    # Signal waybar to reload (don't kill - uwsm manages lifecycle)
-    if command -v waybar &>/dev/null && pgrep -x waybar &>/dev/null; then
-      killall -SIGUSR2 waybar 2>/dev/null || true
-      log "Waybar signaled to reload"
+    # Signal waybar to reload after layout change
+    if pgrep -x waybar &>/dev/null; then
+      pkill -SIGUSR2 -x waybar 2>/dev/null || true
+      log "Waybar signaled (SIGUSR2)"
     fi
 
     # Reapply wallpaper from cache (awww/swww)
@@ -375,7 +368,7 @@ apply_layout() {
       if [[ -f "$wall" ]]; then
         sleep 0.5
         if command -v awww &>/dev/null; then
-          ensure_awww_daemon || true
+          systemctl --user start awww-daemon.service 2>/dev/null || true
           awww img "$wall" &>/dev/null || true
           log "Wallpaper reapplied: $wall"
         elif command -v swww &>/dev/null; then
@@ -384,7 +377,7 @@ apply_layout() {
         fi
       fi
     fi
-  ) 200>/tmp/hypr-monitors-apply.lock
+  ) 200>/tmp/hypr-monitors-apply-${UID}.lock
 }
 
 # Run once
@@ -401,6 +394,7 @@ SOCK="${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
 
 # 1) React to hotplug events
 (
+  exec 8>&-
   set +e
   while true; do
     socat -U - "UNIX-CONNECT:${SOCK}" 2>/dev/null | while IFS= read -r line; do
@@ -419,14 +413,19 @@ SOCK="${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
 
 # 2) Poll as a fallback
 (
+  exec 8>&-
   set +e
   last=""
   last_lid=""
   while true; do
     read_monitors
-    now="$(jq -r '[.[] | "\(.name):\(.disabled // false)"] | sort | join(",")' <<<"$MONJSON" 2>/dev/null || echo "")"
+    # Single jq call: fingerprint + lid name
+    read -r now lid < <(jq -r --arg re "$LID_REGEX" '
+      ([.[] | "\(.name):\(.disabled // false)"] | sort | join(","))
+      + "\t"
+      + ([.[] | select(.name | test($re)) | .name][0] // "")
+    ' <<<"$MONJSON" 2>/dev/null || echo "")
     lid_state="none"
-    lid="$(detect_lid)"
     if [[ -n "$lid" ]]; then
       if lid_is_open; then
         lid_state="open"
@@ -435,7 +434,10 @@ SOCK="${XDG_RUNTIME_DIR}/hypr/${HYPRLAND_INSTANCE_SIGNATURE}/.socket2.sock"
       fi
     fi
     if [[ "$now" != "$last" || "$lid_state" != "$last_lid" ]]; then
-      [[ "$DEBUG" -eq 1 ]] && log "Active-set or lid state changed: $now | lid: $lid_state"
+      if [[ "$DEBUG" -eq 1 ]]; then
+        log "Enabled monitors: $(jq -r '[.[] | select((.disabled // false)==false) | .name] | join(",")' <<<"$MONJSON" 2>/dev/null || echo '<none>')"
+        log "Active-set or lid state changed: $now | lid: $lid_state"
+      fi
       # Wait briefly for Hyprland to stabilize
       sleep 0.5
       apply_layout

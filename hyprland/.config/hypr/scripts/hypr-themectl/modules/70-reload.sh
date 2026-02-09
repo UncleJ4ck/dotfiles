@@ -8,26 +8,19 @@ set -Eeuo pipefail
 reload_desktop() {
   info "Reloading desktop components"
 
-  # Waybar - restart instead of SIGUSR2 (more reliable for full config+style reload)
+  # Waybar - matugen post_hook already sends SIGUSR2 to reload CSS+config;
+  # do NOT also touch style.css because reload_style_on_change inotify
+  # fires a second reload that races with the SIGUSR2 and can blank waybar.
   if pgrep -x waybar &>/dev/null; then
-    # Kill orphaned waybar-ws.sh processes first (they become zombies on waybar restart)
-    pkill -9 -f "waybar-ws.sh" 2>/dev/null || true
-
-    # Kill and let systemd/uwsm restart it, or restart manually
-    if is_cmd systemctl && systemctl --user cat waybar.service &>/dev/null 2>&1; then
-      systemctl --user restart waybar.service 2>/dev/null || true
-      dbg "Waybar restarted via systemd"
+    dbg "Waybar reload handled by matugen post_hook (SIGUSR2)"
+  else
+    # Start waybar if it is not running
+    if is_cmd uwsm; then
+      setsid uwsm app -- waybar &>/dev/null &
     else
-      pkill -x waybar 2>/dev/null || true
-      sleep 0.3
-      # Restart waybar in background (uwsm if available, otherwise direct)
-      if is_cmd uwsm; then
-        setsid uwsm app -- waybar &>/dev/null &
-      else
-        setsid waybar &>/dev/null &
-      fi
-      dbg "Waybar restarted manually"
+      setsid waybar &>/dev/null &
     fi
+    dbg "Waybar started"
   fi
 
   # SwayNC - reload with timeout to prevent hangs

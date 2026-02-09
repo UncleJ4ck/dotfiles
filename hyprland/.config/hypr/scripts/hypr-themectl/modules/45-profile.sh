@@ -15,9 +15,14 @@ _list_profile_candidates() {
 }
 
 _profile_state_key() {
-  local wall="$1"
+  local wall="$1" scorer="${2:-histogram}"
   local wall_hash
   wall_hash="$(md5sum "$wall" 2>/dev/null | awk '{print $1}')" || wall_hash="unknown"
+
+  if [[ "$scorer" == "clip" ]]; then
+    printf '%s\n' "${PROFILE_PICKER_VERSION}_${wall_hash}_${MATUGEN_MODE}_clip"
+    return
+  fi
 
   local p s t bg
   p="$(matugen_role_hex "$MATUGEN_MODE" primary "#89b4fa")"
@@ -57,9 +62,33 @@ _render_profile_for_hyprlock() {
 }
 
 # =============================================================================
-# Profile Scoring (Python)
+# Profile Scoring (CLIP via uv)
 # =============================================================================
-_select_best_profile_python() {
+_select_best_profile_clip() {
+  local wall="$1"
+  is_cmd uv || return 1
+
+  local -a clip_args=(
+    uv run --quiet
+    "$SCRIPT_DIR/lib/clip-match.py"
+    "$wall" "$PROFILE_DIR"
+    --model "$CLIP_MODEL"
+    --cache "$CLIP_CACHE_FILE"
+    --color-weight "$CLIP_COLOR_WEIGHT"
+    --exclude "$(basename "$HYPRLOCK_PROFILE_OUT")"
+  )
+  ((DEBUG)) && clip_args+=(--debug)
+
+  local result
+  result="$("${clip_args[@]}" 2>&"$LOG_FD")" || return 1
+  [[ -n "$result" && -f "$result" ]] || return 1
+  echo "$result"
+}
+
+# =============================================================================
+# Profile Scoring (Histogram fallback)
+# =============================================================================
+_select_best_profile_histogram() {
   local wall="$1"
   local im py
   im="$(im_cmd)"
@@ -266,29 +295,58 @@ PY
 }
 
 # =============================================================================
+# Profile Scoring Dispatcher (CLIP → histogram fallback)
+# =============================================================================
+_select_best_profile_python() {
+  local wall="$1"
+
+  # Try CLIP first — prefix output with scorer name
+  local result
+  if result="$(_select_best_profile_clip "$wall" 2>&"$LOG_FD")" && [[ -n "$result" ]]; then
+    dbg "CLIP scorer selected: $(basename "$result")"
+    echo "clip:$result"
+    return 0
+  fi
+
+  # Fall back to histogram scorer
+  dbg "CLIP unavailable, using histogram scorer"
+  result="$(_select_best_profile_histogram "$wall")" || return 1
+  [[ -n "$result" ]] || return 1
+  echo "histogram:$result"
+}
+
+# =============================================================================
 # Main Entry Point
 # =============================================================================
 apply_profile_picture() {
   local wall="$1"
   [[ -f "$wall" ]] || die "Wallpaper missing: $wall"
 
-  local key prev
-  key="$(_profile_state_key "$wall")"
-  prev="$(read_state "$STATE_PROFILE_FILE")"
-
-  # Cache hit check (unless forced)
-  if ((!PROFILE_PICKER_FORCE)) && ((!DEBUG)) && [[ "$prev" == "$key" && -s "$HYPRLOCK_PROFILE_OUT" ]]; then
-    dbg "Profile picture unchanged (cache hit)"
-    return 0
-  fi
-
   [[ -d "$PROFILE_DIR" ]] || {
     warn "Profile directory missing: $PROFILE_DIR"
     return 0
   }
 
-  local chosen=""
-  chosen="$(_select_best_profile_python "$wall")" || true
+  # Quick cache check before expensive scoring (unless forced)
+  if ((!PROFILE_PICKER_FORCE)) && ((!DEBUG)) && [[ -s "$HYPRLOCK_PROFILE_OUT" ]]; then
+    local prev
+    prev="$(read_state "$STATE_PROFILE_FILE")"
+    # Check both possible scorer keys
+    if [[ "$prev" == "$(_profile_state_key "$wall" clip)" ]] || \
+       [[ "$prev" == "$(_profile_state_key "$wall" histogram)" ]]; then
+      dbg "Profile picture unchanged (cache hit)"
+      return 0
+    fi
+  fi
+
+  local raw chosen="" scorer="histogram"
+  raw="$(_select_best_profile_python "$wall")" || true
+
+  # Parse "scorer:path" output
+  if [[ "$raw" == *:* ]]; then
+    scorer="${raw%%:*}"
+    chosen="${raw#*:}"
+  fi
 
   # Fallback to first candidate
   if [[ -z "$chosen" || ! -f "$chosen" ]]; then
@@ -303,5 +361,5 @@ apply_profile_picture() {
 
   info "Profile selected: $(basename "$chosen")"
   _render_profile_for_hyprlock "$chosen" "$HYPRLOCK_PROFILE_OUT"
-  write_state "$STATE_PROFILE_FILE" "$key"
+  write_state "$STATE_PROFILE_FILE" "$(_profile_state_key "$wall" "$scorer")"
 }

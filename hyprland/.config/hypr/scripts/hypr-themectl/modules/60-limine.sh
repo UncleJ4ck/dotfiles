@@ -287,9 +287,12 @@ update_limine_config() {
     PALETTE="${BASE};${RED};${GREEN};${YELLOW};${BLUE};${PINK};${TEAL};${TEXT}"
     PALETTE_BRIGHT="${SURFACE2};${RED};${GREEN};${YELLOW};${BLUE};${PINK};${TEAL};${TEXT}"
   else
+    local -A _allowed=([BASE]=1 [TEXT]=1 [SUBTEXT0]=1 [SURFACE0]=1 [SURFACE2]=1 [MENU_BG]=1
+                        [RED]=1 [GREEN]=1 [YELLOW]=1 [BLUE]=1 [PINK]=1 [TEAL]=1
+                        [PALETTE]=1 [PALETTE_BRIGHT]=1 [BG_BRIGHT]=1 [FG_BRIGHT]=1)
     local k v
     while IFS='=' read -r k v || [[ -n "$k" ]]; do
-      [[ -n "$k" ]] && printf -v "$k" '%s' "$v"
+      [[ -n "$k" && -n "${_allowed[$k]+x}" ]] && printf -v "$k" '%s' "$v"
     done <<< "$kv"
   fi
 

@@ -53,7 +53,7 @@
 [templates.waybar]
   input_path  = "~/.config/matugen/templates/ui/waybar/colors.css"
   output_path = "~/.config/waybar/colors/colors.css"
-  post_hook   = 'pkill -SIGUSR2 waybar'
+  post_hook   = 'sleep 0.3; pkill -SIGUSR2 -x waybar 2>/dev/null || true'
 
 [templates.rofi]
   input_path  = "~/.config/matugen/templates/ui/rofi/colors.rasi"

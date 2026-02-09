@@ -44,6 +44,7 @@ Commands:
   plymouth     Update Plymouth LUKS prompt theme (Matugen)
   limine       Update Limine bootloader theme
   reload       Reload desktop components
+  clip-setup   Pre-download CLIP model for profile matching
   preflight    Check dependencies
   break-lock   Force-break stuck lock
 
@@ -117,7 +118,7 @@ resolve_wall_from_mode() {
 
 needs_lock() {
   case "${1:-}" in
-  preflight | break-lock) return 1 ;;
+  preflight | break-lock | clip-setup) return 1 ;;
   *) return 0 ;;
   esac
 }
@@ -268,6 +269,20 @@ main() {
 
   preflight)
     preflight
+    ;;
+
+  clip-setup)
+    is_cmd uv || die "uv not found (install: https://docs.astral.sh/uv/)"
+    info "Pre-downloading CLIP model: $CLIP_MODEL"
+    local -a clip_setup_args=(
+      uv run --quiet
+      "$SCRIPT_DIR/lib/clip-match.py"
+      --model "$CLIP_MODEL"
+      --setup
+    )
+    ((DEBUG)) && clip_setup_args+=(--debug)
+    "${clip_setup_args[@]}" 2>&"$LOG_FD"
+    info "CLIP model ready"
     ;;
 
   break-lock)

@@ -7,7 +7,7 @@
   "margin-left": 10,
   "margin-right": 10,
   "margin-bottom": 0,
-  "reload_style_on_change": true,
+  "reload_style_on_change": false,
 
   "modules-left": [
     "custom/ws1",
@@ -20,7 +20,7 @@
     "custom/ws8",
     "custom/ws9",
     "custom/player",
-    "hyprland/language",
+    "custom/keyboard",
     "custom/clipboard"
   ],
 
@@ -39,67 +39,67 @@
   ],
 
   "custom/ws1": {
-    "exec": "~/.config/hypr/scripts/waybar-ws.sh 1",
+    "exec": "~/.config/hypr/scripts/grouped-workspaces/waybar-ws.sh 1",
     "return-type": "json",
     "interval": "once",
     "signal": 8,
-    "on-click": "~/.config/hypr/scripts/workspace-groups.sh switch 1"
+    "on-click": "~/.config/hypr/scripts/grouped-workspaces/workspace-groups.sh switch 1"
   },
   "custom/ws2": {
-    "exec": "~/.config/hypr/scripts/waybar-ws.sh 2",
+    "exec": "~/.config/hypr/scripts/grouped-workspaces/waybar-ws.sh 2",
     "return-type": "json",
     "interval": "once",
     "signal": 8,
-    "on-click": "~/.config/hypr/scripts/workspace-groups.sh switch 2"
+    "on-click": "~/.config/hypr/scripts/grouped-workspaces/workspace-groups.sh switch 2"
   },
   "custom/ws3": {
-    "exec": "~/.config/hypr/scripts/waybar-ws.sh 3",
+    "exec": "~/.config/hypr/scripts/grouped-workspaces/waybar-ws.sh 3",
     "return-type": "json",
     "interval": "once",
     "signal": 8,
-    "on-click": "~/.config/hypr/scripts/workspace-groups.sh switch 3"
+    "on-click": "~/.config/hypr/scripts/grouped-workspaces/workspace-groups.sh switch 3"
   },
   "custom/ws4": {
-    "exec": "~/.config/hypr/scripts/waybar-ws.sh 4",
+    "exec": "~/.config/hypr/scripts/grouped-workspaces/waybar-ws.sh 4",
     "return-type": "json",
     "interval": "once",
     "signal": 8,
-    "on-click": "~/.config/hypr/scripts/workspace-groups.sh switch 4"
+    "on-click": "~/.config/hypr/scripts/grouped-workspaces/workspace-groups.sh switch 4"
   },
   "custom/ws5": {
-    "exec": "~/.config/hypr/scripts/waybar-ws.sh 5",
+    "exec": "~/.config/hypr/scripts/grouped-workspaces/waybar-ws.sh 5",
     "return-type": "json",
     "interval": "once",
     "signal": 8,
-    "on-click": "~/.config/hypr/scripts/workspace-groups.sh switch 5"
+    "on-click": "~/.config/hypr/scripts/grouped-workspaces/workspace-groups.sh switch 5"
   },
   "custom/ws6": {
-    "exec": "~/.config/hypr/scripts/waybar-ws.sh 6",
+    "exec": "~/.config/hypr/scripts/grouped-workspaces/waybar-ws.sh 6",
     "return-type": "json",
     "interval": "once",
     "signal": 8,
-    "on-click": "~/.config/hypr/scripts/workspace-groups.sh switch 6"
+    "on-click": "~/.config/hypr/scripts/grouped-workspaces/workspace-groups.sh switch 6"
   },
   "custom/ws7": {
-    "exec": "~/.config/hypr/scripts/waybar-ws.sh 7",
+    "exec": "~/.config/hypr/scripts/grouped-workspaces/waybar-ws.sh 7",
     "return-type": "json",
     "interval": "once",
     "signal": 8,
-    "on-click": "~/.config/hypr/scripts/workspace-groups.sh switch 7"
+    "on-click": "~/.config/hypr/scripts/grouped-workspaces/workspace-groups.sh switch 7"
   },
   "custom/ws8": {
-    "exec": "~/.config/hypr/scripts/waybar-ws.sh 8",
+    "exec": "~/.config/hypr/scripts/grouped-workspaces/waybar-ws.sh 8",
     "return-type": "json",
     "interval": "once",
     "signal": 8,
-    "on-click": "~/.config/hypr/scripts/workspace-groups.sh switch 8"
+    "on-click": "~/.config/hypr/scripts/grouped-workspaces/workspace-groups.sh switch 8"
   },
   "custom/ws9": {
-    "exec": "~/.config/hypr/scripts/waybar-ws.sh 9",
+    "exec": "~/.config/hypr/scripts/grouped-workspaces/waybar-ws.sh 9",
     "return-type": "json",
     "interval": "once",
     "signal": 8,
-    "on-click": "~/.config/hypr/scripts/workspace-groups.sh switch 9"
+    "on-click": "~/.config/hypr/scripts/grouped-workspaces/workspace-groups.sh switch 9"
   },
 
   "custom/player": {
@@ -187,16 +187,11 @@
     "orientation": "horizontal"
   },
 
-  "hyprland/language": {
-    "format": "{}",
-    "format-en": "󰌌 US",
-    "format-fr": "󰌌 FR",
-    "format-de": "󰌌 DE",
+  "custom/keyboard": {
+    "exec": "~/.config/hypr/scripts/waybar-keyboard.sh",
+    "return-type": "json",
     "tooltip": true,
-    "tooltip-format": "Keyboard Layout: {}",
-    "keyboard-name": "all",
-    "on-click": "hyprctl switchxkblayout all 1",
-    "swap-icon-label": false
+    "on-click": "hyprctl switchxkblayout all next"
   },
 
   "custom/notifications": {

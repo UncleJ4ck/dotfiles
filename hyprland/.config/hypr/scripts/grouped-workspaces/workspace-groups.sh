@@ -46,15 +46,29 @@ command -v jq &>/dev/null || { echo "Error: jq required" >&2; exit 1; }
 # ─────────────────────────────────────────────────────────────────────────────
 MONITOR_JSON=$(hyprctl monitors -j 2>/dev/null)
 
-# Filter to only enabled monitors and sort by x position
-readarray -t MONITORS < <(echo "$MONITOR_JSON" | jq -r '
-    [.[] | select(.disabled != true)] | sort_by(.x) | .[].name
-')
+# Single jq call: sorted enabled monitor names + focused monitor name
+_mon_data=$(jq -r '
+    ([.[] | select(.disabled != true)] | sort_by(.x) | .[].name),
+    "---",
+    ((.[] | select(.focused == true) | .name) // "")
+' <<< "$MONITOR_JSON")
+
+# Split into MONITORS array (before ---) and FOCUSED_MONITOR (after ---)
+MONITORS=()
+FOCUSED_MONITOR=""
+_past_sep=0
+while IFS= read -r _line; do
+    if [[ "$_line" == "---" ]]; then
+        _past_sep=1
+    elif [[ "$_past_sep" -eq 0 ]]; then
+        [[ -n "$_line" ]] && MONITORS+=("$_line")
+    else
+        FOCUSED_MONITOR="$_line"
+    fi
+done <<< "$_mon_data"
 
 MONITOR_COUNT=${#MONITORS[@]}
 
-# Get focused monitor (fallback to first monitor if none focused)
-FOCUSED_MONITOR=$(echo "$MONITOR_JSON" | jq -r '.[] | select(.focused == true) | .name')
 if [[ -z "$FOCUSED_MONITOR" && "$MONITOR_COUNT" -gt 0 ]]; then
     FOCUSED_MONITOR="${MONITORS[0]}"
 fi
@@ -93,9 +107,16 @@ get_monitor_index() {
     echo "0"
 }
 
-# Notify waybar to refresh its workspace modules (best-effort)
+# State file shared with waybar-ws-daemon.sh
+STATE_FILE="/tmp/hypr-workspace-group-${UID}"
+
+# Update state file + notify waybar (eliminates race with daemon)
 notify_waybar() {
-    pkill -RTMIN+8 waybar 2>/dev/null || pkill -SIGRTMIN+8 waybar 2>/dev/null || true
+    local group="${1:-}"
+    if [[ -n "$group" ]]; then
+        echo "$group" > "${STATE_FILE}.tmp" && mv -f "${STATE_FILE}.tmp" "$STATE_FILE"
+    fi
+    pkill -RTMIN+8 -x waybar 2>/dev/null || true
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -127,7 +148,7 @@ case "$ACTION" in
             BATCH_CMD+="dispatch focusmonitor ${FOCUSED_MONITOR}"
             hyprctl --batch "$BATCH_CMD" >/dev/null
         fi
-        notify_waybar
+        notify_waybar "$GROUP"
         ;;
 
     movetoworkspace)
@@ -165,7 +186,7 @@ case "$ACTION" in
 
             hyprctl --batch "$BATCH_CMD" >/dev/null
         fi
-        notify_waybar
+        notify_waybar "$GROUP"
         ;;
 
     movetoworkspacesilent)
@@ -200,19 +221,19 @@ case "$ACTION" in
 
             hyprctl --batch "$BATCH_CMD" >/dev/null
         fi
-        notify_waybar
+        notify_waybar "$GROUP"
         ;;
 
     getgroup)
         # Returns the current "group" number (1-9) for use in waybar/statusbars
         # This lets your bar show "1" instead of "21" etc.
-        ACTIVE_WS=$(echo "$MONITOR_JSON" | jq -r '.[] | select(.focused == true) | .activeWorkspace.id')
+        ACTIVE_WS=$(jq -r '.[] | select(.focused == true) | .activeWorkspace.id' <<< "$MONITOR_JSON")
         get_group_from_workspace "$ACTIVE_WS"
         ;;
 
     next|prev)
         # Navigate to next/previous group (for mouse scroll)
-        ACTIVE_WS=$(echo "$MONITOR_JSON" | jq -r '.[] | select(.focused == true) | .activeWorkspace.id')
+        ACTIVE_WS=$(jq -r '.[] | select(.focused == true) | .activeWorkspace.id' <<< "$MONITOR_JSON")
         CURRENT_GROUP=$(get_group_from_workspace "$ACTIVE_WS")
 
         if [[ "$ACTION" == "next" ]]; then
@@ -227,7 +248,7 @@ case "$ACTION" in
 
     waybar)
         # JSON output for waybar custom module
-        ACTIVE_WS=$(echo "$MONITOR_JSON" | jq -r '.[] | select(.focused == true) | .activeWorkspace.id')
+        ACTIVE_WS=$(jq -r '.[] | select(.focused == true) | .activeWorkspace.id' <<< "$MONITOR_JSON")
         CURRENT_GROUP=$(get_group_from_workspace "$ACTIVE_WS")
 
         # Build workspace indicators
@@ -252,7 +273,7 @@ case "$ACTION" in
         echo "Focused: ${FOCUSED_MONITOR}"
         for i in "${!MONITORS[@]}"; do
             mon="${MONITORS[$i]}"
-            ws=$(echo "$MONITOR_JSON" | jq -r --arg m "$mon" '.[] | select(.name == $m) | .activeWorkspace.id')
+            ws=$(jq -r --arg m "$mon" '.[] | select(.name == $m) | .activeWorkspace.id' <<< "$MONITOR_JSON")
             grp=$(get_group_from_workspace "$ws")
             echo "  [$i] $mon: workspace $ws (group $grp)"
         done

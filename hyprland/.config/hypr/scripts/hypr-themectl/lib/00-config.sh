@@ -112,24 +112,29 @@ set -Eeuo pipefail
 : "${PROFILE_DIR:=$HOME/Pictures/Profile}"
 : "${HYPRLOCK_CONFIG:=$HOME/.config/hypr/hyprlock.conf}"
 : "${HYPRLOCK_PROFILE_OUT:=$PROFILE_DIR/user.jpeg}"
-: "${PROFILE_PICKER_VERSION:=2}"
+: "${PROFILE_PICKER_VERSION:=3}"
 : "${PROFILE_PICKER_FORCE:=0}"
 : "${PROFILE_PICKER_MAX_COLORS:=12}"
 : "${PROFILE_PICKER_SAMPLE:=128}"
 : "${PROFILE_PICKER_SAT_MIN:=0.10}"
 : "${PROFILE_PICKER_LUMA_MIN:=0.06}"
 : "${PROFILE_PICKER_LUMA_MAX:=0.94}"
-: "${PROFILE_PICKER_W_MEANLAB:=1.55}"
-: "${PROFILE_PICKER_W_PALETTE:=0.55}"
-: "${PROFILE_PICKER_W_SAT:=24.0}"
-: "${PROFILE_PICKER_W_LUMA:=18.0}"
-: "${PROFILE_PICKER_W_COLORFUL:=0.40}"
-: "${PROFILE_PICKER_W_COV:=10.0}"
+: "${PROFILE_PICKER_W_MEANLAB:=2.50}"
+: "${PROFILE_PICKER_W_PALETTE:=2.50}"
+: "${PROFILE_PICKER_W_SAT:=8.0}"
+: "${PROFILE_PICKER_W_LUMA:=12.0}"
+: "${PROFILE_PICKER_W_COLORFUL:=0.15}"
+: "${PROFILE_PICKER_W_COV:=3.0}"
+
+# CLIP-based profile matching (requires uv + torch)
+: "${CLIP_MODEL:=openai/clip-vit-base-patch32}"
+: "${CLIP_CACHE_FILE:=$STATE_DIR/clip-profile-cache.json}"
+: "${CLIP_COLOR_WEIGHT:=0.5}"  # 0.0=pure CLIP, 0.5=balanced, 1.0=pure color
 
 # =============================================================================
 # Lock & State Files
 # =============================================================================
-: "${LOCK_PATH:=$XDG_RUNTIME_DIR/hypr-theme.lock}"
+: "${LOCK_PATH:=$XDG_RUNTIME_DIR/hypr-theme-${UID}.lock}"
 : "${STATE_FLAVOR_FILE:=$STATE_DIR/current_flavor}"
 : "${STATE_ACCENT_FILE:=$STATE_DIR/current_accent}"
 : "${STATE_MODE_FILE:=$STATE_DIR/current_matugen_mode}"

@@ -6,6 +6,7 @@ path=(
   "$HOME/.local/bin"
   "${CARGO_HOME:-$HOME/.cargo}/bin"
   "$HOME/go/bin"
+  "$HOME/.npm-global/bin"
   $path
 )
 export PATH

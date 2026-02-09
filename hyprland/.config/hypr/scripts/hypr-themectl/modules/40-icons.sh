@@ -181,8 +181,20 @@ ensure_papirus_folders_bin() {
 
 ensure_catpp_repo() {
   if [[ -d "$CATPP_REPO_DIR/.git" ]]; then
+    # Throttle: only pull once per 24 hours
+    local marker="$STATE_DIR/catpp-repo-last-pull" now
+    printf -v now '%(%s)T' -1
+    if [[ -f "$marker" ]]; then
+      local last_pull
+      last_pull=$(<"$marker")
+      if ((now - last_pull < 86400)); then
+        dbg "Catppuccin repo up-to-date (pulled $((now - last_pull))s ago)"
+        return 0
+      fi
+    fi
     dbg "Updating catppuccin-papirus-folders"
     git -C "$CATPP_REPO_DIR" pull --ff-only >/dev/null 2>&1 || true
+    printf '%s\n' "$now" > "$marker"
   else
     info "Cloning catppuccin-papirus-folders"
     git clone --depth 1 "https://github.com/catppuccin/papirus-folders.git" "$CATPP_REPO_DIR" >/dev/null
@@ -204,8 +216,8 @@ ensure_theme_dir() {
   if [[ ! -f "$THEME_DIR/index.theme" ]]; then
     if [[ -f "$BASE_PAPIRUS_INDEX" ]]; then
       cp "$BASE_PAPIRUS_INDEX" "$THEME_DIR/index.theme"
-      sed -i "s/^Name=.*/Name=$THEME_NAME/" "$THEME_DIR/index.theme"
-      sed -i "s/^Inherits=.*/Inherits=$BASE_PAPIRUS_THEME,hicolor/" "$THEME_DIR/index.theme"
+      sed -i -e "s/^Name=.*/Name=$THEME_NAME/" \
+             -e "s/^Inherits=.*/Inherits=$BASE_PAPIRUS_THEME,hicolor/" "$THEME_DIR/index.theme"
     else
       cat >"$THEME_DIR/index.theme" <<EOF
 [Icon Theme]

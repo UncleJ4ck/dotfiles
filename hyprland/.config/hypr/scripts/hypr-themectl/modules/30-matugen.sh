@@ -15,17 +15,22 @@ run_matugen() {
 
   info "Running matugen (mode: $MATUGEN_MODE)"
 
-  if ! matugen image "$wall" -m "$MATUGEN_MODE" 2>/dev/null; then
+  # Single invocation: --json hex outputs JSON to stdout while still applying
+  # templates and running post_hooks normally (no need for a second --dry-run call)
+  local json_out=""
+  if ! json_out=$(matugen image "$wall" -m "$MATUGEN_MODE" --json hex 2>/dev/null); then
     warn "Matugen failed on first attempt, retrying..."
-    matugen image "$wall" -m "$MATUGEN_MODE" || {
+    json_out=$(matugen image "$wall" -m "$MATUGEN_MODE" --json hex) || {
       warn "Matugen failed, using fallbacks"
       return 0
     }
   fi
 
-  # Export JSON for Limine and other consumers
-  if ! matugen image "$wall" --json hex > "$MATUGEN_JSON_FILE" 2>/dev/null; then
-    warn "Matugen JSON export failed"
+  # Save JSON for Limine, Plymouth, and other consumers
+  if [[ -n "$json_out" ]]; then
+    printf '%s\n' "$json_out" > "$MATUGEN_JSON_FILE"
+  else
+    warn "Matugen JSON export empty"
     rm -f "$MATUGEN_JSON_FILE" 2>/dev/null || true
   fi
 

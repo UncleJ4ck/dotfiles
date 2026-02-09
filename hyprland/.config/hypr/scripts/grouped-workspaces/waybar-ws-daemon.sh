@@ -43,8 +43,9 @@ cleanup() {
 trap cleanup EXIT SIGTERM SIGINT SIGHUP
 
 get_current_group() {
-    local ws_id group
-    ws_id=$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | select(.focused == true) | .activeWorkspace.id // 1')
+    local mon_json ws_id group
+    mon_json=$(hyprctl monitors -j 2>/dev/null) || { echo 1; return; }
+    ws_id=$(jq -r '.[] | select(.focused == true) | .activeWorkspace.id // 1' <<< "$mon_json")
     [[ -z "$ws_id" || "$ws_id" == "null" ]] && ws_id=1
     group=$(( (ws_id - 1) % 10 + 1 ))
     [[ "$group" -gt "$MAX_GROUPS" ]] && group=$MAX_GROUPS
@@ -64,7 +65,7 @@ update_state() {
     echo "$new_group" > "$STATE_FILE_TMP"
     mv -f "$STATE_FILE_TMP" "$STATE_FILE"
     # Signal waybar to re-execute workspace modules (SIGRTMIN+8)
-    pkill -RTMIN+8 waybar 2>/dev/null || pkill -SIGRTMIN+8 waybar 2>/dev/null || true
+    pkill -RTMIN+8 -x waybar 2>/dev/null || true
 }
 
 # Wait for Hyprland to be ready
@@ -89,9 +90,14 @@ update_state
 # Listen for workspace changes and update state file atomically
 # Reconnection loop in case Hyprland restarts or socket disconnects
 while true; do
-    socat -U - "UNIX-CONNECT:${SOCKET}" 2>/dev/null | while read -r line; do
+    socat -U - "UNIX-CONNECT:${SOCKET}" 2>/dev/null | while IFS= read -r line; do
         case "$line" in
-            workspace*|workspacev2*|focusedmon*|focusedmonv2*|moveworkspace*|moveworkspacev2*|createworkspace*|destroyworkspace*|monitoraddedv2*|monitorremoved*)
+            # v2-only events to avoid double-firing on v1+v2 pairs
+            workspacev2*|focusedmonv2*|moveworkspacev2*|createworkspacev2*|destroyworkspacev2*|monitoraddedv2*|monitorremoved*)
+                # Drain burst: consume all pending events (50ms quiet window)
+                # A single group switch with 3 monitors fires ~16 events;
+                # this collapses the burst into one update_state call.
+                while IFS= read -t 0.05 -r _drain; do :; done
                 update_state
                 ;;
         esac

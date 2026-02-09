@@ -24,43 +24,23 @@ plymouth_wall_variant() {
 # Helpers
 # -----------------------------------------------------------------------------
 _hex_to_rgb01() {
-  local hex="${1:-#000000}"
-  local py
-  py="$(get_python)"
-  "$py" - "$hex" <<'PY'
-import sys
-h=sys.argv[1].lstrip('#')
-r=int(h[0:2],16)/255.0
-g=int(h[2:4],16)/255.0
-b=int(h[4:6],16)/255.0
-print(f"{r:.3f} {g:.3f} {b:.3f}")
-PY
+  local hex="${1:-#000000}"; hex="${hex#\#}"
+  local r=$((16#${hex:0:2})) g=$((16#${hex:2:2})) b=$((16#${hex:4:2}))
+  awk -v r="$r" -v g="$g" -v b="$b" 'BEGIN { printf "%.3f %.3f %.3f\n", r/255, g/255, b/255 }'
 }
 
 _hex_to_rgb255() {
-  local hex="${1:-#000000}"
-  local py
-  py="$(get_python)"
-  "$py" - "$hex" <<'PY'
-import sys
-h=sys.argv[1].lstrip('#')
-r=int(h[0:2],16); g=int(h[2:4],16); b=int(h[4:6],16)
-print(f"{r} {g} {b}")
-PY
+  local hex="${1:-#000000}"; hex="${hex#\#}"
+  printf '%d %d %d\n' "0x${hex:0:2}" "0x${hex:2:2}" "0x${hex:4:2}"
 }
 
 _blend_hex() {
-  local a="$1" b="$2" t="${3:-0.10}"
-  local py
-  py="$(get_python)"
-  "$py" - "$a" "$b" "$t" <<'PY'
-import sys
-a=sys.argv[1].lstrip('#'); b=sys.argv[2].lstrip('#'); t=float(sys.argv[3])
-ar,ag,ab=int(a[0:2],16),int(a[2:4],16),int(a[4:6],16)
-br,bg,bb=int(b[0:2],16),int(b[2:4],16),int(b[4:6],16)
-r=round(ar*(1-t)+br*t); g=round(ag*(1-t)+bg*t); b_=round(ab*(1-t)+bb*t)
-print(f"#{r:02x}{g:02x}{b_:02x}")
-PY
+  local a="${1#\#}" b="${2#\#}" t="${3:-0.10}"
+  awk -v a="$a" -v b="$b" -v t="$t" 'BEGIN {
+    ar=strtonum("0x" substr(a,1,2)); ag=strtonum("0x" substr(a,3,2)); ab=strtonum("0x" substr(a,5,2))
+    br=strtonum("0x" substr(b,1,2)); bg=strtonum("0x" substr(b,3,2)); bb=strtonum("0x" substr(b,5,2))
+    printf "#%02x%02x%02x\n", ar*(1-t)+br*t+0.5, ag*(1-t)+bg*t+0.5, ab*(1-t)+bb*t+0.5
+  }'
 }
 
 _assets_ok() {
@@ -329,19 +309,14 @@ _generate_plymouth_assets() {
     local cmd
     cmd="$(im_cmd)"
 
-    local bg_r bg_g bg_b ac_r ac_g ac_b
+    local bg_r bg_g bg_b ac_r ac_g ac_b bd_r bd_g bd_b
     read -r bg_r bg_g bg_b < <(_hex_to_rgb255 "$bg")
     read -r ac_r ac_g ac_b < <(_hex_to_rgb255 "$accent")
+    read -r bd_r bd_g bd_b < <(_hex_to_rgb255 "$border_hex")
 
     root_exec "$cmd" -size 720x220 xc:none \
       -fill "rgba(${bg_r},${bg_g},${bg_b},0.55)" \
-      -stroke "$(
-        python3 - <<PY
-h="$border_hex".lstrip("#")
-r=int(h[0:2],16); g=int(h[2:4],16); b=int(h[4:6],16)
-print(f"rgba({r},{g},{b},0.35)")
-PY
-      )" \
+      -stroke "rgba(${bd_r},${bd_g},${bd_b},0.35)" \
       -strokewidth 2 \
       -draw "roundrectangle 6,6 714,214 28,28" \
       -strip "${PLYMOUTH_THEME_DIR}/box.png" 2>/dev/null || true

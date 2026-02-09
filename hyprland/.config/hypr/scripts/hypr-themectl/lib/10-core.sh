@@ -7,7 +7,7 @@ set -Eeuo pipefail
 # =============================================================================
 LOG_FD=2
 
-_ts() { date '+%Y-%m-%d %H:%M:%S'; }
+_ts() { printf '%(%Y-%m-%d %H:%M:%S)T' -1; }
 
 # [+] Info/success messages
 info() { printf '\e[32m[+]\e[0m %s\n' "$*" >&"$LOG_FD"; }
@@ -51,20 +51,26 @@ write_state() {
 # =============================================================================
 is_cmd() { command -v "$1" &>/dev/null; }
 
+_CACHED_PYTHON=""
 get_python() {
+  if [[ -n "$_CACHED_PYTHON" ]]; then echo "$_CACHED_PYTHON"; return 0; fi
   local py
   for py in python3 python; do
-    is_cmd "$py" && { echo "$py"; return 0; }
+    is_cmd "$py" && { _CACHED_PYTHON="$py"; echo "$py"; return 0; }
   done
   die "Python not found (need python3 or python)"
 }
 
 # ImageMagick command (prefer 'magick' over legacy 'convert')
+_CACHED_IM_CMD=""
+_CACHED_IM_DONE=0
 im_cmd() {
+  if ((_CACHED_IM_DONE)); then echo "$_CACHED_IM_CMD"; return 0; fi
   local cmd
   for cmd in magick convert; do
-    is_cmd "$cmd" && { echo "$cmd"; return 0; }
+    is_cmd "$cmd" && { _CACHED_IM_CMD="$cmd"; _CACHED_IM_DONE=1; echo "$cmd"; return 0; }
   done
+  _CACHED_IM_DONE=1
   echo ""
 }
 
@@ -92,7 +98,7 @@ root_exec() {
   fi
 
   is_cmd sudo || die "Need pkexec or sudo for root actions"
-  sudo "$@"
+  sudo "$@" || { warn "sudo failed (exit $?)"; return 1; }
 }
 
 # =============================================================================

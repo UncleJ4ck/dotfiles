@@ -1664,7 +1664,9 @@ EOF
 # -----------------------------------------------------------------------------
 reload_desktop() {
   dbg "Reloading desktop components"
-  pgrep -x waybar &>/dev/null && killall -SIGUSR2 waybar 2>/dev/null || true
+  if pgrep -x waybar &>/dev/null; then
+    dbg "Waybar running (CSS auto-reload enabled)"
+  fi
   if is_cmd swaync-client; then
     swaync-client -R >/dev/null 2>&1 || true
     swaync-client -rs >/dev/null 2>&1 || true
