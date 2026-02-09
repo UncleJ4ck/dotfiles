@@ -1,3 +1,18 @@
 [GTK]
 application_prefer_dark_theme = true
-icon_theme_name = "Papirus-Dark"
+font_name = "JetBrainsMono Nerd Font 11"
+cursor_theme_name = "macOS"
+icon_theme_name = "Papirus-Dark-Matugen"
+theme_name = "adw-gtk3-dark"
+
+[background]
+path = "/etc/greetd/backgrounds/regreet-bg.png"
+fit = "Cover"
+
+[commands]
+reboot = ["systemctl", "reboot"]
+poweroff = ["systemctl", "poweroff"]
+
+
+[widget.clock]
+format = "%a %H:%M"
