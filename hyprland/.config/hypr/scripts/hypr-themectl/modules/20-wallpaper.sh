@@ -248,6 +248,7 @@ apply_wallpaper() {
   fi
 
   printf '%s\n' "$wall" > "$CACHE_FILE"
+  ln -sf "$wall" "$HOME/.config/rofi/.current_wallpaper"
   dbg "Cached: $CACHE_FILE"
 
   # Reapply to defeat late overrides

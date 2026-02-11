@@ -1,0 +1,12 @@
+configuration {
+  font: "JetBrainsMono Nerd Font Propo 14";
+  modi: "dmenu";
+  fixed-num-lines: true;
+  show-icons: false;
+  eh: 1;
+  dpi: 100;
+  click-to-exit: true;
+  location: 0;
+}
+
+@theme "~/.config/rofi/scripts/keybinds/theme.rasi"

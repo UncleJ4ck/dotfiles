@@ -10,8 +10,7 @@ declare -a MENU_COMMAND=(
     rofi -dmenu -i
     -markup-rows
     -p 'Keybinds'
-    -theme-str 'window {width: 70%;}'
-    -theme-str 'listview {fixed-height: true;}'
+    -config ~/.config/rofi/scripts/keybinds/menu.rasi
 )
 
 # ASCII Unit Separator (hidden delimiter in rofi display)

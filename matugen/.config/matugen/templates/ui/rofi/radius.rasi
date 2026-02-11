@@ -1,5 +1,5 @@
 * {
-borderradius: 20px;
-borderradiuselement: 20px;
-buttonradius: 18px;
+borderradius: 12px;
+borderradiuselement: 12px;
+buttonradius: 10px;
 }

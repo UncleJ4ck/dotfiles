@@ -137,15 +137,21 @@ case "$ACTION" in
             # Single monitor: just switch workspace directly
             hyprctl dispatch workspace "$GROUP"
         else
-            # Multi-monitor: switch all monitors atomically
+            # Multi-monitor: switch all monitors
+            # Uses focusworkspaceoncurrentmonitor to prevent workspace swapping.
+            # Non-focused monitors switch first for smoothest visual transition.
             BATCH_CMD=""
+            FOCUSED_INDEX=$(get_monitor_index "$FOCUSED_MONITOR")
+            FOCUSED_WS=$(get_workspace_id "$FOCUSED_INDEX" "$GROUP")
+
             for i in "${!MONITORS[@]}"; do
+                [[ "${MONITORS[$i]}" == "$FOCUSED_MONITOR" ]] && continue
                 ws=$(get_workspace_id "$i" "$GROUP")
                 mon="${MONITORS[$i]}"
-                BATCH_CMD+="dispatch focusmonitor ${mon}; dispatch workspace ${ws}; "
+                BATCH_CMD+="dispatch focusmonitor ${mon}; dispatch focusworkspaceoncurrentmonitor ${ws}; "
             done
-            # Return focus to originally focused monitor
-            BATCH_CMD+="dispatch focusmonitor ${FOCUSED_MONITOR}"
+            # Focused monitor last — this is what the user sees
+            BATCH_CMD+="dispatch focusmonitor ${FOCUSED_MONITOR}; dispatch focusworkspaceoncurrentmonitor ${FOCUSED_WS}"
             hyprctl --batch "$BATCH_CMD" >/dev/null
         fi
         notify_waybar "$GROUP"
@@ -167,23 +173,18 @@ case "$ACTION" in
             MONITOR_INDEX=$(get_monitor_index "$FOCUSED_MONITOR")
             TARGET_WS=$(get_workspace_id "$MONITOR_INDEX" "$GROUP")
 
-            # Build batch command:
             # 1. Move window to target workspace (follows the window)
-            # 2. Switch all OTHER monitors to their group workspaces
+            # 2. Switch other monitors with focusworkspaceoncurrentmonitor (no swap)
             BATCH_CMD="dispatch movetoworkspace ${TARGET_WS}; "
 
             for i in "${!MONITORS[@]}"; do
-                # Skip the focused monitor (already switched by movetoworkspace)
                 [[ "${MONITORS[$i]}" == "$FOCUSED_MONITOR" ]] && continue
-
                 ws=$(get_workspace_id "$i" "$GROUP")
                 mon="${MONITORS[$i]}"
-                BATCH_CMD+="dispatch focusmonitor ${mon}; dispatch workspace ${ws}; "
+                BATCH_CMD+="dispatch focusmonitor ${mon}; dispatch focusworkspaceoncurrentmonitor ${ws}; "
             done
 
-            # Return focus to the originally focused monitor (where window now is)
             BATCH_CMD+="dispatch focusmonitor ${FOCUSED_MONITOR}"
-
             hyprctl --batch "$BATCH_CMD" >/dev/null
         fi
         notify_waybar "$GROUP"
@@ -205,20 +206,18 @@ case "$ACTION" in
             MONITOR_INDEX=$(get_monitor_index "$FOCUSED_MONITOR")
             TARGET_WS=$(get_workspace_id "$MONITOR_INDEX" "$GROUP")
 
-            # Build batch command:
             # 1. Move window silently to target workspace
-            # 2. Switch ALL monitors to their group workspaces
+            # 2. Switch all monitors with focusworkspaceoncurrentmonitor (no swap)
             BATCH_CMD="dispatch movetoworkspacesilent ${TARGET_WS}; "
 
             for i in "${!MONITORS[@]}"; do
+                [[ "${MONITORS[$i]}" == "$FOCUSED_MONITOR" ]] && continue
                 ws=$(get_workspace_id "$i" "$GROUP")
                 mon="${MONITORS[$i]}"
-                BATCH_CMD+="dispatch focusmonitor ${mon}; dispatch workspace ${ws}; "
+                BATCH_CMD+="dispatch focusmonitor ${mon}; dispatch focusworkspaceoncurrentmonitor ${ws}; "
             done
 
-            # Return focus to the originally focused monitor
-            BATCH_CMD+="dispatch focusmonitor ${FOCUSED_MONITOR}"
-
+            BATCH_CMD+="dispatch focusmonitor ${FOCUSED_MONITOR}; dispatch focusworkspaceoncurrentmonitor ${TARGET_WS}"
             hyprctl --batch "$BATCH_CMD" >/dev/null
         fi
         notify_waybar "$GROUP"

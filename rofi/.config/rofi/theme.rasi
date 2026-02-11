@@ -1,77 +1,67 @@
 @import "~/.config/rofi/colors/colors.rasi"
 @import "~/.config/rofi/colors/radius.rasi"
 
+/* ── Window ────────────────────────────────────── */
 window {
-  width: 500px;
-  padding: 15px;
-  border: 0px;
+  width: 600px;
+  padding: 0px;
+  border: 3px;
   border-color: var(primary);
   border-radius: var(borderradius);
   transparency: "real";
-  background-color: var(surface);
-  x-offset: 0px;
-  y-offset: 0px;
-}
-
-error-message {
-  enabled: true;
-  padding: 0.8em;
   background-color: transparent;
-  border-color: var(primary);
-  border-radius: var(borderradius);
 }
 
-textbox {
-  enabled: true;
-  padding: 0.4em 0.54em 0.4em 0.54em;
-  str: "No results!";
-  text-color: var(error);
-  background-color: var(surface-container);
-  border-radius: var(buttonradius);
-  border-color: var(primary);
-}
-
-entry {
-  hide-cursor-on-empty: true;
-  placeholder: " Search...";
-  placeholder-color: var(secondary);
-  text-color: var(secondary);
-  border: 0em;
-  border-color: var(primary);
-  padding: 0.4em 0.54em 0.4em 0.54em;
-  border-radius: var(buttonradius);
-  background-color: var(surface-container);
-}
-
-listview {
-  lines: 4;
-  margin: 0px;
-  padding: 10px 0px 0px 0px;
-  columns: 4;
-  fixed-columns: true;
-  fixed-height: true;
-  background-color: transparent;
-  scrollbar: false;
-  cycle: false;
-  border: 0px;
-  border-color: var(primary);
-  spacing: 5px;
-}
-
+/* ── Layout ────────────────────────────────────── */
 mainbox {
   background-color: transparent;
-  spacing: 0em;
-  padding: 0.6em;
-  border-radius: var(borderradius);
-  children: [ inputbar, listview ];
+  spacing: 0px;
+  padding: 0px;
+  children: [ "wallbox", "listview" ];
+}
+
+/* ── Wallpaper banner ─────────────────────────── */
+wallbox {
+  background-image: url("~/.config/rofi/.current_wallpaper", width);
+  background-color: var(surface-container-low);
+  padding: 100px 18% 18px 18%;
+  children: [ "inputbar" ];
 }
 
 inputbar {
-  padding: 0em;
+  expand: true;
+  background-color: rgba(0, 0, 0, 0.65);
+  border: 1px;
+  border-color: rgba(255, 255, 255, 0.12);
+  border-radius: var(buttonradius);
+  padding: 10px 14px;
+  spacing: 0px;
+  children: [ "entry" ];
+}
+
+entry {
+  expand: true;
+  placeholder: "  Search...";
+  placeholder-color: rgba(255, 255, 255, 0.45);
+  text-color: rgba(255, 255, 255, 0.90);
   background-color: transparent;
-  children: [ entry ];
-  border: 0em;
-  border-color: var(primary);
+  border: 0px;
+  horizontal-align: 0.5;
+}
+
+/* ── App grid ─────────────────────────────────── */
+listview {
+  lines: 4;
+  columns: 4;
+  fixed-columns: true;
+  fixed-height: true;
+  margin: 0px;
+  padding: 10px;
+  background-color: var(surface-container-low);
+  scrollbar: false;
+  cycle: false;
+  border: 0px;
+  spacing: 5px;
 }
 
 element {
@@ -82,53 +72,53 @@ element {
   border: 0px;
 }
 
-element normal.normal {
-  background-color: transparent;
-  text-color: var(secondary);
-}
-
-element normal.active {
-  background-color: transparent;
-  text-color: var(secondary);
-}
-
-element normal.urgent {
-  background-color: transparent;
-  text-color: var(secondary);
-}
-
-element alternate.active {
-  background-color: transparent;
-  text-color: var(secondary);
-}
-
-element alternate.normal {
-  background-color: transparent;
-  text-color: var(secondary);
-}
-
+element normal.normal,
+element normal.active,
+element normal.urgent,
+element alternate.normal,
+element alternate.active,
 element alternate.urgent {
   background-color: transparent;
   text-color: var(secondary);
 }
 
+element selected.normal,
+element selected.active,
+element selected.urgent {
+  background-color: var(surface-container-high);
+  text-color: var(secondary);
+  border: 2px;
+  border-color: var(primary);
+}
+
 element-text {
-  background-color: #00000000;
+  background-color: transparent;
   text-color: inherit;
   padding: 0em;
   horizontal-align: 0.5;
   highlight: bold underline;
 }
 
-element selected.normal {
-  background-color: var(surface-container-highest);
-  text-color: var(secondary);
-  border: 0em;
-  border-color: var(primary);
-}
-
 element-icon {
   size: 48px;
   background-color: transparent;
   text-color: inherit;
+}
+
+/* ── Error message ────────────────────────────── */
+error-message {
+  enabled: true;
+  padding: 0.8em;
+  background-color: var(surface-container-low);
+  border-color: var(primary);
+  border-radius: var(borderradius);
+}
+
+textbox {
+  enabled: true;
+  padding: 0.4em 0.54em;
+  str: "No results!";
+  text-color: var(error);
+  background-color: var(surface-container);
+  border-radius: var(buttonradius);
 }

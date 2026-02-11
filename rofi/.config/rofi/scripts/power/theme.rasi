@@ -1,93 +1,113 @@
 @import "~/.config/rofi/colors/colors.rasi"
 @import "~/.config/rofi/colors/radius.rasi"
 
+/* ── Window ────────────────────────────────────── */
 window {
-  width: 22em;
-
-  padding: 0;
-  border: 0;
+  width: 24em;
+  padding: 0px;
+  border: 3px;
+  border-color: var(primary);
   border-radius: var(borderradius);
-
   transparency: "real";
-  background-color: var(surface);
-
+  background-color: transparent;
   x-offset: -10px;
   y-offset: 10px;
 }
 
-error-message {
+/* ── Layout ────────────────────────────────────── */
+mainbox {
+  background-color: transparent;
+  spacing: 0px;
+  padding: 0px;
+  children: [ "wallbox", "listview" ];
+}
+
+/* ── Wallpaper banner (no search) ─────────────── */
+wallbox {
+  background-image: url("~/.config/rofi/.current_wallpaper", width);
+  background-color: var(surface-container-low);
+  padding: 90px 0px 0px 0px;
+  children: [ "inputbar" ];
+}
+
+/* Hide the prompt + entry completely */
+inputbar {
+  background-color: transparent;
+  padding: 0px;
+  border: 0px;
+  spacing: 0px;
+  children: [ "prompt", "entry" ];
+}
+
+prompt {
   enabled: false;
 }
 
-mainbox {
+entry {
+  expand: false;
+  width: 0px;
+  padding: 0px;
   background-color: transparent;
-  padding: 8px;
-  children: [ listview ];
+  text-color: transparent;
+  placeholder: "";
 }
 
+/* ── Power options grid ───────────────────────── */
 listview {
   columns: 3;
   lines: 2;
-
-  /* Grid layout */
   layout: vertical;
   flow: horizontal;
-
   fixed-columns: true;
   fixed-height: true;
-
   spacing: 7px;
-  background-color: transparent;
+  background-color: var(surface-container-low);
   scrollbar: false;
   cycle: false;
-
-  margin: 0;
-  padding: 0;
-  border: 0;
+  margin: 0px;
+  padding: 8px;
+  border: 0px;
 }
 
 element {
   orientation: vertical;
-
   padding: 7px 9px;
-  margin: 0;
-
+  margin: 0px;
   border: 1px;
   border-color: var(surface-container-highest);
   border-radius: var(buttonradius);
-
-  background-color: var(surface);
+  background-color: var(surface-container);
 }
 
 element-text {
   background-color: transparent;
   text-color: inherit;
-
-  padding: 0;
+  padding: 0px;
   horizontal-align: 0.5;
   vertical-align: 0.5;
-
   markup: true;
   highlight: bold;
 }
 
-/* Style BOTH normal and alternate states (prevents black icons/text) */
 element normal.normal,
 element normal.active,
 element normal.urgent,
 element alternate.normal,
 element alternate.active,
 element alternate.urgent {
-  background-color: var(surface);
+  background-color: var(surface-container);
   text-color: var(secondary);
 }
 
 element selected.normal,
 element selected.active,
 element selected.urgent {
-  background-color: var(surface-container-highest);
+  background-color: var(surface-container-high);
   text-color: var(secondary);
-
-  border: 1px;
+  border: 2px;
   border-color: var(primary);
+}
+
+error-message {
+  enabled: false;
 }

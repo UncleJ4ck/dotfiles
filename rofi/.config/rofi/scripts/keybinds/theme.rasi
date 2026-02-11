@@ -3,7 +3,7 @@
 
 /* ── Window ────────────────────────────────────── */
 window {
-  width: 32em;
+  width: 65%;
   padding: 0px;
   border: 3px;
   border-color: var(primary);
@@ -24,7 +24,7 @@ mainbox {
 wallbox {
   background-image: url("~/.config/rofi/.current_wallpaper", width);
   background-color: var(surface-container-low);
-  padding: 70px 15% 16px 15%;
+  padding: 90px 32% 16px 32%;
   children: [ "inputbar" ];
 }
 
@@ -41,7 +41,7 @@ inputbar {
 
 entry {
   expand: true;
-  placeholder: "  Clipboard...";
+  placeholder: "  Search keybinds...";
   placeholder-color: rgba(255, 255, 255, 0.45);
   text-color: rgba(255, 255, 255, 0.90);
   background-color: transparent;
@@ -49,11 +49,12 @@ entry {
   horizontal-align: 0.5;
 }
 
-/* ── Clipboard list ───────────────────────────── */
+/* ── Keybind list ─────────────────────────────── */
 listview {
-  lines: 8;
+  lines: 12;
   columns: 1;
-  fixed-columns: false;
+  fixed-columns: true;
+  fixed-height: true;
   margin: 0px;
   padding: 8px;
   background-color: var(surface-container-low);
@@ -72,7 +73,7 @@ scrollbar {
 }
 
 element {
-  padding: 8px 10px;
+  padding: 6px 10px;
   orientation: horizontal;
   margin: 0px;
   border-radius: var(buttonradius);
@@ -94,7 +95,7 @@ element selected.active,
 element selected.urgent {
   background-color: var(surface-container-high);
   text-color: var(secondary);
-  border: 0 0 0 3px;
+  border: 2px;
   border-color: var(primary);
 }
 
@@ -104,12 +105,7 @@ element-text {
   padding: 0em;
   vertical-align: 0.5;
   highlight: bold underline;
-}
-
-element-icon {
-  size: 1.6em;
-  background-color: transparent;
-  text-color: inherit;
+  markup: true;
 }
 
 /* ── Error message ────────────────────────────── */
