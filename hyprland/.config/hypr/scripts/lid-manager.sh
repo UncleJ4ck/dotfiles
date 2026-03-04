@@ -1,0 +1,141 @@
+#!/bin/bash
+set -euo pipefail
+
+LID="eDP-1"
+LID_DISABLE_AT="${LID_DISABLE_AT:-3}"
+
+lid_is_open() {
+  ! grep -q closed /proc/acpi/button/lid/*/state 2>/dev/null
+}
+
+count_externals() {
+  local count=0
+  for f in /sys/class/drm/card*-*/status; do
+    [[ "$f" == *-eDP-* ]] && continue
+    [[ -f "$f" && $(< "$f") == connected ]] && ((++count)) || true
+  done
+  echo "$count"
+}
+
+manage_lid() {
+  local ext
+  ext=$(count_externals) || return
+  if lid_is_open && (( ext < LID_DISABLE_AT )); then
+    hyprctl keyword monitor "$LID,preferred,auto,1" >/dev/null 2>&1
+  else
+    hyprctl keyword monitor "$LID,disable" >/dev/null 2>&1
+  fi
+}
+
+consolidate_windows() {
+  local count=9
+
+  # Fetch all data upfront — 3 IPC calls total, bail on failure
+  local mon_json cli_json ws_json
+  mon_json=$(hyprctl monitors -j 2>/dev/null) || return 0
+  cli_json=$(hyprctl clients -j 2>/dev/null)  || return 0
+  ws_json=$(hyprctl workspaces -j 2>/dev/null) || return 0
+
+  # Validate JSON before processing (avoids jq parse errors crashing daemon)
+  jq -e 'type == "array"' <<< "$mon_json" >/dev/null 2>&1 || return 0
+  jq -e 'type == "array"' <<< "$cli_json" >/dev/null 2>&1 || return 0
+  jq -e 'type == "array"' <<< "$ws_json"  >/dev/null 2>&1 || return 0
+
+  # Single jq pass: find orphaned windows, emit hyprctl --batch commands
+  local batch
+  batch=$(jq -r --argjson count "$count" \
+    --argjson mon_json "$mon_json" \
+    --argjson ws_json "$ws_json" '
+    # Active monitor names as lookup object
+    ($mon_json | map(.name) | INDEX(.; .)) as $active |
+    # workspace_id → monitor_name map
+    ($ws_json | map({(.id | tostring): .monitor}) | add // {}) as $ws_map |
+    # For each client on a positive workspace whose monitor is gone
+    [ .[] |
+      select(.workspace.id > 0) |
+      .workspace.id as $wid |
+      .address as $addr |
+      ($ws_map[$wid | tostring] // "") as $ws_mon |
+      select($ws_mon == "" or ($active[$ws_mon] | not)) |
+      (($wid - 1) % $count + 1) as $group |
+      "dispatch movetoworkspacesilent \($group),address:\($addr)"
+    ] | join("; ")
+  ' <<< "$cli_json" 2>/dev/null) || return 0
+
+  # Execute batch (empty = no orphans)
+  [[ -n "$batch" ]] && hyprctl --batch "$batch" >/dev/null 2>&1 || true
+}
+
+recover_workspaces() {
+  # After hotplug, the plugin's persistent workspace flag is lost.
+  # Toggling enable_persistent_workspaces off→on forces the plugin to
+  # reinitialize all persistent workspaces on the correct monitors.
+  # This does NOT generate monitoradded/monitorremoved events (safe in daemon loop).
+  local opt="plugin:split-monitor-workspaces:enable_persistent_workspaces"
+  hyprctl keyword "$opt" 0 >/dev/null 2>&1 || true
+  sleep 0.1
+  hyprctl keyword "$opt" 1 >/dev/null 2>&1 || true
+}
+
+recover_after_change() {
+  # 1. Consolidate orphaned windows (single-fetch, validated)
+  consolidate_windows
+
+  # 2. Let the plugin fix workspace assignments
+  hyprctl dispatch split-grabroguewindows >/dev/null 2>&1 || true
+
+  # 3. Force-create all persistent workspaces across all monitors
+  recover_workspaces
+
+  # 4. Restart waybar via systemd (avoid duplicates from Restart=on-failure)
+  systemctl --user stop waybar.service 2>/dev/null || true
+  killall -q waybar 2>/dev/null || true
+  pkill -f waybar-keyboard.sh 2>/dev/null || true
+  sleep 0.3
+  if ! systemctl --user start waybar.service 2>/dev/null; then
+    waybar &>/dev/null &disown
+  fi
+
+  # 5. Reapply wallpaper on all outputs
+  awww restore 2>/dev/null || true
+}
+
+case "${1:-}" in
+  daemon)
+    manage_lid  # Initial check on startup
+    recover_after_change  # Restore waybar/wallpaper (event listeners aren't up yet)
+
+    # Single event FIFO — both sources feed here, one consumer handles recovery
+    FIFO="/tmp/hypr-lid-manager-events"
+    rm -f "$FIFO"
+    mkfifo "$FIFO"
+    exec 3<>"$FIFO"  # Hold both ends open (prevents EOF, prevents writer blocking)
+    trap 'rm -f "$FIFO"; kill $(jobs -p) 2>/dev/null' EXIT
+
+    # Source 1: udev catches DRM hotplug even without CRTC allocation
+    udevadm monitor --subsystem-match=drm 2>/dev/null | while IFS= read -r line; do
+      [[ "$line" == UDEV*change*/drm/card* ]] && printf '\n' > "$FIFO"
+    done &
+
+    # Source 2: Hyprland socket2 catches compositor-level monitor events
+    SOCKET="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
+    socat -U - "UNIX-CONNECT:$SOCKET" | while IFS= read -r line; do
+      case "$line" in
+        monitoraddedv2*|monitorremoved*) printf '\n' > "$FIFO" ;;
+      esac
+    done &
+
+    # Single consumer: debounce all sources, then evaluate once
+    while IFS= read -r _ <&3; do
+      while IFS= read -t 0.5 -r _ <&3; do :; done  # debounce burst
+      sleep 0.5  # Let Hyprland finish configuring outputs
+      manage_lid
+      recover_after_change
+    done
+    ;;
+  *)
+    # One-shot mode (called by bindl on lid switch)
+    manage_lid
+    recover_after_change
+    ;;
+esac

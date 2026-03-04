@@ -26,11 +26,10 @@ mainbox {
 wallbox {
   background-image: url("~/.config/rofi/.current_wallpaper", width);
   background-color: var(surface-container-low);
-  padding: 90px 0px 0px 0px;
+  padding: 50px 0px 0px 0px;
   children: [ "inputbar" ];
 }
 
-/* Hide the prompt + entry completely */
 inputbar {
   background-color: transparent;
   padding: 0px;
@@ -52,15 +51,12 @@ entry {
   placeholder: "";
 }
 
-/* ── Power options grid ───────────────────────── */
+/* ── Power options list ─────────────────────────── */
 listview {
-  columns: 3;
-  lines: 2;
   layout: vertical;
-  flow: horizontal;
   fixed-columns: true;
   fixed-height: true;
-  spacing: 7px;
+  spacing: 4px;
   background-color: var(surface-container-low);
   scrollbar: false;
   cycle: false;
@@ -70,8 +66,8 @@ listview {
 }
 
 element {
-  orientation: vertical;
-  padding: 7px 9px;
+  orientation: horizontal;
+  padding: 10px 14px;
   margin: 0px;
   border: 1px;
   border-color: var(surface-container-highest);
@@ -83,7 +79,7 @@ element-text {
   background-color: transparent;
   text-color: inherit;
   padding: 0px;
-  horizontal-align: 0.5;
+  horizontal-align: 0.0;
   vertical-align: 0.5;
   markup: true;
   highlight: bold;

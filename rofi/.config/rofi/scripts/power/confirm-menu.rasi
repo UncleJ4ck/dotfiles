@@ -2,24 +2,23 @@ configuration{
   font: "JetBrainsMono Nerd Font Propo 19";
   modi: "dmenu";
   markup-rows: true;
-
   show-icons: false;
-  icon-theme: "Icons";
-
-  lines: 6;
+  lines: 2;
   columns: 1;
   fixed-num-lines: true;
-
   eh: 1;
-
   dpi: 100;
   click-to-exit: true;
-
   hover-select: true;
   me-select-entry: "";
   me-accept-entry: "MousePrimary";
-
   location: 0;
 }
 
 @theme "~/.config/rofi/scripts/power/theme.rasi"
+
+/* Force 2-row layout for confirmation */
+listview {
+  lines: 2;
+  columns: 1;
+}

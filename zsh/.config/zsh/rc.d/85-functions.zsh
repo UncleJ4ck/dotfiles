@@ -75,8 +75,8 @@ __mk_parse_opts() {
 
 __mk_read_pass() {
   local pass=""
-  read -r -s "pass?Password: " pass
-  echo
+  read -r -s "pass?Password: "
+  echo >&2
   printf '%s' "$pass"
 }
 

@@ -14,13 +14,8 @@ reload_desktop() {
   if pgrep -x waybar &>/dev/null; then
     dbg "Waybar reload handled by matugen post_hook (SIGUSR2)"
   else
-    # Start waybar if it is not running
-    if is_cmd uwsm; then
-      setsid uwsm app -- waybar &>/dev/null &
-    else
-      setsid waybar &>/dev/null &
-    fi
-    dbg "Waybar started"
+    systemctl --user restart waybar.service 2>/dev/null || true
+    dbg "Waybar restarted via systemd"
   fi
 
   # SwayNC - reload with timeout to prevent hangs
@@ -31,10 +26,13 @@ reload_desktop() {
     dbg "SwayNC reloaded"
   fi
 
-  # Thunar - file manager (quit to refresh theme)
+  # Thunar - GTK3 doesn't hot-reload imported CSS; restart daemon
   if is_cmd thunar && pgrep -x thunar &>/dev/null; then
     thunar -q 2>/dev/null || true
-    dbg "Thunar quit for refresh"
+    sleep 0.3
+    thunar --daemon &
+    disown
+    dbg "Thunar restarted"
   fi
 
   # Kitty - SIGUSR1 for config reload

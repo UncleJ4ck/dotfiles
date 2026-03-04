@@ -57,10 +57,9 @@ confirm() {
     local label="$1"
     local answer
     answer=$(printf '%b' \
-        "yes\0display\037<span size='24000'>󰄬</span>&#10;<span size='10000'>Yes, $label</span>\n" \
-        "no\0display\037<span size='24000'>󰜺</span>&#10;<span size='10000'>Cancel</span>\n" |
-        rofi -dmenu -i -markup-rows -config "$SCRIPT_DIR/menu.rasi" \
-            -theme-str 'listview { columns: 2; lines: 1; }' \
+        "yes\0display\037<span size='20000'>󰄬</span>  <span size='13000'>Yes, $label</span>\n" \
+        "no\0display\037<span size='20000'>󰜺</span>  <span size='13000'>Cancel</span>\n" |
+        rofi -dmenu -i -markup-rows -config "$SCRIPT_DIR/confirm-menu.rasi" \
             -p "$label?")
     [[ "$answer" == "yes" ]]
 }
@@ -70,12 +69,12 @@ confirm() {
 # ─────────────────────────────────────────────────────────────────────────────
 
 chosen=$(printf '%b' \
-    "shutdown\0display\037<span size='24000'>󰐥</span>&#10;<span size='10000'>Shutdown</span>\n" \
-    "reboot\0display\037<span size='24000'>󰜉</span>&#10;<span size='10000'>Reboot</span>\n" \
-    "suspend\0display\037<span size='24000'>󰤄</span>&#10;<span size='10000'>Suspend</span>\n" \
-    "lock\0display\037<span size='24000'>󰌾</span>&#10;<span size='10000'>Lock</span>\n" \
-    "logout\0display\037<span size='24000'>󰀄</span>&#10;<span size='10000'>Logout</span>\n" \
-    "soft_reboot\0display\037<span size='24000'>󰑓</span>&#10;<span size='10000'>Soft Reboot</span>\n" |
+    "shutdown\0display\037<span size='20000'>󰐥</span>  <span size='13000'>Shutdown</span>\n" \
+    "reboot\0display\037<span size='20000'>󰜉</span>  <span size='13000'>Reboot</span>\n" \
+    "suspend\0display\037<span size='20000'>󰤄</span>  <span size='13000'>Suspend</span>\n" \
+    "lock\0display\037<span size='20000'>󰌾</span>  <span size='13000'>Lock</span>\n" \
+    "logout\0display\037<span size='20000'>󰀄</span>  <span size='13000'>Logout</span>\n" \
+    "soft_reboot\0display\037<span size='20000'>󰑓</span>  <span size='13000'>Soft Reboot</span>\n" |
     rofi -dmenu -i -markup-rows -config "$SCRIPT_DIR/menu.rasi" -p "Power") || exit 0
 
 [[ -z "$chosen" ]] && exit 0

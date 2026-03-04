@@ -86,6 +86,20 @@
           "command": "sh -c 'region=$(slurp) && [ -n \"$region\" ] && grim -g \"$region\" - | wl-copy && notify-send \"Screenshot\" \"Copied to clipboard\"'"
         },
         {
+          "label": "󰋋",
+          "type": "toggle",
+          "active": false,
+          "command": "sh -c '[[ $SWAYNC_TOGGLE_STATE == true ]] && pactl set-sink-port @DEFAULT_SINK@ analog-output-headphones || pactl set-sink-port @DEFAULT_SINK@ analog-output-speaker'",
+          "update-command": "sh -c 'pactl list sinks | grep -q \"Active Port: analog-output-headphones\" && echo true || echo false'"
+        },
+        {
+          "label": "󰍬",
+          "type": "toggle",
+          "active": false,
+          "command": "sh -c '[[ $SWAYNC_TOGGLE_STATE == true ]] && pactl set-source-port @DEFAULT_SOURCE@ analog-input-headset-mic || pactl set-source-port @DEFAULT_SOURCE@ analog-input-internal-mic'",
+          "update-command": "sh -c 'pactl list sources | grep -q \"Active Port: analog-input-headset-mic\" && echo true || echo false'"
+        },
+        {
           "label": "󰕾",
           "command": "pwvucontrol"
         }
