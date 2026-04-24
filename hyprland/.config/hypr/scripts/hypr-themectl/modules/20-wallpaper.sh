@@ -93,11 +93,13 @@ wait_monitors_stable() {
   local last="" cur="" stable=0
 
   # Raw hyprctl JSON is deterministic for same state — no jq needed.
-  # 24 iterations × 0.5s = 12s max; 3 consecutive matches = 1.5s stable.
-  for _ in {1..24}; do
+  # 10 iterations × 0.3s = 3s max; 3 consecutive matches = 0.9s stable.
+  # lid-manager.sh already runs its own stability loop before calling us,
+  # so this is a quick final check — no need to wait 12s every time.
+  for _ in {1..10}; do
     cur="$(hyprctl -j monitors 2>/dev/null)" || cur=""
 
-    [[ -z "$cur" || "$cur" == "[]" ]] && { sleep 0.5; continue; }
+    [[ -z "$cur" || "$cur" == "[]" ]] && { sleep 0.3; continue; }
 
     if [[ "$cur" == "$last" ]]; then
       ((++stable))
@@ -108,7 +110,7 @@ wait_monitors_stable() {
     fi
 
     ((stable >= 3)) && { dbg "Monitors stable"; return 0; }
-    sleep 0.5
+    sleep 0.3
   done
 
   warn "Monitors did not stabilize, continuing anyway"

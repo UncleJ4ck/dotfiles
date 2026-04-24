@@ -50,6 +50,10 @@ Commands:
 
 Options:
   --debug              Enable verbose debug output
+  --sync               Block until Plymouth UKI rebuild finishes (~30-60s).
+                       Default is async: mkinitcpio runs in the background so
+                       apply returns immediately.  Use --sync before reboot
+                       to guarantee the latest Plymouth is baked in.
   --random             Pick random wallpaper (default)
   --reapply            Use cached wallpaper
   --set <path|name>    Use specific wallpaper
@@ -57,6 +61,7 @@ Options:
 Examples:
   hypr-themectl.sh apply --random
   hypr-themectl.sh apply --set ~/Pictures/walls/sunset.png
+  hypr-themectl.sh --sync apply --reapply      # block on UKI rebuild
   hypr-themectl.sh wallpaper --reapply
   hypr-themectl.sh --debug regreet --set wallpaper.png
 EOF
@@ -131,6 +136,12 @@ main() {
     case "$1" in
     --debug)
       DEBUG=1
+      shift
+      ;;
+    --sync)
+      # Force synchronous Plymouth UKI rebuild (blocks ~30-60s).
+      # Use before reboot to guarantee the latest Plymouth is baked in.
+      export PLYMOUTH_SYNC_REBUILD=1
       shift
       ;;
     -h | --help)
@@ -216,6 +227,9 @@ main() {
     local wall
     wall="$(resolve_wall_from_mode)"
     info "Wallpaper: $wall"
+    # Run matugen first so _profile_state_key and the color-aware scorers
+    # see fresh Matugen JSON, not stale colors from a previous wallpaper.
+    run_matugen "$wall"
     apply_profile_picture "$wall"
     ;;
 

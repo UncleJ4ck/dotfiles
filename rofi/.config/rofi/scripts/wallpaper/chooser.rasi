@@ -1,18 +1,13 @@
-configuration{
- font: "JetBrainsMono Nerd Font Propo 20";
- modi: "dmenu";
- fixed-num-lines: true;
- show-icons: true;
- icon-theme: "Icons";
- eh: 2;
- dpi: 100;
- display-drun: "";
- display-run: "";
- display-filebrowser: "󱧷";
- location: 0;
-/* hover-select: true;
- me-select-entry: '';
- me-accept-entry: "MousePrimary"; */
+configuration {
+  font: "JetBrainsMono Nerd Font Propo 13";
+  modi: "dmenu";
+  fixed-num-lines: true;
+  show-icons: true;
+  icon-theme: "Papirus-Dark-Matugen";
+  eh: 2;
+  dpi: 100;
+  click-to-exit: true;
+  location: 0;
 }
 
 @theme "~/.config/rofi/scripts/wallpaper/chooser-theme.rasi"

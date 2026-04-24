@@ -1,0 +1,1 @@
+Useful commands for this repo: `bash -n .config/hypr/scripts/<script>.sh` to syntax-check a helper script; `rg -n <pattern> .config/hypr` to find bindings or commands; `sed -n 'start,endp' .config/hypr/conf.d/keybinds.conf` to inspect a section; `hyprctl reload` to reload Hyprland config after edits; `git -C /home/j4kuuu/dotfiles/hyprland diff -- <path>` to review changes.

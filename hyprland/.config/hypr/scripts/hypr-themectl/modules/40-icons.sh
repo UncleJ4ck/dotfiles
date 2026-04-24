@@ -410,10 +410,25 @@ install_system_icons() {
   local dst="/usr/share/icons/$THEME_NAME"
   ensure_theme_dir
 
+  # Skip rsync if the user-side theme hasn't changed since last install.
+  # Key = current folder color + mtime of the theme index (cheap proxy for
+  # "anything changed in theme dir").  Avoids ~5-10s of rsync + icon-cache
+  # regeneration + a pkexec prompt on every wallpaper swap.
+  local current color_key state_file="$STATE_DIR/system_icons_installed"
+  current="$(theme_current_color)"
+  color_key="${current}_$(stat -c '%Y' "$THEME_DIR/index.theme" 2>/dev/null || echo 0)"
+
+  if [[ -d "$dst" && "$(read_state "$state_file")" == "$color_key" ]]; then
+    dbg "System icons already installed for $color_key"
+    return 0
+  fi
+
   info "Installing system icons: $dst"
   root_exec mkdir -p "$dst"
   root_exec rsync -a --delete "$THEME_DIR/" "$dst/"
   is_cmd gtk-update-icon-cache && root_exec gtk-update-icon-cache -f -t "$dst" 2>/dev/null || true
+
+  write_state "$state_file" "$color_key"
 }
 
 # =============================================================================

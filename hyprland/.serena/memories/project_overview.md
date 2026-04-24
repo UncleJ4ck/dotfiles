@@ -1,0 +1,1 @@
+This project is a Hyprland dotfiles repo rooted at /home/j4kuuu/dotfiles/hyprland. The active config lives under .config/hypr and is symlinked into ~/.config/hypr. It mainly contains Hyprland configuration fragments in .config/hypr/conf.d and Bash helper scripts in .config/hypr/scripts.

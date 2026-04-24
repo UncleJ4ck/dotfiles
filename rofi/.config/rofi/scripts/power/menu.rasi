@@ -1,5 +1,5 @@
 configuration{
-  font: "JetBrainsMono Nerd Font Propo 19";
+  font: "JetBrainsMono Nerd Font Propo 13";
   modi: "dmenu";
   markup-rows: true;
 
@@ -8,7 +8,7 @@ configuration{
 
   lines: 6;
   columns: 1;
-  fixed-num-lines: true;
+  fixed-num-lines: false;
 
   eh: 1;
 

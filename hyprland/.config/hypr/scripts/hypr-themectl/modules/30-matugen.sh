@@ -13,18 +13,45 @@ run_matugen() {
     return 0
   fi
 
+  [[ -f "$wall" ]] || {
+    warn "Matugen: wallpaper missing: '$wall'"
+    return 0
+  }
+
   info "Running matugen (mode: $MATUGEN_MODE)"
+
+  # matugen 4.x removed the implicit "pick most dominant color" behavior and
+  # now prompts interactively when multiple dominant colors are found.  We
+  # pass --prefer saturation to pick the most chromatic color automatically
+  # (better matches the wallpaper's visual identity than raw dominance, which
+  # often selects near-neutral tones on wallpapers with lots of dark/brown
+  # areas).  --source-color-index is a fallback alias for compatibility with
+  # older matugen installs that honor index-based selection.
+  #
+  # </dev/null ensures stdin is closed so any unexpected prompt exits instead
+  # of blocking the script, even if matugen's flags change again.
+  local -a mg_args=(
+    matugen image "$wall"
+    -m "$MATUGEN_MODE"
+    --json hex
+    --prefer saturation
+  )
 
   # Single invocation: --json hex outputs JSON to stdout while still applying
   # templates and running post_hooks normally (no need for a second --dry-run call)
-  local json_out=""
-  if ! json_out=$(matugen image "$wall" -m "$MATUGEN_MODE" --json hex 2>/dev/null); then
+  local json_out="" err_out=""
+  if ! json_out=$("${mg_args[@]}" 2>/tmp/matugen.err </dev/null); then
+    err_out="$(</tmp/matugen.err)"
     warn "Matugen failed on first attempt, retrying..."
-    json_out=$(matugen image "$wall" -m "$MATUGEN_MODE" --json hex) || {
+    ((DEBUG)) && [[ -n "$err_out" ]] && dbg "matugen stderr: $err_out"
+
+    json_out=$("${mg_args[@]}" </dev/null 2>&1) || {
       warn "Matugen failed, using fallbacks"
+      ((DEBUG)) && dbg "matugen retry output: $json_out"
       return 0
     }
   fi
+  rm -f /tmp/matugen.err 2>/dev/null || true
 
   # Save JSON for Limine, Plymouth, and other consumers
   if [[ -n "$json_out" ]]; then
@@ -117,7 +144,12 @@ pick_icon_hex() {
 
 # =============================================================================
 # Matugen JSON Reader
-# JSON shape: .colors.<role>.<dark|light|default>
+# JSON shape changed in matugen 4.x:
+#   Old (≤3.x): .colors.<role>.<dark|light|default>           → "#hex"
+#   New (4.x):  .colors.<role>.<dark|light|default>.color     → "#hex"
+# We query the new path first, fall back to the old path so the same script
+# works on both versions.  Also validate the result looks like a hex color
+# before accepting it — guards against jq returning an object by accident.
 # =============================================================================
 matugen_role_hex() {
   local mode="$1" key="$2" fallback="$3"
@@ -128,10 +160,19 @@ matugen_role_hex() {
 
   if [[ -s "$MATUGEN_JSON_FILE" ]]; then
     local v
-    v="$(jq -r --arg m "$jq_mode" --arg k "$key" \
-         '.colors[$k][$m] // empty' "$MATUGEN_JSON_FILE" 2>/dev/null)" || true
+    # matugen 4.x wraps each leaf as {"color": "#hex"} — try that first,
+    # then fall back to the old direct-string format from matugen ≤3.x.
+    v="$(jq -r --arg m "$jq_mode" --arg k "$key" '
+      (.colors[$k][$m].color // .colors[$k][$m] // empty)
+      | if type == "string" then . else empty end
+    ' "$MATUGEN_JSON_FILE" 2>/dev/null)" || true
 
-    [[ -n "$v" && "$v" != "null" ]] && { echo "$v"; return 0; }
+    # Validate it's actually a hex color (guards against any future schema
+    # changes producing unexpected types).
+    if [[ -n "$v" && "$v" != "null" && "$v" =~ ^#[0-9a-fA-F]{6}$ ]]; then
+      echo "$v"
+      return 0
+    fi
   fi
 
   echo "$fallback"

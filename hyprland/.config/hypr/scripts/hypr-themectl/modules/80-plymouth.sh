@@ -314,24 +314,42 @@ _generate_plymouth_assets() {
     read -r ac_r ac_g ac_b < <(_hex_to_rgb255 "$accent")
     read -r bd_r bd_g bd_b < <(_hex_to_rgb255 "$border_hex")
 
-    root_exec "$cmd" -size 720x220 xc:none \
-      -fill "rgba(${bg_r},${bg_g},${bg_b},0.55)" \
-      -stroke "rgba(${bd_r},${bd_g},${bd_b},0.35)" \
+    # Render as the current user to a temp file, then install as root.
+    # Running ImageMagick as root for drawing is an unnecessary escalation
+    # and a known source of CVE exposure historically.
+    local tmp_box tmp_entry tmp_bullet
+    tmp_box="$(mktemp --tmpdir 'plymouth-box-XXXXXX.png')"
+    tmp_entry="$(mktemp --tmpdir 'plymouth-entry-XXXXXX.png')"
+    tmp_bullet="$(mktemp --tmpdir 'plymouth-bullet-XXXXXX.png')"
+
+    # Box: bumped opacity 0.55 → 0.65 for better legibility on busy wallpapers
+    "$cmd" -size 720x220 xc:none \
+      -fill "rgba(${bg_r},${bg_g},${bg_b},0.65)" \
+      -stroke "rgba(${bd_r},${bd_g},${bd_b},0.40)" \
       -strokewidth 2 \
       -draw "roundrectangle 6,6 714,214 28,28" \
-      -strip "${PLYMOUTH_THEME_DIR}/box.png" 2>/dev/null || true
+      -strip "$tmp_box" 2>/dev/null && \
+      root_exec install -m 644 "$tmp_box" "${PLYMOUTH_THEME_DIR}/box.png" || true
 
-    root_exec "$cmd" -size 520x64 xc:none \
-      -fill "rgba(${bg_r},${bg_g},${bg_b},0.62)" \
+    # Entry: 600x68 (was 520x64) — more room for long LUKS passwords,
+    # 72%→83% of box width, still fits inside the 720px box with padding.
+    "$cmd" -size 600x68 xc:none \
+      -fill "rgba(${bg_r},${bg_g},${bg_b},0.72)" \
       -stroke "rgba(${ac_r},${ac_g},${ac_b},0.55)" \
       -strokewidth 2 \
-      -draw "roundrectangle 6,6 514,58 18,18" \
-      -strip "${PLYMOUTH_THEME_DIR}/entry.png" 2>/dev/null || true
+      -draw "roundrectangle 6,6 594,62 20,20" \
+      -strip "$tmp_entry" 2>/dev/null && \
+      root_exec install -m 644 "$tmp_entry" "${PLYMOUTH_THEME_DIR}/entry.png" || true
 
-    root_exec "$cmd" -size 14x14 xc:none \
-      -fill "rgba(${ac_r},${ac_g},${ac_b},0.90)" \
-      -draw "circle 7,7 7,2" \
-      -strip "${PLYMOUTH_THEME_DIR}/bullet.png" 2>/dev/null || true
+    # Bullet: 18x18 (was 14x14) — Plymouth scales assets pixel-for-pixel,
+    # so tiny bullets disappeared on 4K displays.
+    "$cmd" -size 18x18 xc:none \
+      -fill "rgba(${ac_r},${ac_g},${ac_b},0.92)" \
+      -draw "circle 9,9 9,3" \
+      -strip "$tmp_bullet" 2>/dev/null && \
+      root_exec install -m 644 "$tmp_bullet" "${PLYMOUTH_THEME_DIR}/bullet.png" || true
+
+    rm -f "$tmp_box" "$tmp_entry" "$tmp_bullet" 2>/dev/null || true
   fi
 }
 
@@ -352,7 +370,25 @@ EOT
 }
 
 _rebuild_ukis() {
-  root_exec mkinitcpio -P
+  # mkinitcpio -P rebuilds every installed kernel's UKI and takes 30-60s.
+  # Two modes:
+  #   PLYMOUTH_SYNC_REBUILD=1 → block until rebuild finishes (for pre-reboot use)
+  #   PLYMOUTH_SYNC_REBUILD=0 → background rebuild, return immediately (default)
+  #
+  # In async mode: setsid detaches from our process group so the child
+  # survives hypr-themectl exit. flock -n prevents concurrent rebuilds
+  # (two mkinitcpio processes touching /boot would race).
+  if ((${PLYMOUTH_SYNC_REBUILD:-0})); then
+    info "Plymouth UKI rebuild (synchronous, ~30-60s)"
+    root_exec mkinitcpio -P
+  else
+    info "Plymouth UKI rebuild queued (background, ~30-60s, log: /tmp/hypr-themectl-mkinitcpio.log)"
+    root_exec bash -c '
+      setsid flock -n /run/hypr-themectl-mkinitcpio.lock \
+        mkinitcpio -P >/tmp/hypr-themectl-mkinitcpio.log 2>&1 </dev/null &
+      disown 2>/dev/null || true
+    ' 2>/dev/null || true
+  fi
 }
 
 # -----------------------------------------------------------------------------

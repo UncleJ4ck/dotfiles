@@ -1,0 +1,123 @@
+@import "~/.config/rofi/colors/colors.rasi"
+@import "~/.config/rofi/colors/radius.rasi"
+
+/* ── Window ────────────────────────────────────── */
+window {
+  width: 65%;
+  padding: 0px;
+  border: 3px;
+  border-color: var(primary);
+  border-radius: var(borderradius);
+  transparency: "real";
+  background-color: transparent;
+}
+
+/* ── Layout ────────────────────────────────────── */
+mainbox {
+  background-color: transparent;
+  spacing: 0px;
+  padding: 0px;
+  children: [ "inputbar", "listview" ];
+}
+
+/* ── Wallpaper banner (inputbar IS the banner — no custom widget) ─ */
+inputbar {
+  background-image: url("~/.config/rofi/.current_wallpaper", width);
+  background-color: var(surface-container-low);
+  padding: 70px 32% 14px 32%;
+  children: [ "entry" ];
+  spacing: 0px;
+}
+
+/* ── Search entry (dark scrim pill) ───────────────────── */
+entry {
+  expand: true;
+  background-color: rgba(0, 0, 0, 0.78);
+  border: 1px;
+  border-color: rgba(255, 255, 255, 0.18);
+  border-radius: var(buttonradius);
+  padding: 12px 16px;
+  min-height: 44px;
+  placeholder: "  Search keybinds...";
+  placeholder-color: rgba(255, 255, 255, 0.70);
+  text-color: rgba(255, 255, 255, 0.98);
+  horizontal-align: 0.5;
+  vertical-align: 0.5;
+}
+
+/* ── Keybind list ─────────────────────────────── */
+listview {
+  lines: 12;
+  columns: 1;
+  fixed-columns: true;
+  fixed-height: true;
+  margin: 0px;
+  padding: 8px;
+  background-color: var(surface-container-low);
+  scrollbar: true;
+  cycle: false;
+  border: 0px;
+  spacing: 4px;
+}
+
+scrollbar {
+  margin: 0px 4px;
+  handle-width: 4px;
+  handle-color: var(primary);
+  background-color: var(surface-container);
+  border-radius: 2px;
+}
+
+element {
+  padding: 6px 10px;
+  orientation: horizontal;
+  margin: 0px;
+  border-radius: var(buttonradius);
+  border: 0px;
+}
+
+element normal.normal,
+element normal.active,
+element normal.urgent,
+element alternate.normal,
+element alternate.active,
+element alternate.urgent {
+  background-color: transparent;
+  text-color: var(secondary);
+}
+
+element selected.normal,
+element selected.active,
+element selected.urgent {
+  background-color: var(surface-container-high);
+  text-color: var(secondary);
+  border: 2px;
+  border-color: var(primary);
+}
+
+element-text {
+  background-color: transparent;
+  text-color: inherit;
+  padding: 0em;
+  vertical-align: 0.5;
+  highlight: bold underline;
+  markup: true;
+}
+
+/* ── Error message ────────────────────────────── */
+error-message {
+  enabled: true;
+  padding: 0.8em;
+  background-color: var(surface-container-low);
+  border-color: var(primary);
+  border-radius: var(borderradius);
+}
+
+textbox {
+  enabled: true;
+  padding: 0.3em 0.45em;
+  str: "No results found";
+  text-color: var(error);
+  background-color: var(surface-container);
+  border-radius: var(buttonradius);
+}

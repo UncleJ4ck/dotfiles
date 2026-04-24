@@ -1,132 +1,120 @@
 @import "~/.config/rofi/colors/colors.rasi"
 @import "~/.config/rofi/colors/radius.rasi"
 
+/* ── Wallpaper thumbnail picker ─────────────────────────────────────── */
 window {
-  width: 48em;
-  padding: 0em;
-  border: 0px;         
+  width: 38em;
+  padding: 0px;
+  border: 2px;
   border-color: var(primary);
   border-radius: var(borderradius);
   transparency: "real";
-  background-color: var(surface);
-  x-offset: 0em;
-  y-offset: 0em;
+  background-color: var(surface-container);
+}
+
+mainbox {
+  background-color: transparent;
+  spacing: 0px;
+  padding: 10px;
+  children: [ "inputbar", "listview" ];
+  border-radius: var(borderradius);
+}
+
+inputbar {
+  expand: true;
+  background-color: var(surface-container-highest);
+  border: 1px;
+  border-color: var(outline-variant);
+  border-radius: var(buttonradius);
+  padding: 8px 12px;
+  min-height: 36px;
+  margin: 0px 0px 8px 0px;
+  spacing: 0px;
+  children: [ "entry" ];
+}
+
+entry {
+  expand: true;
+  placeholder: "  Search wallpapers...";
+  placeholder-color: var(on-surface-variant);
+  text-color: var(on-surface);
+  background-color: transparent;
+  border: 0px;
+  horizontal-align: 0.0;
+  vertical-align: 0.5;
+}
+
+listview {
+  lines: 2;
+  columns: 3;
+  fixed-columns: true;
+  fixed-height: true;
+  margin: 0px;
+  padding: 0px;
+  background-color: transparent;
+  scrollbar: false;
+  cycle: false;
+  border: 0px;
+  spacing: 6px;
+}
+
+element {
+  padding: 6px;
+  orientation: vertical;
+  margin: 0px;
+  border-radius: var(buttonradius);
+  border: 1px;
+  border-color: var(outline-variant);
+  background-color: var(surface-container-high);
+}
+
+element normal.normal,
+element normal.active,
+element normal.urgent,
+element alternate.normal,
+element alternate.active,
+element alternate.urgent {
+  background-color: var(surface-container-high);
+  text-color: var(on-surface);
+}
+
+element selected.normal,
+element selected.active,
+element selected.urgent {
+  background-color: var(primary-container);
+  text-color: var(on-primary-container);
+  border: 1px;
+  border-color: var(primary);
+}
+
+element-text {
+  background-color: transparent;
+  text-color: inherit;
+  padding: 4px 0px 0px 0px;
+  horizontal-align: 0.5;
+  highlight: bold underline;
+}
+
+element-icon {
+  size: 10em;
+  background-color: transparent;
+  text-color: inherit;
+  border-radius: var(buttonradius);
 }
 
 error-message {
   enabled: true;
   padding: 0.8em;
-  background-color: transparent;
-  border-color: var(primary);
+  background-color: var(surface-container);
+  border-color: var(error);
   border-radius: var(borderradius);
 }
 
 textbox {
   enabled: true;
-  padding: 0.4em 0.54em 0.4em 0.54em;
-  str: "Keine Ergebnisse!";
-  text-color: var(error);
-  background-color: var(surface-container);
+  padding: 0.3em 0.45em;
+  str: "No results found";
+  text-color: var(on-error-container);
+  background-color: var(error-container);
   border-radius: var(buttonradius);
-  border-color: var(primary);
-}
-
-entry {
-  hide-cursor-on-empty: true;
-  placeholder: " Suchen...";
-  placeholder-color: var(secondary);
-  text-color: var(secondary);
-  border: 0em;
-  border-color: var(primary);
-  padding: 0.4em 0.54em 0.4em 0.54em;
-  border-radius: var(buttonradius);
-  background-color: var(surface-container);
-}
-
-listview {
-  lines: 2;
-  margin: 0em;
-  padding: 0.8em 0em 0em 0em;
-  columns: 3;
-  fixed-columns: false;
-  background-color: transparent;
-  scrollbar: false;
-  cycle: false;
-  border: 0em;
-  border-color: var(primary);
-}
-
-mainbox {
-  background-color: transparent;
-  spacing: 0em; 
-  padding: 0.8em;
-  border-radius: var(borderradius);
-  children: [ inputbar, listview ];
-}
-
-inputbar {
-  padding: 0em;
-  background-color: transparent;
-  children: [ entry ];
-  border: 0em;
-  border-color: var(primary);
-}
-
-element {
-  padding: 0.4em 0.54em 0.4em 0.54em;
-  orientation: vertical;
-  margin: 0.14em;
-  border-radius: var(buttonradius);
-  border: 0em;
-}
-
-element normal.normal {
-  background-color: transparent;
-  text-color: var(secondary);
-}
-
-element normal.active {
-  background-color: transparent;
-  text-color: var(secondary);
-}
-
-element normal.urgent {
-  background-color: transparent;
-  text-color: var(secondary);
-}
-
-element alternate.active {
-  background-color: transparent;
-  text-color: var(secondary);
-}
-
-element alternate.normal {
-  background-color: transparent;
-  text-color: var(secondary);
-}
-
-element alternate.urgent {
-  background-color: transparent;
-  text-color: var(secondary);
-}
-
-element-text {
-  background-color: #00000000;
-  text-color: inherit;
-  padding: 0em;
-  horizontal-align: 0.5;
-  highlight: bold underline;
-}
-
-element selected.normal {
-  background-color: var(surface-container-highest);
-  text-color: var(secondary);
-  border: 0em;
-  border-color: var(primary);
-}
-
-element-icon {
-  size: 13em; 
-  background-color: transparent;
-  text-color: inherit;
 }

@@ -162,7 +162,9 @@ apply_limine_background() {
   fi
 
   local wall_hash state_key prev_state dest tmp_file cmd ext
-  wall_hash="$(md5sum "$wall" 2>/dev/null | cut -d' ' -f1)" || wall_hash="unknown"
+  # mtime+size is ~instant and sufficient as a change detector.
+  # md5sum of a 4K wallpaper takes ~50ms; we only need "did this file change?".
+  wall_hash="$(stat -c '%Y-%s' "$wall" 2>/dev/null)" || wall_hash="unknown"
 
   ext="$LIMINE_BG_FORMAT"
   [[ "$ext" == "jpeg" ]] && ext="jpg"

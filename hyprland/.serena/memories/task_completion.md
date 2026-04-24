@@ -1,0 +1,1 @@
+After modifying this repo, validate Bash helper scripts with `bash -n`, review the exact diff with git, and reload Hyprland with `hyprctl reload` inside a running session so new keybinds take effect. For user-facing changes, mention any required package installs explicitly.

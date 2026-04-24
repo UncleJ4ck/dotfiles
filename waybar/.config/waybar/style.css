@@ -43,10 +43,12 @@ window#waybar {
 #workspaces button.visible {
     background: @primary;
     color: @on_primary;
-    padding: 2px 10px;
+    padding: 2px 14px;
     border: 1px solid @primary_fixed_dim;
     border-radius: 10px;
-    box-shadow: 0 0 4px 1px alpha(@primary, 0.4);
+    /* Use padding/size as the primary active affordance (color-not-only rule).
+     * Subtle glow for polish; no strong shadow that competes with the bar. */
+    box-shadow: 0 0 2px 0 alpha(@primary, 0.3);
     transition: all 0.2s ease-out;
 }
 
@@ -61,7 +63,7 @@ window#waybar {
     background: @primary_fixed_dim;
     color: @on_primary;
     border-radius: 10px;
-    box-shadow: 0 0 5px 1px alpha(@primary, 0.5);
+    box-shadow: 0 0 3px 0 alpha(@primary, 0.4);
 }
 
 /* ===================== PLAYER MODULE ===================== */
@@ -392,11 +394,12 @@ window#waybar.empty #window {
 
 /* ===================== TOOLTIP ===================== */
 tooltip {
-    background: @surface_container;
+    background: @surface_container_high;
     color: @on_surface;
     border-radius: 12px;
     padding: 8px 12px;
-    border: 1px solid @outline_variant;
+    /* Softer border — the elevated surface already provides edge definition */
+    border: 1px solid alpha(@outline_variant, 0.4);
 }
 
 tooltip label {

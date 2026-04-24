@@ -2,5 +2,5 @@
 vt = 1
 
 [default_session]
-command = "env XKB_DEFAULT_LAYOUT=fr LIBSEAT_BACKEND=logind HOME=/var/lib/greetd XDG_CONFIG_HOME=/etc/greetd/xdg cage -s -- regreet --style /etc/greetd/regreet.css >/tmp/greetd.log 2>&1"
+command = "env XKB_DEFAULT_LAYOUT=fr LIBSEAT_BACKEND=logind HOME=/var/lib/greetd XDG_CONFIG_HOME=/etc/greetd/xdg cage -d -s -- regreet --style /etc/greetd/regreet.css >/tmp/greetd.log 2>&1"
 user = "greeter"

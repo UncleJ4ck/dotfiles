@@ -1,0 +1,1 @@
+Shell scripts in this repo use Bash with simple imperative structure, uppercase top-level config variables, small helper functions, and conservative comments. Hyprland keybinds are grouped by section headers in .config/hypr/conf.d/keybinds.conf. Keep diffs small and place related shortcuts near existing screenshot or utility sections.

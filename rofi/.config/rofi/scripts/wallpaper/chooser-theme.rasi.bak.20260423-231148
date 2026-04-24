@@ -1,0 +1,124 @@
+@import "~/.config/rofi/colors/colors.rasi"
+@import "~/.config/rofi/colors/radius.rasi"
+
+/* ── Window ────────────────────────────────────── */
+window {
+  width: 48em;
+  padding: 0px;
+  border: 3px;
+  border-color: var(primary);
+  border-radius: var(borderradius);
+  transparency: "real";
+  background-color: transparent;
+}
+
+/* ── Layout ────────────────────────────────────── */
+/* Chooser is a grid of thumbnails — no wallpaper banner, since the
+ * thumbnails themselves provide the visual density.  A compact search
+ * bar at the top with the same dark-scrim styling as the banner menus. */
+mainbox {
+  background-color: var(surface-container-low);
+  spacing: 0px;
+  padding: 0px;
+  children: [ "inputbar", "listview" ];
+  border-radius: var(borderradius);
+}
+
+inputbar {
+  expand: true;
+  background-color: rgba(0, 0, 0, 0.78);
+  border: 1px;
+  border-color: rgba(255, 255, 255, 0.18);
+  border-radius: var(buttonradius);
+  padding: 10px 14px;
+  min-height: 44px;
+  margin: 10px 10px 6px 10px;
+  spacing: 0px;
+  children: [ "entry" ];
+}
+
+entry {
+  expand: true;
+  placeholder: "  Search wallpapers...";
+  placeholder-color: rgba(255, 255, 255, 0.70);
+  text-color: rgba(255, 255, 255, 0.98);
+  background-color: transparent;
+  border: 0px;
+  horizontal-align: 0.5;
+  vertical-align: 0.5;
+}
+
+/* ── Thumbnail grid ─────────────────────────────── */
+listview {
+  lines: 2;
+  columns: 3;
+  fixed-columns: true;
+  fixed-height: true;
+  margin: 0px;
+  padding: 10px;
+  background-color: transparent;
+  scrollbar: false;
+  cycle: false;
+  border: 0px;
+  spacing: 8px;
+}
+
+element {
+  padding: 8px;
+  orientation: vertical;
+  margin: 0px;
+  border-radius: var(buttonradius);
+  border: 0px;
+}
+
+element normal.normal,
+element normal.active,
+element normal.urgent,
+element alternate.normal,
+element alternate.active,
+element alternate.urgent {
+  background-color: transparent;
+  text-color: var(secondary);
+}
+
+element selected.normal,
+element selected.active,
+element selected.urgent {
+  background-color: var(surface-container-high);
+  text-color: var(secondary);
+  border: 2px;
+  border-color: var(primary);
+}
+
+element-text {
+  background-color: transparent;
+  text-color: inherit;
+  padding: 4px 0px 0px 0px;
+  horizontal-align: 0.5;
+  highlight: bold underline;
+}
+
+element-icon {
+  size: 12em;
+  background-color: transparent;
+  text-color: inherit;
+  border-radius: var(buttonradius);
+}
+
+/* ── Error message ────────────────────────────── */
+error-message {
+  enabled: true;
+  padding: 0.8em;
+  background-color: var(surface-container-low);
+  border-color: var(primary);
+  border-radius: var(borderradius);
+}
+
+textbox {
+  enabled: true;
+  padding: 0.3em 0.45em;
+  str: "No results found";
+  text-color: var(error);
+  background-color: var(surface-container);
+  border-radius: var(buttonradius);
+}

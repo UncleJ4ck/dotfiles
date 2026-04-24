@@ -1,74 +1,65 @@
 @import "~/.config/rofi/colors/colors.rasi"
 @import "~/.config/rofi/colors/radius.rasi"
 
-/* ── Window ────────────────────────────────────── */
+/* ── Compact keybind viewer ────────────────────────────────────────── */
 window {
-  width: 65%;
+  width: 50%;
   padding: 0px;
-  border: 3px;
+  border: 2px;
   border-color: var(primary);
   border-radius: var(borderradius);
   transparency: "real";
-  background-color: transparent;
+  background-color: var(surface-container);
 }
 
-/* ── Layout ────────────────────────────────────── */
 mainbox {
   background-color: transparent;
   spacing: 0px;
-  padding: 0px;
-  children: [ "wallbox", "listview" ];
-}
-
-/* ── Wallpaper banner ─────────────────────────── */
-wallbox {
-  background-image: url("~/.config/rofi/.current_wallpaper", width);
-  background-color: var(surface-container-low);
-  padding: 90px 32% 16px 32%;
-  children: [ "inputbar" ];
+  padding: 10px;
+  children: [ "inputbar", "listview" ];
 }
 
 inputbar {
-  expand: true;
-  background-color: rgba(0, 0, 0, 0.65);
-  border: 1px;
-  border-color: rgba(255, 255, 255, 0.12);
-  border-radius: var(buttonradius);
-  padding: 8px 12px;
-  spacing: 0px;
+  background-color: transparent;
+  padding: 0px 0px 8px 0px;
   children: [ "entry" ];
+  spacing: 0px;
 }
 
 entry {
   expand: true;
+  background-color: var(surface-container-highest);
+  border: 1px;
+  border-color: var(outline-variant);
+  border-radius: var(buttonradius);
+  padding: 8px 12px;
+  min-height: 36px;
   placeholder: "  Search keybinds...";
-  placeholder-color: rgba(255, 255, 255, 0.45);
-  text-color: rgba(255, 255, 255, 0.90);
-  background-color: transparent;
-  border: 0px;
-  horizontal-align: 0.5;
+  placeholder-color: var(on-surface-variant);
+  text-color: var(on-surface);
+  horizontal-align: 0.0;
+  vertical-align: 0.5;
 }
 
-/* ── Keybind list ─────────────────────────────── */
 listview {
   lines: 12;
   columns: 1;
   fixed-columns: true;
   fixed-height: true;
   margin: 0px;
-  padding: 8px;
-  background-color: var(surface-container-low);
+  padding: 0px;
+  background-color: transparent;
   scrollbar: true;
   cycle: false;
   border: 0px;
-  spacing: 4px;
+  spacing: 3px;
 }
 
 scrollbar {
-  margin: 0px 4px;
-  handle-width: 4px;
+  margin: 0px 0px 0px 6px;
+  handle-width: 3px;
   handle-color: var(primary);
-  background-color: var(surface-container);
+  background-color: var(surface-container-highest);
   border-radius: 2px;
 }
 
@@ -77,7 +68,9 @@ element {
   orientation: horizontal;
   margin: 0px;
   border-radius: var(buttonradius);
-  border: 0px;
+  border: 1px;
+  border-color: var(outline-variant);
+  background-color: var(surface-container-high);
 }
 
 element normal.normal,
@@ -86,16 +79,16 @@ element normal.urgent,
 element alternate.normal,
 element alternate.active,
 element alternate.urgent {
-  background-color: transparent;
-  text-color: var(secondary);
+  background-color: var(surface-container-high);
+  text-color: var(on-surface);
 }
 
 element selected.normal,
 element selected.active,
 element selected.urgent {
-  background-color: var(surface-container-high);
-  text-color: var(secondary);
-  border: 2px;
+  background-color: var(primary-container);
+  text-color: var(on-primary-container);
+  border: 1px;
   border-color: var(primary);
 }
 
@@ -108,20 +101,19 @@ element-text {
   markup: true;
 }
 
-/* ── Error message ────────────────────────────── */
 error-message {
   enabled: true;
   padding: 0.8em;
-  background-color: var(surface-container-low);
-  border-color: var(primary);
+  background-color: var(surface-container);
+  border-color: var(error);
   border-radius: var(borderradius);
 }
 
 textbox {
   enabled: true;
   padding: 0.3em 0.45em;
-  str: "No results!";
-  text-color: var(error);
-  background-color: var(surface-container);
+  str: "No results found";
+  text-color: var(on-error-container);
+  background-color: var(error-container);
   border-radius: var(buttonradius);
 }

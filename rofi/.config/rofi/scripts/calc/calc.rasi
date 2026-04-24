@@ -1,22 +1,16 @@
-configuration{
- font: "JetBrainsMono Nerd Font Propo 20";
- modi: "dmenu";
- fixed-num-lines: true;
- show-icons: false;
- icon-theme: "Icons";
- eh: 1;
- dpi: 100;
- display-drun: "";
- display-run: "";
- display-filebrowser: "󱧷";
- location: 0;
- calc {
-    hint-result: " ";
-    hint-welcome: " ";
- }
-/* hover-select: true;
- me-select-entry: '';
- me-accept-entry: "MousePrimary"; */
+configuration {
+  font: "JetBrainsMono Nerd Font Propo 15";
+  modi: "calc";
+  fixed-num-lines: true;
+  show-icons: false;
+  eh: 1;
+  dpi: 100;
+  click-to-exit: true;
+  location: 0;
+  calc {
+    hint-result: " ";
+    hint-welcome: " ";
+  }
 }
 
 @theme "~/.config/rofi/scripts/calc/theme.rasi"

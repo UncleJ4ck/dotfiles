@@ -136,11 +136,19 @@ write_regreet_style_css() {
   tmp="$(mktemp)"
   py="$(get_python)"
 
+  # Prefer Matugen JSON (authoritative) over starship palette (optional template).
+  # Plymouth module does the same and this keeps ReGreet/Plymouth/desktop in sync.
   local bg fg accent_bg
-  bg="$(starship_palette_hex bg 2>/dev/null || true)"
-  fg="$(starship_palette_hex fg 2>/dev/null || true)"
-  accent_bg="$(starship_palette_hex primary 2>/dev/null || true)"
+  bg="$(matugen_role_hex "$MATUGEN_MODE" background "")"
+  fg="$(matugen_role_hex "$MATUGEN_MODE" on_background "")"
+  accent_bg="$(matugen_role_hex "$MATUGEN_MODE" primary "")"
 
+  # Starship fallback (if matugen JSON is missing and starship template exists)
+  [[ -n "$bg" ]] || bg="$(starship_palette_hex bg 2>/dev/null || true)"
+  [[ -n "$fg" ]] || fg="$(starship_palette_hex fg 2>/dev/null || true)"
+  [[ -n "$accent_bg" ]] || accent_bg="$(starship_palette_hex primary 2>/dev/null || true)"
+
+  # Hardcoded last-resort fallback
   [[ -n "$bg" ]] || bg="#0f1417"
   [[ -n "$fg" ]] || fg="#dfe3e7"
   [[ -n "$accent_bg" ]] || accent_bg="#8ccff0"
@@ -254,7 +262,7 @@ separator, separator.horizontal, separator.vertical {{
   padding: 0px;
 }}
 
-/* --- Remove the actionbar/top-bottom bars “line” without !important --- */
+/* --- Remove the actionbar/top-bottom bars "line" without !important --- */
 toolbarview > box.top-bar,
 toolbarview > box.bottom-bar,
 toolbarview > box.top-bar > *,
@@ -272,6 +280,57 @@ actionbar > revealer > box {{
   border-right: 0;
 }}
 
+/* Hide the headerbar / titlebar entirely (the "ReGreet" title strip).
+   Broadened beyond window.csd because the greeter session is not tagged
+   with .csd — the headerbar renders server-side-decoration-style. */
+headerbar,
+headerbar:backdrop,
+.titlebar,
+.titlebar:backdrop,
+windowhandle,
+window > headerbar,
+window > headerbar:first-child,
+window > windowhandle,
+window > windowhandle:first-child,
+window.csd headerbar,
+window.csd headerbar:backdrop,
+window.csd .titlebar,
+window.csd .titlebar:backdrop,
+window.csd.fullscreen headerbar,
+window.csd.fullscreen headerbar:backdrop,
+window.csd.fullscreen .titlebar,
+window.csd.fullscreen .titlebar:backdrop {{
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  background-image: none;
+  box-shadow: none;
+  border: none;
+}}
+
+/* Collapse the children of the headerbar (title label, buttons) — the greeter
+   doesn't need any of them, and this is what actually reclaims the vertical
+   space that the "ReGreet" strip consumed. */
+headerbar > *,
+.titlebar > *,
+windowhandle > * {{
+  opacity: 0;
+  min-width: 0;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+}}
+
+headerbar label,
+.titlebar label,
+windowhandle label {{
+  font-size: 0;
+  opacity: 0;
+  min-height: 0;
+  min-width: 0;
+}}
+
 toolbarview separator,
 actionbar separator {{
   opacity: 0;
@@ -287,6 +346,14 @@ frame.background, frame.background > border {{
   border: 1px solid {border_strong};
   border-radius: 20px;
   box-shadow: 0 18px 60px {shadow};
+  transition: border-color 220ms ease, box-shadow 220ms ease;
+}}
+
+/* Subtle lift when the card contains keyboard focus — gives users a
+ * visual anchor on the active surface without changing any colors. */
+frame.background:focus-within {{
+  border-color: {ui_tint_border};
+  box-shadow: 0 22px 70px {shadow}, 0 0 0 1px {ui_tint};
 }}
 
 /* Drop-downs / combos */
@@ -332,8 +399,10 @@ entry:focus-within,
 passwordentry entry:focus-within {{
   background: {ui_tint_focus};
   border-color: var(--accent-bg-color);
-  outline: 2px solid var(--accent-bg-color);
-  outline-offset: 0px;
+  /* Use box-shadow for the focus ring instead of outline. GTK4 handles
+   * box-shadow more consistently across libadwaita versions, and it
+   * doesn't affect layout the way outline can. */
+  box-shadow: 0 0 0 2px var(--accent-bg-color);
 }}
 
 /* Buttons: default + suggested + destructive (power/reboot) */

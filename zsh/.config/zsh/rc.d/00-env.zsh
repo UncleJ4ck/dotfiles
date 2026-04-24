@@ -21,6 +21,9 @@ export STARSHIP_CONFIG="/home/j4kuuu/.config/starship/starship.toml"
 export CARGO_HOME="$HOME/.cargo"
 export RUSTUP_HOME="$HOME/.rustup"
 
+# Java
+export JAVA_HOME="/usr/lib/jvm/java-25-openjdk"
+
 # FZF (no color options - let terminal/theme handle it)
 export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --border --info=inline"
 export FZF_DEFAULT_COMMAND='fd --type f --hidden --follow --exclude .git'
@@ -40,5 +43,3 @@ export ANTIDOTE_HOME="$XDG_CACHE_HOME/antidote"
 export YSU_MESSAGE_POSITION="after"
 export YSU_MODE=ALL
 
-# Claude code
-export CLAUDE_CODE_OAUTH_TOKEN="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"

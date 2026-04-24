@@ -1,0 +1,22 @@
+# Managed by j4kuuu dotfiles.
+# Restores the custom hyprland-uwsm.desktop wayland session file after any
+# package upgrade that touches it.  The custom version adds UWSM_SILENT_START=2
+# to the Exec= line to suppress UWSM startup messages on the login screen.
+#
+# Source of truth:
+#   ~/dotfiles/system-wayland-sessions/usr/share/wayland-sessions/hyprland-uwsm.desktop
+#
+# Install:
+#   sudo cp ~/dotfiles/system-pacman/etc/pacman.d/hooks/99-restore-hyprland-uwsm-session.hook \
+#           /etc/pacman.d/hooks/
+
+[Trigger]
+Type = Path
+Operation = Install
+Operation = Upgrade
+Target = usr/share/wayland-sessions/hyprland-uwsm.desktop
+
+[Action]
+Description = Restoring custom hyprland-uwsm.desktop (UWSM_SILENT_START)
+When = PostTransaction
+Exec = /usr/bin/install -m 644 -o root -g root /home/j4kuuu/dotfiles/system-wayland-sessions/usr/share/wayland-sessions/hyprland-uwsm.desktop /usr/share/wayland-sessions/hyprland-uwsm.desktop
