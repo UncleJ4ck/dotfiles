@@ -1,0 +1,115 @@
+@import "~/.config/rofi/colors/colors.rasi"
+@import "~/.config/rofi/colors/radius.rasi"
+
+* {
+  font: "JetBrainsMono Nerd Font Propo 13";
+}
+
+window {
+  width: 32em;
+  padding: 0px;
+  border: 2px;
+  border-color: var(primary);
+  border-radius: var(borderradius);
+  transparency: "real";
+  background-color: var(surface-container);
+}
+
+mainbox {
+  background-color: transparent;
+  spacing: 0px;
+  padding: 10px;
+  children: [ "inputbar", "listview" ];
+}
+
+inputbar {
+  background-color: transparent;
+  padding: 0px 0px 8px 0px;
+  children: [ "entry" ];
+  spacing: 0px;
+}
+
+entry {
+  expand: true;
+  background-color: var(surface-container-highest);
+  border: 1px;
+  border-color: var(outline-variant);
+  border-radius: var(buttonradius);
+  padding: 8px 12px;
+  min-height: 36px;
+  placeholder: "  Pick an output / input / action…";
+  placeholder-color: var(on-surface-variant);
+  text-color: var(on-surface);
+  horizontal-align: 0.0;
+  vertical-align: 0.5;
+}
+
+listview {
+  fixed-columns: true;
+  fixed-height: false;
+  margin: 0px;
+  padding: 0px;
+  background-color: transparent;
+  scrollbar: true;
+  cycle: false;
+  border: 0px;
+  spacing: 3px;
+}
+
+scrollbar {
+  margin: 0px 0px 0px 6px;
+  handle-width: 3px;
+  handle-color: var(primary);
+  background-color: var(surface-container-highest);
+  border-radius: 2px;
+}
+
+element {
+  padding: 7px 12px;
+  orientation: horizontal;
+  margin: 0px;
+  border-radius: var(buttonradius);
+  border: 1px;
+  border-color: var(outline-variant);
+  background-color: var(surface-container-high);
+}
+
+element normal.normal,
+element normal.active,
+element normal.urgent,
+element alternate.normal,
+element alternate.active,
+element alternate.urgent {
+  background-color: var(surface-container-high);
+  text-color: var(on-surface);
+}
+
+element selected.normal,
+element selected.active,
+element selected.urgent {
+  background-color: var(primary-container);
+  text-color: var(on-primary-container);
+  border: 1px;
+  border-color: var(primary);
+}
+
+element-text {
+  background-color: transparent;
+  text-color: inherit;
+  padding: 0em;
+  vertical-align: 0.5;
+  highlight: bold underline;
+}
+
+error-message {
+  enabled: false;
+}
+
+textbox {
+  enabled: true;
+  padding: 0.4em 0.6em;
+  str: "No audio devices";
+  text-color: var(on-error-container);
+  background-color: var(error-container);
+  border-radius: var(buttonradius);
+}

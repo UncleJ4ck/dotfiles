@@ -1,12 +1,13 @@
+# ── Completion setup ─────────────────────────────────────────────────
 [[ -d "$XDG_CACHE_HOME/zsh" ]] || mkdir -p "$XDG_CACHE_HOME/zsh"
 ZSH_COMPDUMP="$XDG_CACHE_HOME/zsh/zcompdump-$ZSH_VERSION"
 
 autoload -Uz compinit
 
+# Once-per-day compinit — use -C (no security check) if dump is from today
 if [[ -f "$ZSH_COMPDUMP" ]]; then
   dump_day=$(stat -c '%j' "$ZSH_COMPDUMP" 2>/dev/null || echo "")
   today=$(date +%j)
-
   if [[ -n "$dump_day" && "$dump_day" == "$today" ]]; then
     compinit -d "$ZSH_COMPDUMP" -C
   else
@@ -16,9 +17,10 @@ else
   compinit -d "$ZSH_COMPDUMP"
 fi
 
+# Recompile dump if stale — runs async, disowned, so startup isn't blocked
 { [[ -f "$ZSH_COMPDUMP" && ( ! -f "$ZSH_COMPDUMP.zwc" || "$ZSH_COMPDUMP" -nt "$ZSH_COMPDUMP.zwc" ) ]] && zcompile "$ZSH_COMPDUMP"; } &!
 
-# --- Completion styling ---
+# ── Styling ──────────────────────────────────────────────────────────
 zstyle ':completion:*' use-cache on
 zstyle ':completion:*' cache-path "$XDG_CACHE_HOME/zsh/zcompcache"
 zstyle ':completion:*' menu select
@@ -31,7 +33,18 @@ zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
 zstyle ':completion:*' squeeze-slashes true
 zstyle ':completion:*:*:kill:*' menu yes select
 
-# --- fzf-tab ---
+# ── Lazy-loaded completions (skip cost at startup; generate on first tab) ──
+
+# Scarb (Cairo/Starknet)
+if command -v scarb >/dev/null 2>&1; then
+  _scarb() {
+    unfunction _scarb
+    eval "$(scarb completions zsh 2>/dev/null)" && _scarb "$@"
+  }
+  compdef _scarb scarb
+fi
+
+# ── fzf-tab ──────────────────────────────────────────────────────────
 zstyle ':fzf-tab:complete:cd:*' fzf-preview 'eza -1 --color=always $realpath 2>/dev/null || ls -1 --color=always $realpath'
 zstyle ':fzf-tab:complete:*:*' fzf-preview '
   preview_path=${realpath:-$word}

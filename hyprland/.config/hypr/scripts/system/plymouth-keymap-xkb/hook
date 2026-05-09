@@ -1,0 +1,17 @@
+#!/usr/bin/ash
+# /etc/initcpio/hooks/keymap-xkb
+#
+# Runtime hook. Sourced by /init during early boot. Exports XKB_DEFAULT_*
+# from the file baked at build time so that plymouthd (started by the
+# 'plymouth' hook) sees the user's keyboard layout via libxkbcommon.
+#
+# If the env file is missing (e.g. build skipped because XKBLAYOUT wasn't
+# set), the hook is a graceful no-op — boot proceeds unchanged.
+
+run_hook() {
+    if [ -r /etc/keymap-xkb.env ]; then
+        # shellcheck disable=SC1091
+        . /etc/keymap-xkb.env
+        export XKB_DEFAULT_LAYOUT XKB_DEFAULT_VARIANT XKB_DEFAULT_MODEL XKB_DEFAULT_OPTIONS
+    fi
+}

@@ -91,7 +91,7 @@ _select_best_profile_clip() {
 _select_best_profile_histogram() {
   local wall="$1"
   local im py
-  im="$(im_cmd)"
+  im="$(im_cmd)" || im=""
   py="$(get_python)"
   [[ -n "$im" ]] || return 1
 

@@ -1,9 +1,61 @@
-# do not version caches/history
+# ── Caches & compiled artifacts ────────────────────────────────────────
 **/.zcompdump*
 **/*.zwc
 **/history
 **/.cache/
 **/.local/state/
 **/.local/share/zsh/history
+**/__pycache__/
+**/*.pyc
+
+# ── Matugen-generated (runtime output, not source) ─────────────────────
 gtk/.config/gtk-3.0/colors.css
 gtk/.config/gtk-4.0/colors.css
+
+# ── Secrets / credentials (defensive — don't commit these ever) ────────
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa*
+id_ed25519*
+id_ecdsa*
+id_dsa*
+known_hosts
+authorized_keys
+.env
+.env.*
+!.env.example
+!.env.sample
+.envrc.local
+secrets.*
+credentials.*
+.secrets*
+**/.aws/credentials
+**/.aws/config
+**/.ssh/id_*
+**/.ssh/config
+**/gh/hosts.yml
+**/github-copilot/hosts.json
+**/claude*/credentials*
+**/anthropic-auth*
+**/.anthropic/
+**/.openai/
+auth.json
+.netrc
+.pgpass
+
+# ── Local overrides (machine-specific) ────────────────────────────────
+**/local.conf
+**/*.local
+*.swp
+*.swo
+*~
+
+# ── Editor / IDE junk ─────────────────────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+
+# ── Wallpaper cache artefacts ─────────────────────────────────────────
+walls/.cache/

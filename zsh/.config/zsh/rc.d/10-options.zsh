@@ -1,23 +1,65 @@
-# Navigation
-setopt AUTO_CD AUTO_PUSHD PUSHD_IGNORE_DUPS PUSHD_SILENT PUSHD_TO_HOME
+# ═══════════════════════════════════════════════════════════════════════════
+#  Zsh options — full reference at: man zshoptions
+# ═══════════════════════════════════════════════════════════════════════════
 
-# Globbing
-setopt EXTENDED_GLOB NO_NOMATCH NULL_GLOB GLOB_DOTS
+# ── Navigation ───────────────────────────────────────────────────────
+setopt AUTO_CD              # `foo/bar` → `cd foo/bar` if no command named that
+setopt AUTO_PUSHD           # cd pushes to dir stack
+setopt PUSHD_IGNORE_DUPS    # dir stack has no duplicates
+setopt PUSHD_SILENT         # don't print stack after pushd/popd
+setopt PUSHD_TO_HOME        # `pushd` with no arg → cd $HOME
+setopt CDABLE_VARS          # `cd var` works if $var is a dir
 
-# History
-setopt APPEND_HISTORY INC_APPEND_HISTORY SHARE_HISTORY EXTENDED_HISTORY
-setopt HIST_EXPIRE_DUPS_FIRST HIST_IGNORE_DUPS HIST_IGNORE_ALL_DUPS
-setopt HIST_FIND_NO_DUPS HIST_IGNORE_SPACE HIST_REDUCE_BLANKS
-setopt HIST_VERIFY HIST_SAVE_NO_DUPS
+# ── Globbing (the killer feature) ────────────────────────────────────
+setopt EXTENDED_GLOB        # use ^,~,#,* patterns
+setopt NO_NOMATCH           # `cmd *.xyz` passes literally if no matches (vs error)
+setopt NULL_GLOB            # same, but for loops — empty glob expands to nothing
+setopt GLOB_DOTS            # `*` matches hidden files too
+setopt NUMERIC_GLOB_SORT    # sort numbered filenames humanly (file2 < file10)
+setopt BAD_PATTERN          # warn on broken globs
 
-# Completion
-setopt COMPLETE_IN_WORD ALWAYS_TO_END AUTO_MENU AUTO_LIST
-setopt AUTO_PARAM_SLASH NO_MENU_COMPLETE NO_LIST_BEEP LIST_PACKED LIST_TYPES
+# ── History ──────────────────────────────────────────────────────────
+setopt APPEND_HISTORY       # multiple shells merge to same file
+setopt INC_APPEND_HISTORY   # write to history immediately, not on exit
+setopt SHARE_HISTORY        # live-share history across open shells
+setopt EXTENDED_HISTORY     # save timestamp + elapsed duration per entry
+setopt HIST_EXPIRE_DUPS_FIRST  # prune dups first when HISTSIZE overflows
+setopt HIST_IGNORE_DUPS     # don't record if same as previous
+setopt HIST_IGNORE_ALL_DUPS # also prune older copies of a just-typed command
+setopt HIST_FIND_NO_DUPS    # don't show dups in search
+setopt HIST_IGNORE_SPACE    # leading-space commands aren't saved
+setopt HIST_REDUCE_BLANKS   # normalize whitespace before saving
+setopt HIST_VERIFY          # `!!`-style expansions fill the line, don't run
+setopt HIST_SAVE_NO_DUPS    # don't write dups to history file
+setopt HIST_FCNTL_LOCK      # use fcntl() for lock (safer than flock on NFS)
 
-# I/O
-setopt NO_BEEP NO_FLOW_CONTROL INTERACTIVE_COMMENTS NO_CLOBBER
-setopt CORRECT NO_CORRECT_ALL
+# ── Completion ───────────────────────────────────────────────────────
+setopt COMPLETE_IN_WORD     # completion works from middle of word too
+setopt ALWAYS_TO_END        # on completion, move cursor to end of the word
+setopt AUTO_MENU            # show menu on second tab
+setopt AUTO_LIST            # list choices on ambiguous completion
+setopt AUTO_PARAM_SLASH     # add / after dir-name completions
+setopt NO_MENU_COMPLETE     # don't auto-insert first match — let me pick
+setopt NO_LIST_BEEP         # silent on ambiguous
+setopt LIST_PACKED          # compact completion listings
+setopt LIST_TYPES           # trailing identifier (/, *, @, ...) after names
 
-# Jobs & Prompt
-setopt LONG_LIST_JOBS AUTO_RESUME NOTIFY
-setopt PROMPT_SUBST TRANSIENT_RPROMPT
+# ── I/O safety ───────────────────────────────────────────────────────
+setopt NO_BEEP              # you're welcome
+setopt NO_FLOW_CONTROL      # reclaim Ctrl+S / Ctrl+Q for zsh (vs terminal XOFF)
+setopt INTERACTIVE_COMMENTS # allow `# comments` in interactive mode
+setopt NO_CLOBBER           # `>` refuses to overwrite; use `>|` to force
+setopt CORRECT              # suggest corrections for mistyped commands
+setopt NO_CORRECT_ALL       # but don't correct arguments (too noisy)
+setopt RM_STAR_WAIT         # on `rm *`, wait 10s before accepting <y>
+
+# ── Jobs & prompt ────────────────────────────────────────────────────
+setopt LONG_LIST_JOBS       # jobs listing shows PID
+setopt AUTO_RESUME          # `%job` to foreground; typing the job name works
+setopt NOTIFY               # notify on background job state changes
+setopt PROMPT_SUBST         # allow command expansion in prompts (for starship)
+setopt TRANSIENT_RPROMPT    # right-prompt disappears on Enter (cleaner scrollback)
+
+# ── Misc ─────────────────────────────────────────────────────────────
+setopt COMBINING_CHARS      # correctly render combining Unicode (emoji + accent)
+setopt MULTIOS              # `echo x > a > b` writes to both — very zsh-only

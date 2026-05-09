@@ -61,20 +61,27 @@ get_python() {
   die "Python not found (need python3 or python)"
 }
 
-# ImageMagick command (prefer 'magick' over legacy 'convert')
+# ImageMagick command (prefer 'magick' over legacy 'convert').
+# Returns non-zero when no IM binary is found, so callers' `cmd="$(im_cmd)" || …`
+# patterns actually fire. (Previously this always returned 0 with empty stdout,
+# making the `|| return 1` patterns scattered through the modules dead code.)
 _CACHED_IM_CMD=""
 _CACHED_IM_DONE=0
 im_cmd() {
-  if ((_CACHED_IM_DONE)); then echo "$_CACHED_IM_CMD"; return 0; fi
+  if ((_CACHED_IM_DONE)); then
+    [[ -n "$_CACHED_IM_CMD" ]] || return 1
+    echo "$_CACHED_IM_CMD"
+    return 0
+  fi
   local cmd
   for cmd in magick convert; do
     is_cmd "$cmd" && { _CACHED_IM_CMD="$cmd"; _CACHED_IM_DONE=1; echo "$cmd"; return 0; }
   done
   _CACHED_IM_DONE=1
-  echo ""
+  return 1
 }
 
-im_available() { [[ -n "$(im_cmd)" ]]; }
+im_available() { im_cmd >/dev/null 2>&1; }
 
 # =============================================================================
 # Debug Mode
@@ -87,18 +94,93 @@ enable_debug() {
 }
 
 # =============================================================================
+# Polkit Agent Probe
+# =============================================================================
+# Hyprland's exec-once entries fire roughly simultaneously, so themectl can
+# call pkexec before hyprpolkitagent has registered with polkitd. pkexec
+# returns 127 (no agent), sudo fallback fails (no TTY), root_exec swallows
+# the error, state silently drifts. This probe waits up to N seconds for an
+# authentication agent to be reachable on the session bus before the first
+# pkexec call.
+#
+# busctl --user is cheap (~5ms) and exits 0 only when the bus has the agent
+# registered. Cached after first success — no need to probe on every call.
+: "${POLKIT_AGENT_WAIT_SECS:=8}"
+_POLKIT_AGENT_OK=0
+_polkit_agent_ready() {
+  ((_POLKIT_AGENT_OK)) && return 0
+  ((EUID == 0)) && { _POLKIT_AGENT_OK=1; return 0; }
+  is_cmd busctl || { _POLKIT_AGENT_OK=1; return 0; }   # no busctl → assume OK, fall through
+
+  local elapsed=0
+  while (( elapsed < POLKIT_AGENT_WAIT_SECS )); do
+    if busctl --user --no-pager --quiet \
+         get-property org.freedesktop.PolicyKit1.AuthenticationAgent / \
+         org.freedesktop.PolicyKit1.AuthenticationAgent SessionId \
+         &>/dev/null; then
+      _POLKIT_AGENT_OK=1
+      return 0
+    fi
+    # Fallback probe: any process named hyprpolkitagent / polkit-gnome /
+    # polkit-kde-agent / lxqt-policykit-agent for current user. Some agents
+    # don't expose the AuthenticationAgent property on the session bus.
+    if pgrep -u "$UID" -f \
+         '(hyprpolkitagent|polkit-gnome|polkit-kde-agent|polkit-mate|lxqt-policykit|xfce-polkit|polkit-dumb-agent)' \
+         &>/dev/null; then
+      _POLKIT_AGENT_OK=1
+      return 0
+    fi
+    sleep 0.25
+    elapsed=$((elapsed + 1))
+  done
+  warn "polkit auth agent not detected after ${POLKIT_AGENT_WAIT_SECS}s — pkexec may fail"
+  return 1
+}
+
+# =============================================================================
 # Root Execution
 # =============================================================================
+# pkexec exit-code semantics:
+#   0          -> success (auth + inner cmd both succeeded)
+#   1..125     -> the *inner command* ran and exited non-zero
+#   126        -> not authorized (auth dialog cancelled or policy denial)
+#   127        -> pkexec couldn't dispatch (binary missing, etc.)
+# Only 126/127 mean "pkexec itself failed" — for everything else, retrying
+# under sudo would silently re-run a destructive inner command (e.g.
+# `mkinitcpio -P` returning 1 mid-rebuild) twice. So fall through to sudo
+# only on auth failures.
 root_exec() {
   ((EUID == 0)) && { "$@"; return $?; }
 
+  local rc=0
   if is_cmd pkexec; then
-    pkexec env PATH="/usr/sbin:/usr/bin:/sbin:/bin" "$@" && return 0
-    dbg "pkexec failed, trying sudo"
+    # Wait for the polkit auth agent before the first pkexec to avoid the
+    # Hyprland exec-once race where themectl beats hyprpolkitagent's D-Bus
+    # registration. After first success, this is cached and ~free.
+    _polkit_agent_ready || true   # warn-and-continue; pkexec will surface 127
+
+    # Capture pkexec's real exit code via `|| rc=$?` — `if pkexec; then …; fi`
+    # would mask it (the `if` compound itself exits 0 regardless of the
+    # tested command's status, so $? after `fi` is the wrong number).
+    rc=0
+    pkexec env PATH="/usr/sbin:/usr/bin:/sbin:/bin" "$@" || rc=$?
+    if (( rc == 0 )); then
+      return 0
+    fi
+    if (( rc != 126 && rc != 127 )); then
+      # Inner command failed after pkexec authenticated. Don't retry.
+      return $rc
+    fi
+    dbg "pkexec auth/dispatch failed (rc=$rc), trying sudo"
   fi
 
   is_cmd sudo || die "Need pkexec or sudo for root actions"
-  sudo "$@" || { warn "sudo failed (exit $?)"; return 1; }
+  rc=0
+  sudo "$@" || rc=$?
+  if (( rc != 0 )); then
+    warn "sudo failed (exit $rc)"
+  fi
+  return $rc
 }
 
 # =============================================================================
@@ -152,27 +234,33 @@ lock_info() {
   fi
 }
 
+# Manual escape hatch only — never auto-invoked. The previous behavior
+# (`fuser -k` as root) could SIGKILL whatever process held the lock, which
+# during a Plymouth UKI rebuild meant SIGKILLing `mkinitcpio` mid-write or
+# (worst case) the user's parent shell. acquire_lock now waits for the
+# lock to be released naturally; only the user's explicit `break-lock`
+# subcommand calls this.
 break_lock() {
   info "Breaking lock: $LOCK_PATH"
   ((DEBUG)) && lock_info
-  is_cmd fuser && root_exec fuser -k "$LOCK_PATH" 2>/dev/null || true
   rm -f "$LOCK_PATH" 2>/dev/null || root_exec rm -f "$LOCK_PATH" 2>/dev/null || true
 }
 
+# Wait up to LOCK_WAIT_SECONDS (default 180) for the lock — long enough to
+# cover a `--sync plymouth` UKI rebuild (~30-60s) plus headroom. If still
+# held after that, die with a clear message instead of stomping the holder.
+: "${LOCK_WAIT_SECONDS:=180}"
 acquire_lock() {
   exec 8>"$LOCK_PATH"
 
-  if flock -n 8; then
+  if flock -w "$LOCK_WAIT_SECONDS" 8; then
     dbg "Lock acquired"
     return 0
   fi
 
-  warn "Lock held by another process, breaking..."
-  break_lock
-  exec 8>"$LOCK_PATH"
-
-  flock -n 8 || die "Could not acquire lock after breaking"
-  dbg "Lock acquired after break"
+  die "Could not acquire $LOCK_PATH within ${LOCK_WAIT_SECONDS}s. \
+Another hypr-themectl is running. Run \`hypr-themectl break-lock\` only if \
+you're sure no UKI rebuild is in progress."
 }
 
 # =============================================================================

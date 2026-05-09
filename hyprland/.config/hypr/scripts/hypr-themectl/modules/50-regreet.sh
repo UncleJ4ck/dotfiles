@@ -91,6 +91,12 @@ _patch_regreet_gtk_section() {
     }
   ' "$REGREET_CONFIG" >"$tmp"
 
+  # Skip the pkexec dialog when the awk transform produced no change.
+  if cmp -s "$tmp" "$REGREET_CONFIG"; then
+    dbg "ReGreet [GTK] section unchanged"
+    rm -f "$tmp"
+    return 0
+  fi
   root_exec install -m 644 "$tmp" "$REGREET_CONFIG"
   rm -f "$tmp"
 }
@@ -105,6 +111,65 @@ update_regreet_icon_theme() {
   gtk_theme="$(_pick_regreet_gtk_theme)"
   info "Updating ReGreet GTK: icon=$THEME_NAME, theme=$gtk_theme"
   _patch_regreet_gtk_section "$gtk_theme"
+}
+
+# =============================================================================
+# [commands] section — power buttons
+# =============================================================================
+# Force regreet's poweroff/reboot to go through `loginctl` instead of
+# `systemctl`. Both ultimately call the same logind D-Bus method, but
+# loginctl is regreet's documented form, and on session-active edge cases
+# (greeter session marked closing while another user has a lingering
+# session) some logind builds give different results between the two
+# command paths. Pinning loginctl removes that variable.
+_patch_regreet_commands_section() {
+  local tmp
+  tmp="$(mktemp)"
+
+  awk '
+    BEGIN { incmd=0; sawcmd=0; sawreboot=0; sawpoweroff=0 }
+    /^\[commands\][[:space:]]*$/ { incmd=1; sawcmd=1; sawreboot=0; sawpoweroff=0; print; next }
+    incmd && /^\[/ {
+      if (!sawreboot)   print "reboot   = [\"loginctl\", \"reboot\"]"
+      if (!sawpoweroff) print "poweroff = [\"loginctl\", \"poweroff\"]"
+      incmd=0
+    }
+    incmd && /^[[:space:]]*reboot[[:space:]]*=/ {
+      print "reboot   = [\"loginctl\", \"reboot\"]"; sawreboot=1; next
+    }
+    incmd && /^[[:space:]]*poweroff[[:space:]]*=/ {
+      print "poweroff = [\"loginctl\", \"poweroff\"]"; sawpoweroff=1; next
+    }
+    { print }
+    END {
+      if (!sawcmd) {
+        print ""
+        print "[commands]"
+        print "reboot   = [\"loginctl\", \"reboot\"]"
+        print "poweroff = [\"loginctl\", \"poweroff\"]"
+      } else if (incmd) {
+        if (!sawreboot)   print "reboot   = [\"loginctl\", \"reboot\"]"
+        if (!sawpoweroff) print "poweroff = [\"loginctl\", \"poweroff\"]"
+      }
+    }
+  ' "$REGREET_CONFIG" >"$tmp"
+
+  if cmp -s "$tmp" "$REGREET_CONFIG"; then
+    dbg "ReGreet [commands] section unchanged"
+    rm -f "$tmp"
+    return 0
+  fi
+  info "Patching ReGreet [commands] to use loginctl"
+  root_exec install -m 644 "$tmp" "$REGREET_CONFIG"
+  rm -f "$tmp"
+}
+
+update_regreet_power_commands() {
+  [[ -f "$REGREET_CONFIG" ]] || {
+    dbg "ReGreet config not found"
+    return 0
+  }
+  _patch_regreet_commands_section
 }
 
 # =============================================================================
@@ -431,6 +496,13 @@ button.destructive-action, .destructive-action {{
 """)
 PY
 
+  # Skip the pkexec dialog when the generated CSS matches what's on disk.
+  if [[ -f "$REGREET_STYLE_CSS" ]] && cmp -s "$tmp" "$REGREET_STYLE_CSS"; then
+    dbg "ReGreet style.css unchanged"
+    rm -f "$tmp"
+    ensure_regreet_gtk_user_css
+    return 0
+  fi
   root_exec install -m 644 "$tmp" "$REGREET_STYLE_CSS"
   rm -f "$tmp"
 
@@ -462,6 +534,14 @@ ensure_greetd_uses_regreet_style() {
     { print }
   ' "$GREETD_CONFIG" >"$tmp"
 
+  # If the awk pattern didn't match (e.g. command line uses a different
+  # syntax than `-- regreet`), the temp file is identical to the original.
+  # Don't fire pkexec for a no-op rewrite.
+  if cmp -s "$tmp" "$GREETD_CONFIG"; then
+    dbg "greetd config unchanged (regreet --style pattern not matched)"
+    rm -f "$tmp"
+    return 0
+  fi
   root_exec install -m 644 "$tmp" "$GREETD_CONFIG"
   rm -f "$tmp"
 }
@@ -499,6 +579,11 @@ update_regreet_background_config() {
     }
   ' "$REGREET_CONFIG" >"$tmp"
 
+  if cmp -s "$tmp" "$REGREET_CONFIG"; then
+    dbg "ReGreet [background] section unchanged"
+    rm -f "$tmp"
+    return 0
+  fi
   root_exec install -m 644 "$tmp" "$REGREET_CONFIG"
   rm -f "$tmp"
 }

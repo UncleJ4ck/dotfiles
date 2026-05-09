@@ -1,20 +1,23 @@
 # =============================================================================
-# Tool integrations
+# Tool integrations — zoxide / direnv / fzf / broot / venv
+# (git fuzzy helpers live in forgit plugin → see 40-plugin-settings.zsh)
 # =============================================================================
 
+# ── zoxide (cd replacement with frecency) ────────────────────────────
 command -v zoxide &>/dev/null && eval "$(zoxide init zsh --cmd cd)"
+
+# ── direnv (per-project env loading) ────────────────────────────────
 command -v direnv &>/dev/null && eval "$(direnv hook zsh)"
 
-# broot (br)
+# ── broot (br) ───────────────────────────────────────────────────────
 if [[ -o interactive ]]; then
   br_file="${XDG_CONFIG_HOME:-$HOME/.config}/broot/launcher/bash/br"
-  [[ -r "$br_file"  ]] && source "$br_file"
+  [[ -r "$br_file" ]] && source "$br_file"
   unset br_file
 fi
 
-# FZF enhancements (no hardcoded colors - Matugen ready)
+# ── FZF: smart previews (images via kitty icat, text via bat) ────────
 if command -v fzf &>/dev/null; then
-  # Smart preview: images with kitty icat, text files with bat
   export FZF_CTRL_T_OPTS="--preview '
     mime=\$(file --mime-type -b {} 2>/dev/null)
     if [[ \$mime =~ ^image/ ]]; then
@@ -29,7 +32,9 @@ if command -v fzf &>/dev/null; then
   command -v eza &>/dev/null && \
     export FZF_ALT_C_OPTS="--preview 'eza --tree --level=2 --color=always {}'"
 
-  # Fuzzy kill (SIGTERM)
+  # ── Fuzzy helpers (non-git — forgit covers git) ─────────────────────
+
+  # Kill processes (SIGTERM)
   fkill() {
     local pids
     pids=$(command ps -eo pid,user,comm,%cpu,%mem --sort=-%cpu \
@@ -39,7 +44,7 @@ if command -v fzf &>/dev/null; then
     [[ -n "$pids" ]] && echo "$pids" | xargs kill
   }
 
-  # Fuzzy kill (SIGKILL)
+  # Kill processes (SIGKILL)
   fkill9() {
     local pids
     pids=$(command ps -eo pid,user,comm,%cpu,%mem --sort=-%cpu \
@@ -49,94 +54,45 @@ if command -v fzf &>/dev/null; then
     [[ -n "$pids" ]] && echo "$pids" | xargs kill -9
   }
 
-  # Fuzzy cd
+  # Fuzzy cd (with directory tree preview)
   fcd() {
     local dir
     if command -v fd &>/dev/null; then
       dir=$(fd --type d --hidden --follow --exclude .git 2>/dev/null \
         | fzf --preview 'command -v eza >/dev/null && eza --tree --level=1 --color=always {} || command ls -la {}')
     else
-      dir=$(find . -type d -not -path '*/.git/*' 2>/dev/null \
-        | sed 's|^\./||' \
+      dir=$(find . -type d -not -path '*/.git/*' 2>/dev/null | sed 's|^\./||' \
         | fzf --preview 'command -v eza >/dev/null && eza --tree --level=1 --color=always {} || command ls -la {}')
     fi
     [[ -n "$dir" ]] && cd "$dir"
   }
 
-  # Fuzzy edit
+  # Fuzzy edit (with bat preview)
   fe() {
     local file
     if command -v fd &>/dev/null; then
       file=$(fd --type f --hidden --follow --exclude .git 2>/dev/null \
         | fzf --preview 'command -v bat >/dev/null && bat --style=numbers --color=always --line-range :300 {} || head -200 {}')
     else
-      file=$(find . -type f -not -path '*/.git/*' 2>/dev/null \
-        | sed 's|^\./||' \
+      file=$(find . -type f -not -path '*/.git/*' 2>/dev/null | sed 's|^\./||' \
         | fzf --preview 'command -v bat >/dev/null && bat --style=numbers --color=always --line-range :300 {} || head -200 {}')
     fi
     [[ -n "$file" ]] && ${EDITOR:-nvim} "$file"
   }
 
-  # Fuzzy git add
-  fga() {
-    local files
-    files=$(git status -s \
-      | fzf -m --preview 'git diff --color=always -- {2} 2>/dev/null' \
-      | awk '{print $2}')
-    [[ -n "$files" ]] && echo "$files" | xargs git add && git status -sb
-  }
-
-  # Fuzzy git checkout branch
-  fgco() {
-    local branch
-    branch=$(git branch -a --color=always \
-      | fzf --ansi \
-      | sed 's/^[* ]*//' | sed 's|remotes/origin/||')
-    [[ -n "$branch" ]] && git checkout "$branch"
-  }
-
-  # Fuzzy git log browser (outputs commit hash)
-  fgl() {
-    git log --oneline --decorate --color=always \
-      | fzf --ansi --preview 'git show --color=always {1}' \
-      | awk '{print $1}'
-  }
-
-  # Fuzzy history -> puts cmd on prompt (doesn't execute)
+  # Fuzzy history (put cmd on prompt, don't execute)
+  # Note: atuin's Ctrl+R is usually nicer; this stays as a secondary path.
   fh() {
     local cmd
     cmd=$(history | fzf --tac | sed 's/^ *[0-9]* *//')
     [[ -n "$cmd" ]] && print -z "$cmd"
   }
+
+  # Fuzzy systemctl unit picker (user units)
+  fsc() {
+    local unit
+    unit=$(systemctl --user list-unit-files --type=service --no-legend 2>/dev/null \
+      | awk '{print $1}' | fzf --preview 'systemctl --user status {} 2>&1 | head -40')
+    [[ -n "$unit" ]] && systemctl --user status "$unit"
+  }
 fi
-
-# Python venv (uv-first for speed, fallback to venv)
-mkvenv() {
-  local vdir="${1:-.venv}"
-
-  if command -v uv &>/dev/null; then
-    uv venv "$vdir"
-    source "$vdir/bin/activate"
-    uv pip install -U pip setuptools wheel
-  else
-    python -m venv "$vdir"
-    source "$vdir/bin/activate"
-    python -m pip install -U pip setuptools wheel
-  fi
-}
-
-# Activate nearest venv (searches up directory tree)
-activate() {
-  local dir="$PWD"
-  while [[ "$dir" != "/" ]]; do
-    for venv in .venv venv env .env; do
-      if [[ -f "$dir/$venv/bin/activate" ]]; then
-        source "$dir/$venv/bin/activate"
-        return 0
-      fi
-    done
-    dir="$(dirname "$dir")"
-  done
-  echo "No venv found"
-  return 1
-}

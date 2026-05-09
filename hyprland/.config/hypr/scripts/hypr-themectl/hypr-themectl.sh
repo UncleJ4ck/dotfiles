@@ -193,6 +193,7 @@ main() {
     local regreet_bg=""
     if [[ -f "$REGREET_CONFIG" ]]; then
       update_regreet_icon_theme
+      update_regreet_power_commands
       write_regreet_style_css
       ensure_greetd_uses_regreet_style
       regreet_bg="$(apply_regreet_background "$wall" || true)"
@@ -252,6 +253,7 @@ main() {
     info "Wallpaper: $wall"
     [[ -f "$REGREET_CONFIG" ]] || die "ReGreet config not found: $REGREET_CONFIG"
     update_regreet_icon_theme
+    update_regreet_power_commands
     write_regreet_style_css
     ensure_greetd_uses_regreet_style
     apply_regreet_background "$wall" >/dev/null || true

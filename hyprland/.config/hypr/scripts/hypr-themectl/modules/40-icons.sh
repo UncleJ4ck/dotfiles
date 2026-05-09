@@ -269,11 +269,6 @@ ensure_all_color_variants() {
   rsync -a --exclude='index.theme' "$CATPP_REPO_DIR/src/" "$THEME_DIR/"
 }
 
-# Keep old function name for compatibility
-ensure_catpp_variants() {
-  ensure_all_color_variants
-}
-
 # =============================================================================
 # Symlink Fixes
 # =============================================================================

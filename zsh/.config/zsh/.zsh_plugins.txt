@@ -1,4 +1,15 @@
-# External plugins (loaded AFTER compinit)
+# External plugins managed by antidote.
+# Loaded AFTER compinit (by 55-antidote.zsh).
+
+# ── must load first (provides the defer mechanism) ─────────────────────
+romkatv/zsh-defer
+
+# ── eager (need to be available the moment you hit the prompt) ─────────
 Aloxaf/fzf-tab
 hlissner/zsh-autopair
-MichaelAquilina/zsh-you-should-use
+wfxr/forgit
+olets/zsh-abbr
+
+# ── deferred (loaded after first prompt — they hook ZLE on every key,
+#    so deferring is invisible in practice) ──────────────────────────────
+MichaelAquilina/zsh-you-should-use               kind:defer

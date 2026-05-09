@@ -1,9 +1,11 @@
+# ── Interactive-shell PATH additions ─────────────────────────────────
+# .zshenv handles PATH entries needed in non-interactive shells.
+# This file covers interactive-only additions (tools you use at the prompt).
 typeset -U path PATH fpath FPATH
 
 fpath=(/usr/share/zsh/site-functions $fpath)
 
 path=(
-  "$HOME/.local/bin"
   "${CARGO_HOME:-$HOME/.cargo}/bin"
   "$HOME/go/bin"
   "$HOME/.npm-global/bin"
@@ -11,9 +13,7 @@ path=(
   "$HOME/.gobrew/bin"
   "$HOME/.gobrew/current/go"
   "$HOME/.opencode/bin"
+  "$HOME/.dual-graph"
   $path
 )
 export PATH
-
-
-

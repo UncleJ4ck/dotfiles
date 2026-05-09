@@ -75,18 +75,44 @@ set -Eeuo pipefail
 # =============================================================================
 : "${LIMINE_CONFIG:=/boot/EFI/arch-limine/limine.conf}"
 : "${LIMINE_BG_DIR:=/boot/EFI/arch-limine}"
-: "${LIMINE_BG_BLUR_RADIUS:=16x6}"
+
+# Wallpaper-merge mode (default): blurred + matugen-tinted wallpaper.
+# Each themectl run regenerates the boot background from the current
+# wallpaper so the boot menu matches the desktop palette automatically.
+# Set LIMINE_USE_WALLPAPER=0 to fall back to the typographic solid-backdrop look.
+: "${LIMINE_USE_WALLPAPER:=1}"
+# Heavy blur — the boot menu needs the wallpaper to read as ambience, not
+# as a recognizable image, so menu text dominates.
+: "${LIMINE_BG_BLUR_RADIUS:=0x22}"
+# Brightness/saturation: drop both so the menu palette is the loudest thing
+# on screen. Format is "brightness,saturation,hue" (% of original).
+: "${LIMINE_BG_MODULATE:=58,80,100}"
+# Absolute luma ceiling expressed as a percentage of full white. ImageMagick
+# `-evaluate Min "N%"` clamps every channel value to at most N% — works
+# correctly across Q8 and Q16 builds (a raw integer would be interpreted
+# against QuantumRange and silently produce near-black on Q16). 41% ≈ luma
+# 105/255; with on_background ≈ 233 the floor contrast ratio works out to
+# ~4.7:1 (WCAG AA passes).
+: "${LIMINE_BG_LUMA_CEILING:=41%}"
+# Matugen-tint blend: ImageMagick `-colorize` percentage applied with the
+# matugen primary as fill. 0=no tint (raw blurred wallpaper), 100=solid color.
+# 18 gives a clear hue unification without flattening the image.
+: "${LIMINE_BG_TINT_PERCENT:=18}"
 : "${LIMINE_BG_QUALITY:=92}"
 : "${LIMINE_BG_FORMAT:=jpg}"
 : "${LIMINE_WALLPAPER_STYLE:=stretched}"
-: "${LIMINE_TERM_MARGIN:=64}"
-: "${LIMINE_TERM_MARGIN_GRADIENT:=8}"
-: "${LIMINE_TERM_BG_ALPHA:=CC}"
-: "${LIMINE_INTERFACE_BRANDING:=}"
-: "${LIMINE_TERM_FONT_SCALE:=2x2}"
+
+: "${LIMINE_TERM_MARGIN:=48}"
+: "${LIMINE_TERM_MARGIN_GRADIENT:=24}"
+: "${LIMINE_TERM_BG_ALPHA:=E6}"
+: "${LIMINE_INTERFACE_BRANDING:=hyprland · arch}"
+: "${LIMINE_TERM_FONT_SCALE:=1x2}"
 : "${LIMINE_HELP_HIDDEN:=yes}"
 
-# Auto-contrast thresholds
+# Variant: pin to dark|light|amoled, or "auto" for luma-driven flipping.
+# auto-flip caused jarring light-mode boot screens on bright wallpapers,
+# so we pin dark by default.
+: "${LIMINE_VARIANT_PIN:=dark}"
 : "${LIMINE_LUMA_LIGHT_THRESH:=0.62}"
 : "${LIMINE_LUMA_DARK_THRESH:=0.25}"
 : "${LIMINE_ALPHA_DARK:=$LIMINE_TERM_BG_ALPHA}"
@@ -99,11 +125,31 @@ set -Eeuo pipefail
 # =============================================================================
 : "${PLYMOUTH_THEME_NAME:=matugen}"
 : "${PLYMOUTH_THEME_DIR:=/usr/share/plymouth/themes/$PLYMOUTH_THEME_NAME}"
+
+# Wallpaper-merge mode (default): blurred + matugen-tinted wallpaper.
+# Same philosophy as Limine — Plymouth picks up the current wallpaper and
+# applies the matugen tint so the LUKS prompt feels native to the desktop.
+: "${PLYMOUTH_USE_WALLPAPER:=1}"
 : "${PLYMOUTH_BG_FORMAT:=png}"
-: "${PLYMOUTH_BG_BLUR_RADIUS:=20x8}"
+# Slightly less aggressive than Limine — Plymouth shows for several seconds
+# while typing a password, so a hint of wallpaper structure is welcome.
+: "${PLYMOUTH_BG_BLUR_RADIUS:=0x18}"
 : "${PLYMOUTH_BG_QUALITY:=92}"
-: "${PLYMOUTH_BG_MODULATE:=88,100,100}"
+: "${PLYMOUTH_BG_MODULATE:=62,82,100}"
+# Same luma-ceiling defense as Limine, expressed as percentage. 43% ≈ 110/255.
+# Plymouth has no term-bg alpha to fall back on, so legibility depends
+# entirely on bg luma being low enough that on_background text reads.
+: "${PLYMOUTH_BG_LUMA_CEILING:=43%}"
+: "${PLYMOUTH_BG_TINT_PERCENT:=15}"
 : "${PLYMOUTH_TARGET_RES:=1920x1080}"
+
+# Variant: pin to dark|light|amoled, or "auto" for luma-driven flipping.
+: "${PLYMOUTH_VARIANT_PIN:=dark}"
+
+# Accent line at the bottom of the prompt (single horizontal rule, low alpha).
+: "${PLYMOUTH_ACCENT_LINE_WIDTH:=320}"
+: "${PLYMOUTH_ACCENT_LINE_ALPHA:=0.32}"
+
 : "${STATE_PLYMOUTH_FILE:=$STATE_DIR/current_plymouth}"
 
 # =============================================================================

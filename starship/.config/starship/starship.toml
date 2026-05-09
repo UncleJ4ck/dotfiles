@@ -34,49 +34,49 @@ $battery"""
 # Matugen-driven palette
 # --------------------------------------------------------------------
 [palettes.matugen]
-bg        = "#1a1110"
-fg        = "#f1dedc"
-muted     = "#d8c2be"
-primary   = "#ffb4aa"
-secondary = "#e7bdb7"
-tertiary  = "#dfc38c"
+bg        = "#16130b"
+fg        = "#e9e2d4"
+muted     = "#cdc6b4"
+primary   = "#ddc66e"
+secondary = "#d2c6a1"
+tertiary  = "#aad0b2"
 error     = "#ffb4ab"
 
-warning   = "#f5bd6f"
-info      = "#b8c4ff"
+warning   = "#e0c46d"
+info      = "#99ccfa"
 success   = "#b1d18a"
 
 # Light-ish bubble backgrounds (Matugen will keep them coherent)
-id_bg        = "#271d1c"
-dir_bg       = "#322826"
-git_bg       = "#271d1c"
-git_status_bg= "#322826"
-lang_bg      = "#322826"
-cloud_bg     = "#271d1c"
-runtime_bg   = "#271d1c"
-time_bg      = "#322826"
-battery_bg   = "#322826"
+id_bg        = "#221f17"
+dir_bg       = "#2d2a21"
+git_bg       = "#221f17"
+git_status_bg= "#2d2a21"
+lang_bg      = "#2d2a21"
+cloud_bg     = "#221f17"
+runtime_bg   = "#221f17"
+time_bg      = "#2d2a21"
+battery_bg   = "#2d2a21"
 
 # Bubble text colors
-id_fg   = "#f1dedc"
-dir_fg  = "#f1dedc"
-git_fg  = "#f1dedc"
-lang_fg = "#f1dedc"
+id_fg   = "#e9e2d4"
+dir_fg  = "#e9e2d4"
+git_fg  = "#e9e2d4"
+lang_fg = "#e9e2d4"
 
 # Accents inside bubbles
-dir_icon     = "#ffb4aa"
-dir_repo_fg  = "#ffb4aa"
-git_icon     = "#e7bdb7"
+dir_icon     = "#ddc66e"
+dir_repo_fg  = "#ddc66e"
+git_icon     = "#d2c6a1"
 
 # Status / character bubbles
 status_bg    = "#93000a"
 status_fg    = "#ffdad6"
-char_bg      = "#ffb4aa"
-char_fg      = "#561e18"
+char_bg      = "#ddc66e"
+char_fg      = "#3a3000"
 char_err_bg  = "#93000a"
 char_err_fg  = "#ffdad6"
-char_vim_bg  = "#dfc38c"
-char_vim_fg  = "#3e2e04"
+char_vim_bg  = "#aad0b2"
+char_vim_fg  = "#153722"
 
 
 # --------------------------------------------------------------------
@@ -219,3 +219,6 @@ vimcmd_symbol  = "[╰─](muted)[](fg:char_vim_bg)[ ❮ ](bold fg:char_vim_f
 
 [package]
 disabled = true
+
+# Transient prompt is not a starship TOML key — it's a zsh function pair.
+# See ~/.config/zsh/rc.d/90-prompt.zsh for the real transient setup.

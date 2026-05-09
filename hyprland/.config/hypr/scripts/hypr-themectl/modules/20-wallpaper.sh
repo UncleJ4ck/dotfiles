@@ -19,6 +19,23 @@ wall_mean_luma() {
   "$cmd" "$img" -resize 128x128\! -colorspace gray -format "%[fx:mean]" info: 2>/dev/null || echo "0.5"
 }
 
+# Maps wallpaper saturation → "vibrant" / "minimal" band.
+# Used by plymouth + limine to pick a design preset so each wallpaper
+# produces a visually distinct boot/bootloader experience, not just
+# a recolor of the same layout.
+#   sat > 0.22  → vibrant (bigger accents, more visible borders)
+#   sat ≤ 0.22  → minimal (hairline borders, restrained)
+wall_vibrancy_band() {
+  local img="$1" sat
+  sat="$(wall_mean_saturation "$img" 2>/dev/null)" || sat="0.20"
+  [[ "$sat" == "nan" || -z "$sat" ]] && sat="0.20"
+  if float_ge "$sat" "0.22"; then
+    echo "vibrant"
+  else
+    echo "minimal"
+  fi
+}
+
 # =============================================================================
 # Grayscale Detection
 # =============================================================================
@@ -133,17 +150,26 @@ daemon_ready() {
 awww_socket_path() {
   local base
   base="${XDG_RUNTIME_DIR}/${WAYLAND_DISPLAY}-awww-daemon"
+
+  # nullglob keeps the glob from expanding to the literal pattern when the
+  # daemon hasn't created its socket yet. Restored after the lookup so we
+  # don't change the caller's globbing semantics.
+  local restore_nullglob=0
+  shopt -q nullglob || restore_nullglob=1
+  shopt -s nullglob
   local -a matches=( "${base}".* )
-  if [[ -e "${matches[0]}" ]]; then
+  ((restore_nullglob)) && shopt -u nullglob
+
+  if (( ${#matches[@]} > 0 )) && [[ -e "${matches[0]}" ]]; then
     printf '%s\n' "${matches[0]}"
     return 0
   fi
-  printf '%s\n' "${base}..sock"
+  return 1
 }
 
 cleanup_stale_socket() {
   local sock
-  sock="$(awww_socket_path)"
+  sock="$(awww_socket_path)" || return 0
   [[ -S "$sock" ]] || return 0
   [[ -n "$(daemon_running_pid)" ]] && return 0
   warn "Removing stale socket: $sock"

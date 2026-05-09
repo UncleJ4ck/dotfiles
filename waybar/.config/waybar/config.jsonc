@@ -118,7 +118,8 @@
       "default": ["󰕿", "󰖀", "󰕾"]
     },
     "on-click": "pamixer -t",
-    "on-click-right": "pavucontrol",
+    "on-click-right": "~/.config/rofi/scripts/audio-sink-picker.sh",
+    "on-click-middle": "pwvucontrol",
     "on-scroll-up": "pamixer -i 5",
     "on-scroll-down": "pamixer -d 5"
   },

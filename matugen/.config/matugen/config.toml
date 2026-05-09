@@ -4,6 +4,10 @@
   input_path  = "~/.config/matugen/templates/shell/matugen.lua"
   output_path = "~/.config/nvim/colors/matugen.lua"
 
+[templates.zsh-colors]
+  input_path  = "~/.config/matugen/templates/shell/zsh-colors.zsh"
+  output_path = "~/.config/zsh/rc.d/05-colors.zsh"
+
 [templates.kitty]
   input_path  = '~/.config/matugen/templates/shell/kitty.conf'
   output_path = '~/.config/kitty/colors.conf'

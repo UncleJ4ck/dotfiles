@@ -219,3 +219,6 @@ vimcmd_symbol  = "[╰─](muted)[](fg:char_vim_bg)[ ❮ ](bold fg:char_vim_f
 
 [package]
 disabled = true
+
+# Transient prompt is not a starship TOML key — it's a zsh function pair.
+# See ~/.config/zsh/rc.d/90-prompt.zsh for the real transient setup.

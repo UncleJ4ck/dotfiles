@@ -1,0 +1,21 @@
+configuration {
+  font: "JetBrainsMono Nerd Font Propo 13";
+  modi: "dmenu";
+  fixed-num-lines: false;
+  show-icons: false;
+  eh: 1;
+  dpi: 100;
+  click-to-exit: true;
+  location: 0;
+}
+
+@theme "~/.config/rofi/scripts/keybinds/theme.rasi"
+
+/* Compact picker — only 2 rows */
+window {
+  width: 14em;
+}
+listview {
+  lines: 2;
+  fixed-height: false;
+}
