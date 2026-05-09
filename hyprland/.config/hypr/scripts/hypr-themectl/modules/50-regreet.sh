@@ -114,7 +114,7 @@ update_regreet_icon_theme() {
 }
 
 # =============================================================================
-# [commands] section — power buttons
+# [commands] section: power buttons
 # =============================================================================
 # Force regreet's poweroff/reboot to go through `loginctl` instead of
 # `systemctl`. Both ultimately call the same logind D-Bus method, but

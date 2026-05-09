@@ -34,7 +34,7 @@ limine_wall_variant() {
 # Pure-Matugen Palette Generation
 # =============================================================================
 # Maps Material 3 roles directly into Limine's 8-slot ANSI palette. No
-# blending toward Catppuccin reference colors — every slot is a real role
+# blending toward Catppuccin reference colors. Every slot is a real role
 # read from the matugen JSON, so the boot menu hue follows the wallpaper.
 #
 # ANSI slot semantics (per Limine CONFIG.md): black, red, green, yellow,
@@ -83,7 +83,7 @@ def blend(a, b, t):
 
 def rgb_dist_sq(a, b):
     """Squared Euclidean distance in RGB. Not strictly perceptual but a
-    good-enough cheap proxy for ΔE — sqrt(1500) ≈ 38 RGB units, which is
+    good-enough cheap proxy for ΔE. sqrt(1500) is about 38 RGB units, which is
     just above the typical JND threshold. Two colors that close are
     indistinguishable from each other in the boot menu."""
     ar, ag, ab = h2rgb(a)

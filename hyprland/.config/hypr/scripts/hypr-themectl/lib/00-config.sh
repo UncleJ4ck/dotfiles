@@ -81,14 +81,14 @@ set -Eeuo pipefail
 # wallpaper so the boot menu matches the desktop palette automatically.
 # Set LIMINE_USE_WALLPAPER=0 to fall back to the typographic solid-backdrop look.
 : "${LIMINE_USE_WALLPAPER:=1}"
-# Heavy blur — the boot menu needs the wallpaper to read as ambience, not
+# Heavy blur. The boot menu needs the wallpaper to read as ambience, not
 # as a recognizable image, so menu text dominates.
 : "${LIMINE_BG_BLUR_RADIUS:=0x22}"
 # Brightness/saturation: drop both so the menu palette is the loudest thing
 # on screen. Format is "brightness,saturation,hue" (% of original).
 : "${LIMINE_BG_MODULATE:=58,80,100}"
 # Absolute luma ceiling expressed as a percentage of full white. ImageMagick
-# `-evaluate Min "N%"` clamps every channel value to at most N% — works
+# `-evaluate Min "N%"` clamps every channel value to at most N%. Works
 # correctly across Q8 and Q16 builds (a raw integer would be interpreted
 # against QuantumRange and silently produce near-black on Q16). 41% ≈ luma
 # 105/255; with on_background ≈ 233 the floor contrast ratio works out to
@@ -127,7 +127,7 @@ set -Eeuo pipefail
 : "${PLYMOUTH_THEME_DIR:=/usr/share/plymouth/themes/$PLYMOUTH_THEME_NAME}"
 
 # Wallpaper-merge mode (default): blurred + matugen-tinted wallpaper.
-# Same philosophy as Limine — Plymouth picks up the current wallpaper and
+# Same philosophy as Limine. Plymouth picks up the current wallpaper and
 # applies the matugen tint so the LUKS prompt feels native to the desktop.
 : "${PLYMOUTH_USE_WALLPAPER:=1}"
 : "${PLYMOUTH_BG_FORMAT:=png}"

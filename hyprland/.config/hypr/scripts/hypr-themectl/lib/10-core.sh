@@ -104,7 +104,7 @@ enable_debug() {
 # pkexec call.
 #
 # busctl --user is cheap (~5ms) and exits 0 only when the bus has the agent
-# registered. Cached after first success — no need to probe on every call.
+# registered. Cached after first success so subsequent calls are free.
 : "${POLKIT_AGENT_WAIT_SECS:=8}"
 _POLKIT_AGENT_OK=0
 _polkit_agent_ready() {
@@ -133,7 +133,7 @@ _polkit_agent_ready() {
     sleep 0.25
     elapsed=$((elapsed + 1))
   done
-  warn "polkit auth agent not detected after ${POLKIT_AGENT_WAIT_SECS}s — pkexec may fail"
+  warn "polkit auth agent not detected after ${POLKIT_AGENT_WAIT_SECS}s, pkexec may fail"
   return 1
 }
 

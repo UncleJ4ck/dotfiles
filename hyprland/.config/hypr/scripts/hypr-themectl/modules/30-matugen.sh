@@ -47,7 +47,7 @@ run_matugen() {
   err_file="$(mktemp --tmpdir matugen-err-XXXXXX)"
   # Bake the path into the trap NOW (double-quote expansion at trap-set time)
   # so the cleanup runs even when `local err_file` has gone out of scope under
-  # set -u — the previous `'…$err_file…'` form deferred expansion until after
+  # set -u. The previous `'…$err_file…'` form deferred expansion until after
   # the function returned, by which point err_file was unset.
   trap "rm -f '$err_file' 2>/dev/null || true" RETURN
 
@@ -74,7 +74,7 @@ run_matugen() {
   # write to stdout (e.g. tools that ignore redirection), and that output
   # gets concatenated to the JSON, breaking `jq -e empty`. Use python's
   # JSONDecoder.raw_decode to extract the first valid JSON object regardless
-  # of trailing content — same idea as `jq -c 'inputs'` but works on a single
+  # of trailing content. Same idea as `jq -c 'inputs'` but works on a single
   # object without --slurp gymnastics.
   #
   # Pass the captured stdout via stdin (here-string) and the python source
