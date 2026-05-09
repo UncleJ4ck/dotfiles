@@ -516,8 +516,12 @@ _rebuild_ukis() {
   seen_error=0
   for ((t = 0; t < 180; t++)); do
     if [[ -s "$rebuild_log" ]]; then
-      seen_success="$(grep -c 'Image generation successful' "$rebuild_log" 2>/dev/null || echo 0)"
-      seen_error="$(grep -cE 'ERROR|Image generation failed' "$rebuild_log" 2>/dev/null || echo 0)"
+      # `grep -c` exits 1 when there are no matches but still prints "0"
+      # to stdout. Without a guard, `|| echo 0` appends a second 0 and the
+      # value becomes "0\n0", tripping `((expr))`. Just trust grep's output
+      # (always a single integer) and treat read failure as 0.
+      seen_success="$(grep -c 'Image generation successful' "$rebuild_log" 2>/dev/null)" || seen_success=0
+      seen_error="$(grep -cE 'ERROR|Image generation failed' "$rebuild_log" 2>/dev/null)" || seen_error=0
       ((seen_error > 0)) && break
       ((seen_success >= kernels_count)) && break
     fi
@@ -526,7 +530,7 @@ _rebuild_ukis() {
   rm -f "$watchdog_pid_file" 2>/dev/null || true
 
   if ((seen_error > 0)); then
-    warn "UKI rebuild reported errors ($seen_error) — Plymouth state will NOT be marked. Inspect: $rebuild_log"
+    warn "UKI rebuild reported errors ($seen_error). Plymouth state will NOT be marked. Inspect: $rebuild_log"
     return 1
   fi
   if ((seen_success < kernels_count)); then

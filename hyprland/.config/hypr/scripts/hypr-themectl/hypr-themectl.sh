@@ -295,8 +295,11 @@ main() {
     ;;
 
   dry-run|preview)
+    # Default to reapply (use cached wallpaper) so `hypr-theme dry-run`
+    # with no args works. Explicit --random / --set still honored.
+    [[ "${1:-}" =~ ^(--random|--reapply|--set)$ ]] || set -- --reapply "$@"
     parse_wall_args "$@"
-    local wall preview_dir live_log
+    local wall preview_dir
     wall="$(resolve_wall_from_mode)"
     info "Dry-run for wallpaper: $wall"
 
@@ -305,8 +308,8 @@ main() {
     mkdir -p "$preview_dir"
 
     # Redirect every "managed" path to the preview tree. Each module reads
-    # these env-var paths; root_exec is replaced with a sandbox that just
-    # writes locally without touching /etc or /boot.
+    # these env-var paths; root_exec becomes a sandbox that runs the command
+    # only when its target lands in the preview dir, and otherwise logs.
     export LIMINE_CONFIG="$preview_dir/limine.conf"
     export LIMINE_BG_DIR="$preview_dir/arch-limine"
     export PLYMOUTH_THEME_DIR="$preview_dir/plymouth-matugen"
@@ -315,15 +318,24 @@ main() {
     export REGREET_BG_DIR="$preview_dir/regreet-bg"
     export GREETD_CONFIG="$preview_dir/greetd.toml"
     export PLYMOUTH_SYNC_REBUILD=0
-    # Block UKI rebuild and any actual /etc write.
+    # Stop _rebuild_ukis cold in dry-run.
+    _rebuild_ukis() { info "[dry-run] skipped mkinitcpio -P"; return 0; }
+
+    # Many call sites pass paths that point at /etc/, /usr/, /boot/, or
+    # /etc/greetd/xdg even though we already redirected the primary config
+    # paths above. Detect those and just log.
     root_exec() {
-      # Instead of touching the system, log what we WOULD have run.
-      printf '[dry-run] would root_exec: %s\n' "$*" >>"$preview_dir/root_exec.log"
-      # Allow benign filesystem ops we redirected into preview_dir to still happen.
-      case "$1" in
-        install|mkdir|rm|cp|chmod|chown|mv|tee) "$@" ;;
-        *) return 0 ;;
-      esac
+      local arg writes_outside_preview=0
+      for arg in "$@"; do
+        case "$arg" in
+          /etc/*|/usr/*|/boot/*|/var/*|/srv/*) writes_outside_preview=1 ;;
+        esac
+      done
+      if (( writes_outside_preview )); then
+        printf '[dry-run] skipped: %s\n' "$*" >>"$preview_dir/root_exec.log"
+        return 0
+      fi
+      "$@"
     }
     # Seed empty starting files so awk patchers have something to read.
     : > "$REGREET_CONFIG"

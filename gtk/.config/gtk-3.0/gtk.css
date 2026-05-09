@@ -6,61 +6,61 @@
  *   ~/.config/gtk-3.0/colors.css
  */
 
-@define-color accent_bg_color          #ddc66e;
-@define-color accent_fg_color          #3a3000;
-@define-color accent_color             #fae287;
+@define-color accent_bg_color          #ffb2b9;
+@define-color accent_fg_color          #561d26;
+@define-color accent_color             #ffdadc;
 
 @define-color destructive_bg_color     #ffb4ab;
 @define-color destructive_fg_color     #690005;
 @define-color destructive_color        #ffb4ab;
 
-@define-color success_bg_color         #d2c6a1;
-@define-color success_fg_color         #373016;
-@define-color success_color            #efe2bc;
+@define-color success_bg_color         #e5bdbf;
+@define-color success_fg_color         #44292c;
+@define-color success_color            #ffdadc;
 
-@define-color warning_bg_color         #aad0b2;
-@define-color warning_fg_color         #153722;
-@define-color warning_color            #c6eccd;
+@define-color warning_bg_color         #e8c08e;
+@define-color warning_fg_color         #442b06;
+@define-color warning_color            #ffddb6;
 
 @define-color error_bg_color           #ffb4ab;
 @define-color error_fg_color           #690005;
 @define-color error_color              #ffb4ab;
 
 /* Core surfaces */
-@define-color window_bg_color          #16130b;
-@define-color window_fg_color          #e9e2d4;
+@define-color window_bg_color          #1a1112;
+@define-color window_fg_color          #f0dedf;
 
-@define-color view_bg_color            #16130b;
-@define-color view_fg_color            #e9e2d4;
+@define-color view_bg_color            #1a1112;
+@define-color view_fg_color            #f0dedf;
 
 /* Headerbar */
-@define-color headerbar_bg_color       #221f17;
-@define-color headerbar_fg_color       #e9e2d4;
-@define-color headerbar_border_color   #e9e2d4;
-@define-color headerbar_backdrop_color #16130b;
+@define-color headerbar_bg_color       #271d1e;
+@define-color headerbar_fg_color       #f0dedf;
+@define-color headerbar_border_color   #f0dedf;
+@define-color headerbar_backdrop_color #1a1112;
 @define-color headerbar_shade_color    alpha(#000000, 0.36);
 
 /* Sidebars */
-@define-color sidebar_bg_color         #1e1b13;
-@define-color sidebar_fg_color         #e9e2d4;
-@define-color sidebar_backdrop_color   #100e07;
+@define-color sidebar_bg_color         #22191a;
+@define-color sidebar_fg_color         #f0dedf;
+@define-color sidebar_backdrop_color   #140c0d;
 @define-color sidebar_border_color     alpha(#000000, 0.36);
 
-@define-color secondary_sidebar_bg_color       #221f17;
-@define-color secondary_sidebar_fg_color       #e9e2d4;
-@define-color secondary_sidebar_backdrop_color #1e1b13;
+@define-color secondary_sidebar_bg_color       #271d1e;
+@define-color secondary_sidebar_fg_color       #f0dedf;
+@define-color secondary_sidebar_backdrop_color #22191a;
 @define-color secondary_sidebar_border_color   alpha(#000000, 0.36);
 
 /* Cards / dialogs / popovers */
-@define-color card_bg_color            #2d2a21;
-@define-color card_fg_color            #e9e2d4;
+@define-color card_bg_color            #312828;
+@define-color card_fg_color            #f0dedf;
 @define-color card_shade_color         alpha(#000000, 0.36);
 
-@define-color dialog_bg_color          #2d2a21;
-@define-color dialog_fg_color          #e9e2d4;
+@define-color dialog_bg_color          #312828;
+@define-color dialog_fg_color          #f0dedf;
 
-@define-color popover_bg_color         #2d2a21;
-@define-color popover_fg_color         #e9e2d4;
+@define-color popover_bg_color         #312828;
+@define-color popover_fg_color         #f0dedf;
 
 /* Misc */
 @define-color shade_color              alpha(#000000, 0.25);
