@@ -1,0 +1,16 @@
+[Unit]
+Description=Reapply matugen theme on session start
+PartOf=graphical-session.target
+After=graphical-session.target awww-daemon.service hyprpolkitagent.service
+Wants=awww-daemon.service hyprpolkitagent.service
+ConditionEnvironment=WAYLAND_DISPLAY
+
+[Service]
+Type=oneshot
+ExecStart=%h/.config/hypr/scripts/hypr-themectl/hypr-themectl.sh wallpaper --reapply
+TimeoutStartSec=120
+# Don't fail the session if themectl errors. The unit is best-effort.
+SuccessExitStatus=0 1
+
+[Install]
+WantedBy=graphical-session.target

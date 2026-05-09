@@ -44,6 +44,9 @@ Commands:
   plymouth     Update Plymouth LUKS prompt theme (Matugen)
   limine       Update Limine bootloader theme
   reload       Reload desktop components
+  dry-run      Preview the apply without touching /etc, /boot, or /usr.
+               Writes to /tmp/themectl-preview/ for diff inspection.
+               Aliased as 'preview'.
   clip-setup   Pre-download CLIP model for profile matching
   preflight    Check dependencies
   break-lock   Force-break stuck lock
@@ -123,7 +126,7 @@ resolve_wall_from_mode() {
 
 needs_lock() {
   case "${1:-}" in
-  preflight | break-lock | clip-setup) return 1 ;;
+  preflight | break-lock | clip-setup | dry-run | preview) return 1 ;;
   *) return 0 ;;
   esac
 }
@@ -178,6 +181,9 @@ main() {
     parse_wall_args "$@"
     ((DEBUG)) && dbg "MODE=$MODE CHOSEN=${CHOSEN:-<none>}"
 
+    themectl_pacnew_check
+    themectl_drift_check
+
     local wall
     wall="$(resolve_wall_from_mode)"
     info "Wallpaper: $wall"
@@ -204,6 +210,7 @@ main() {
 
     [[ -f "$LIMINE_CONFIG" ]] && update_limine_config "$wall" "$regreet_bg"
     reload_desktop
+    themectl_stamp_apply
     ;;
 
   wallpaper)
@@ -285,6 +292,76 @@ main() {
 
   preflight)
     preflight
+    ;;
+
+  dry-run|preview)
+    parse_wall_args "$@"
+    local wall preview_dir live_log
+    wall="$(resolve_wall_from_mode)"
+    info "Dry-run for wallpaper: $wall"
+
+    preview_dir="${THEMECTL_PREVIEW_DIR:-/tmp/themectl-preview}"
+    rm -rf "$preview_dir"
+    mkdir -p "$preview_dir"
+
+    # Redirect every "managed" path to the preview tree. Each module reads
+    # these env-var paths; root_exec is replaced with a sandbox that just
+    # writes locally without touching /etc or /boot.
+    export LIMINE_CONFIG="$preview_dir/limine.conf"
+    export LIMINE_BG_DIR="$preview_dir/arch-limine"
+    export PLYMOUTH_THEME_DIR="$preview_dir/plymouth-matugen"
+    export REGREET_CONFIG="$preview_dir/regreet.toml"
+    export REGREET_STYLE_CSS="$preview_dir/regreet.css"
+    export REGREET_BG_DIR="$preview_dir/regreet-bg"
+    export GREETD_CONFIG="$preview_dir/greetd.toml"
+    export PLYMOUTH_SYNC_REBUILD=0
+    # Block UKI rebuild and any actual /etc write.
+    root_exec() {
+      # Instead of touching the system, log what we WOULD have run.
+      printf '[dry-run] would root_exec: %s\n' "$*" >>"$preview_dir/root_exec.log"
+      # Allow benign filesystem ops we redirected into preview_dir to still happen.
+      case "$1" in
+        install|mkdir|rm|cp|chmod|chown|mv|tee) "$@" ;;
+        *) return 0 ;;
+      esac
+    }
+    # Seed empty starting files so awk patchers have something to read.
+    : > "$REGREET_CONFIG"
+    : > "$LIMINE_CONFIG"
+    mkdir -p "$LIMINE_BG_DIR" "$PLYMOUTH_THEME_DIR" "$REGREET_BG_DIR"
+    # Prime limine.conf with a fake entry so update_limine_config doesn't
+    # bail (it requires at least one /Entry block).
+    cat >"$LIMINE_CONFIG" <<'EOF'
+timeout: 5
+
+/Arch Linux (linux)
+    protocol: efi
+    path: boot():/EFI/Linux/arch-linux.efi
+EOF
+
+    wait_monitors_stable
+    apply_wallpaper "$wall"
+    run_matugen "$wall"
+    apply_icons "$wall" 2>/dev/null || true
+
+    local regreet_bg=""
+    update_regreet_icon_theme || true
+    update_regreet_power_commands || true
+    write_regreet_style_css || true
+    regreet_bg="$(apply_regreet_background "$wall" 2>/dev/null || true)"
+
+    update_plymouth_theme "$wall" || true
+    update_limine_config "$wall" "$regreet_bg" || true
+
+    info "Preview written to: $preview_dir"
+    info "Diff against live state with:"
+    info "  diff -u /etc/greetd/regreet.toml   $REGREET_CONFIG"
+    info "  diff -u /etc/greetd/regreet.css    $REGREET_STYLE_CSS"
+    info "  diff -u /boot/EFI/arch-limine/limine.conf $LIMINE_CONFIG"
+    info "  ls -la $PLYMOUTH_THEME_DIR/"
+    [[ -s "$preview_dir/root_exec.log" ]] && {
+      info "Skipped root operations recorded in: $preview_dir/root_exec.log"
+    }
     ;;
 
   clip-setup)

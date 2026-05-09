@@ -180,6 +180,13 @@ set -Eeuo pipefail
 # =============================================================================
 # Lock & State Files
 # =============================================================================
+# Marker updated to "now" after every successful apply. Used by the drift
+# preflight to detect /etc/ files modified outside of themectl.
+: "${STATE_LAST_APPLY_FILE:=$STATE_DIR/last-apply}"
+# Paths themectl writes to. The drift preflight scans these for unexpected
+# changes (.pacnew/.pacsave files, mtimes after the last apply).
+: "${MANAGED_ETC_PATHS:=/etc/greetd /etc/plymouth /etc/polkit-1/rules.d /usr/share/plymouth/themes/matugen /boot/EFI/arch-limine}"
+
 : "${LOCK_PATH:=$XDG_RUNTIME_DIR/hypr-theme-${UID}.lock}"
 : "${STATE_FLAVOR_FILE:=$STATE_DIR/current_flavor}"
 : "${STATE_ACCENT_FILE:=$STATE_DIR/current_accent}"

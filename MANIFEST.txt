@@ -1,0 +1,28 @@
+# Expected dotfile symlinks. Format: <link path under $HOME> -> <target under $HOME>
+# Verified by ~/.config/zsh/rc.d/00-symlink-check.zsh on shell startup.
+# If you add or remove a symlink, regenerate this file with:
+#   find ~/.config -maxdepth 4 -type l 2>/dev/null \
+#     | while read l; do printf '%s -> %s\n' "${l#$HOME/}" "$(readlink "$l")"; done \
+#     | grep -E ' -> .*dotfiles/' | sort > ~/dotfiles/MANIFEST.txt
+.config/environment.d -> dotfiles/environment/.config/environment.d
+.config/gtk-2.0 -> dotfiles/gtk/.config/gtk-2.0
+.config/gtk-3.0 -> dotfiles/gtk/.config/gtk-3.0
+.config/gtk-4.0 -> dotfiles/gtk/.config/gtk-4.0
+.config/hypr -> dotfiles/hyprland/.config/hypr
+.config/hyprpolkit/.qtquickcontrols2.conf -> dotfiles/hyprpolkit/.config/hyprpolkit/.qtquickcontrols2.conf
+.config/kitty -> dotfiles/kitty/.config/kitty
+.config/Kvantum -> dotfiles/kvantum/.config/Kvantum
+.config/matugen -> dotfiles/matugen/.config/matugen
+.config/nvim -> dotfiles/nvim/.config/nvim
+.config/qt5ct -> dotfiles/qt/.config/qt5ct
+.config/qt6ct -> dotfiles/qt/.config/qt6ct
+.config/qtquickcontrols2-hyprpolkit.conf -> dotfiles/hyprpolkit/.config/qtquickcontrols2-hyprpolkit.conf
+.config/rofi -> dotfiles/rofi/.config/rofi
+.config/starship -> dotfiles/starship/.config/starship
+.config/swaync -> dotfiles/swaync/.config/swaync
+.config/systemd/user/battery-notify.service -> dotfiles/systemd-user/.config/systemd/user/battery-notify.service
+.config/utils -> dotfiles/utils/.config/utils
+.config/uwsm -> dotfiles/uwsm/.config/uwsm
+.config/waybar -> dotfiles/waybar/.config/waybar
+.config/xfce4/helpers.rc -> dotfiles/xfce4/.config/xfce4/helpers.rc
+.config/zsh -> dotfiles/zsh/.config/zsh

@@ -264,6 +264,56 @@ you're sure no UKI rebuild is in progress."
 }
 
 # =============================================================================
+# Pacnew + drift preflight
+# =============================================================================
+# Two failure modes this catches:
+#   1. pacman -Syu shipped a new default config (regreet, plymouth, polkit)
+#      as *.pacnew while we still hold the old version. Themectl's awk
+#      patches against the old schema would produce broken output.
+#   2. User edited /etc/greetd/regreet.toml or similar by hand expecting it
+#      to persist. Themectl is about to overwrite it. Show the user before
+#      we clobber.
+themectl_pacnew_check() {
+  local hits
+  # Quote MANAGED_ETC_PATHS as a list when expanding.
+  hits="$(find ${MANAGED_ETC_PATHS} \
+            \( -name '*.pacnew' -o -name '*.pacsave' \) \
+            -not -path '*/.git/*' 2>/dev/null)" || true
+  if [[ -n "$hits" ]]; then
+    warn "Unmerged pacman backups found in managed paths:"
+    printf '  %s\n' $hits >&2
+    warn "Run \`pacdiff\` to merge before \`themectl apply\` (or set THEMECTL_IGNORE_PACNEW=1 to override)."
+    if (( ${THEMECTL_IGNORE_PACNEW:-0} == 0 )); then
+      die "Aborting to avoid clobbering user changes / writing against stale schema"
+    fi
+  fi
+}
+
+themectl_drift_check() {
+  [[ -f "$STATE_LAST_APPLY_FILE" ]] || return 0  # first run, nothing to compare
+  local hits
+  hits="$(find ${MANAGED_ETC_PATHS} \
+            -newer "$STATE_LAST_APPLY_FILE" \
+            -type f \
+            -not -name '*.log' \
+            -not -path '*/.git/*' 2>/dev/null)" || true
+  if [[ -n "$hits" ]]; then
+    warn "Files in managed paths changed since last themectl apply:"
+    printf '  %s\n' $hits >&2
+    warn "These will be overwritten. Set THEMECTL_IGNORE_DRIFT=1 to proceed anyway."
+    if (( ${THEMECTL_IGNORE_DRIFT:-0} == 0 )); then
+      die "Aborting to preserve manual edits"
+    fi
+  fi
+}
+
+themectl_stamp_apply() {
+  mkdir -p "$STATE_DIR"
+  : > "$STATE_LAST_APPLY_FILE"
+  touch "$STATE_LAST_APPLY_FILE"
+}
+
+# =============================================================================
 # Initialization
 # =============================================================================
 core_init() {
