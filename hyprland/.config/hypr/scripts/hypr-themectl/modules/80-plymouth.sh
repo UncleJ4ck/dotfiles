@@ -506,22 +506,32 @@ _rebuild_ukis() {
     return 1
   fi
 
-  # Lightweight watchdog: poll the log up to 180s for a success/failure
-  # signal. Runs synchronously here, not detached, so the caller blocks
-  # only ~30-60s while keeping the rebuild itself out of the foreground.
-  local kernels_count seen_success seen_error t
+  # Watchdog. Two-phase: first wait up to 300s for the log to start growing
+  # (flock against pacman db.lck can hold for that long during a -Syu), then
+  # poll up to 240s for completion signals. Without phase 1, a long pacman
+  # run would burn the watchdog budget before mkinitcpio even started.
+  local kernels_count seen_success seen_error t apply_start
   kernels_count="$(ls /boot/vmlinuz-* 2>/dev/null | wc -l)"
   ((kernels_count == 0)) && kernels_count=1
+  apply_start="$(date +%s)"
+
+  # Phase 1: wait for the log to be non-empty (mkinitcpio started writing).
+  for ((t = 0; t < 300; t++)); do
+    [[ -s "$rebuild_log" ]] && break
+    sleep 1
+  done
+
+  # Phase 2: poll for success/failure markers. mkinitcpio prints multiple
+  # "successful" lines per kernel; the one that actually means done in UKI
+  # mode is "Unified kernel image generation successful". Matching it
+  # case-insensitively also catches a future capitalization change.
+  # Errors: only count `==> ERROR` (NOT `==> WARNING`, which looks similar).
   seen_success=0
   seen_error=0
-  for ((t = 0; t < 180; t++)); do
+  for ((t = 0; t < 240; t++)); do
     if [[ -s "$rebuild_log" ]]; then
-      # `grep -c` exits 1 when there are no matches but still prints "0"
-      # to stdout. Without a guard, `|| echo 0` appends a second 0 and the
-      # value becomes "0\n0", tripping `((expr))`. Just trust grep's output
-      # (always a single integer) and treat read failure as 0.
-      seen_success="$(grep -c 'Image generation successful' "$rebuild_log" 2>/dev/null)" || seen_success=0
-      seen_error="$(grep -cE 'ERROR|Image generation failed' "$rebuild_log" 2>/dev/null)" || seen_error=0
+      seen_success="$(grep -ciE 'Unified kernel image generation successful' "$rebuild_log" 2>/dev/null)" || seen_success=0
+      seen_error="$(grep -cE '^==> ERROR|Image generation failed' "$rebuild_log" 2>/dev/null)" || seen_error=0
       ((seen_error > 0)) && break
       ((seen_success >= kernels_count)) && break
     fi
@@ -534,7 +544,7 @@ _rebuild_ukis() {
     return 1
   fi
   if ((seen_success < kernels_count)); then
-    warn "UKI rebuild watchdog timed out (success=$seen_success/$kernels_count after 180s). Plymouth state will NOT be marked. Inspect: $rebuild_log"
+    warn "UKI rebuild watchdog timed out (success=$seen_success/$kernels_count after 240s phase-2 poll). Plymouth state will NOT be marked. Inspect: $rebuild_log"
     return 1
   fi
 

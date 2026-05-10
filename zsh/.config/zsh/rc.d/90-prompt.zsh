@@ -8,18 +8,15 @@
 #   starship_transient_rprompt_func  → replaces RPROMPT on Enter
 # Calling enable_transience activates the mechanism.
 
-if command -v starship &>/dev/null; then
-  eval "$(starship init zsh)"
+if (( $+commands[starship] )); then
+  _evalcache starship starship init zsh
 
-  # Collapsed prompt: a single coloured chevron
+  # Collapsed prompt: a single coloured chevron after Enter, so scrollback
+  # stays readable. The *live* prompt still shows the full bubbled version.
   function starship_transient_prompt_func() {
-    # Use the character module's rendered glyph so status colour reflects exit code
     starship module character
   }
-
-  # No transient right prompt (cleaner scrollback)
   function starship_transient_rprompt_func() { }
-
   (( $+functions[enable_transience] )) && enable_transience
 else
   # Minimal fallback (no starship)

@@ -14,8 +14,19 @@ export LESSHISTFILE="$XDG_STATE_HOME/less/history"
 # Starship
 export STARSHIP_CONFIG="/home/j4kuuu/.config/starship/starship.toml"
 
-# GPG
-[[ -t 1 ]] && export GPG_TTY="$(tty)"
+# GPG. $TTY is a zsh built-in parameter, no fork. Empty in non-tty shells,
+# which is fine: the export below skips when $TTY is empty.
+[[ -n "$TTY" ]] && export GPG_TTY="$TTY"
+
+# Cache/state dirs used by other rc modules. Consolidated here so each
+# module doesn't repeat the [[ -d ]] || mkdir -p dance.
+for _d in \
+  "$XDG_DATA_HOME/zsh" \
+  "$XDG_CACHE_HOME/zsh" \
+  "$XDG_STATE_HOME/less"; do
+  [[ -d "$_d" ]] || mkdir -p -- "$_d"
+done
+unset _d
 
 # Rust
 export CARGO_HOME="$HOME/.cargo"

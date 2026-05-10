@@ -3,11 +3,11 @@
 # (git fuzzy helpers live in forgit plugin → see 40-plugin-settings.zsh)
 # =============================================================================
 
-# ── zoxide (cd replacement with frecency) ────────────────────────────
-command -v zoxide &>/dev/null && eval "$(zoxide init zsh --cmd cd)"
+# zoxide (cd replacement with frecency)
+_evalcache zoxide zoxide init zsh --cmd cd
 
-# ── direnv (per-project env loading) ────────────────────────────────
-command -v direnv &>/dev/null && eval "$(direnv hook zsh)"
+# direnv (per-project env loading)
+_evalcache direnv direnv hook zsh
 
 # ── broot (br) ───────────────────────────────────────────────────────
 if [[ -o interactive ]]; then
@@ -17,19 +17,19 @@ if [[ -o interactive ]]; then
 fi
 
 # ── FZF: smart previews (images via kitty icat, text via bat) ────────
-if command -v fzf &>/dev/null; then
+if (( $+commands[fzf] )); then
   export FZF_CTRL_T_OPTS="--preview '
     mime=\$(file --mime-type -b {} 2>/dev/null)
     if [[ \$mime =~ ^image/ ]]; then
       kitty +kitten icat --clear --transfer-mode=memory --stdin=no --place=\${FZF_PREVIEW_COLUMNS}x\${FZF_PREVIEW_LINES}@0x0 {} 2>/dev/null
-    elif command -v bat &>/dev/null; then
+    elif command -v bat >/dev/null; then
       bat --style=numbers --color=always --line-range :300 {}
     else
       cat {}
     fi
   '"
 
-  command -v eza &>/dev/null && \
+  (( $+commands[eza] )) && \
     export FZF_ALT_C_OPTS="--preview 'eza --tree --level=2 --color=always {}'"
 
   # ── Fuzzy helpers (non-git — forgit covers git) ─────────────────────
@@ -57,7 +57,7 @@ if command -v fzf &>/dev/null; then
   # Fuzzy cd (with directory tree preview)
   fcd() {
     local dir
-    if command -v fd &>/dev/null; then
+    if (( $+commands[fd] )); then
       dir=$(fd --type d --hidden --follow --exclude .git 2>/dev/null \
         | fzf --preview 'command -v eza >/dev/null && eza --tree --level=1 --color=always {} || command ls -la {}')
     else
@@ -70,7 +70,7 @@ if command -v fzf &>/dev/null; then
   # Fuzzy edit (with bat preview)
   fe() {
     local file
-    if command -v fd &>/dev/null; then
+    if (( $+commands[fd] )); then
       file=$(fd --type f --hidden --follow --exclude .git 2>/dev/null \
         | fzf --preview 'command -v bat >/dev/null && bat --style=numbers --color=always --line-range :300 {} || head -200 {}')
     else

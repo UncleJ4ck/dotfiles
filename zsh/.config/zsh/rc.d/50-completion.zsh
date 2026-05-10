@@ -1,23 +1,21 @@
-# ── Completion setup ─────────────────────────────────────────────────
-[[ -d "$XDG_CACHE_HOME/zsh" ]] || mkdir -p "$XDG_CACHE_HOME/zsh"
+# Completion setup. Cache dir created in 00-env.zsh.
 ZSH_COMPDUMP="$XDG_CACHE_HOME/zsh/zcompdump-$ZSH_VERSION"
 
 autoload -Uz compinit
 
-# Once-per-day compinit — use -C (no security check) if dump is from today
-if [[ -f "$ZSH_COMPDUMP" ]]; then
-  dump_day=$(stat -c '%j' "$ZSH_COMPDUMP" 2>/dev/null || echo "")
-  today=$(date +%j)
-  if [[ -n "$dump_day" && "$dump_day" == "$today" ]]; then
-    compinit -d "$ZSH_COMPDUMP" -C
-  else
-    compinit -d "$ZSH_COMPDUMP"
-  fi
+# Once-per-day compinit. The glob qualifier `(#qN.mh-24)` matches the
+# dump file only if it's a regular file modified within the last 24
+# hours; if it matches we use `-C` to skip the security check (huge
+# speedup, ~30-100ms shaved). The previous `stat -c %j` version was
+# broken: %j is not a Linux stat format spec, so the daily-cache
+# shortcut never fired and every shell paid full compinit cost.
+if [[ -n "${ZSH_COMPDUMP}"(#qN.mh-24) ]]; then
+  compinit -C -d "$ZSH_COMPDUMP"
 else
   compinit -d "$ZSH_COMPDUMP"
 fi
 
-# Recompile dump if stale — runs async, disowned, so startup isn't blocked
+# Recompile dump if stale. Runs async + disowned so startup isn't blocked.
 { [[ -f "$ZSH_COMPDUMP" && ( ! -f "$ZSH_COMPDUMP.zwc" || "$ZSH_COMPDUMP" -nt "$ZSH_COMPDUMP.zwc" ) ]] && zcompile "$ZSH_COMPDUMP"; } &!
 
 # ── Styling ──────────────────────────────────────────────────────────

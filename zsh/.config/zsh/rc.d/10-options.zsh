@@ -24,8 +24,8 @@ setopt INC_APPEND_HISTORY   # write to history immediately, not on exit
 setopt SHARE_HISTORY        # live-share history across open shells
 setopt EXTENDED_HISTORY     # save timestamp + elapsed duration per entry
 setopt HIST_EXPIRE_DUPS_FIRST  # prune dups first when HISTSIZE overflows
-setopt HIST_IGNORE_DUPS     # don't record if same as previous
-setopt HIST_IGNORE_ALL_DUPS # also prune older copies of a just-typed command
+setopt HIST_IGNORE_ALL_DUPS # prune older copies of a just-typed command
+                            # (supersedes HIST_IGNORE_DUPS, no need to set both)
 setopt HIST_FIND_NO_DUPS    # don't show dups in search
 setopt HIST_IGNORE_SPACE    # leading-space commands aren't saved
 setopt HIST_REDUCE_BLANKS   # normalize whitespace before saving
@@ -62,4 +62,26 @@ setopt TRANSIENT_RPROMPT    # right-prompt disappears on Enter (cleaner scrollba
 
 # ── Misc ─────────────────────────────────────────────────────────────
 setopt COMBINING_CHARS      # correctly render combining Unicode (emoji + accent)
-setopt MULTIOS              # `echo x > a > b` writes to both — very zsh-only
+setopt MULTIOS              # `echo x > a > b` writes to both, very zsh-only
+
+# Ctrl+W stops at path-component boundaries. The default WORDCHARS
+# includes `/`, so Ctrl+W eats whole paths. Removing `/` makes path
+# editing painless. Single biggest interactive-shell DX upgrade.
+WORDCHARS='*?_-.[]~&;!#$%^(){}<>'
+
+# Persistent dir stack across shell restarts. `cd -<TAB>` lists recent
+# dirs from previous sessions too.
+DIRSTACKFILE="$XDG_CACHE_HOME/zsh/dirstack"
+DIRSTACKSIZE=20
+if [[ -r "$DIRSTACKFILE" ]] && (( ${#dirstack} == 0 )); then
+  dirstack=( "${(@f)$(<"$DIRSTACKFILE")}" )
+  [[ -d "$dirstack[1]" ]] && cd -- "$dirstack[1]" 2>/dev/null && cd -- - >/dev/null
+fi
+chpwd_dirstack_save() { print -l -- "$PWD" "${(u)dirstack[@]}" >|"$DIRSTACKFILE" }
+autoload -Uz add-zsh-hook
+add-zsh-hook chpwd chpwd_dirstack_save
+
+# Built-in batch rename (zmv) and calculator (zcalc). Both autoloaded
+# lazily so cost at startup is just a hash entry.
+autoload -Uz zmv zcalc
+alias mmv='noglob zmv -W'

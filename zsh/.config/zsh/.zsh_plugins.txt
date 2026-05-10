@@ -7,8 +7,10 @@ romkatv/zsh-defer
 # ── eager (need to be available the moment you hit the prompt) ─────────
 Aloxaf/fzf-tab
 hlissner/zsh-autopair
-wfxr/forgit
-olets/zsh-abbr
+
+# ── deferred (don't hook ZLE eagerly, safe to defer) ───────────────────
+wfxr/forgit                                       kind:defer
+olets/zsh-abbr                                    kind:defer
 
 # ── deferred (loaded after first prompt — they hook ZLE on every key,
 #    so deferring is invisible in practice) ──────────────────────────────

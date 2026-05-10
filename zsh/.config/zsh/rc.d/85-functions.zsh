@@ -110,7 +110,7 @@ mkzip() {
   lvl="$(__mk_clamp_0_9 "${__MK_LEVEL:-6}")"
   out="${__MK_OUT:-${src}.zip}"
   if (( __MK_WANT_PASS )); then
-    if command -v 7z >/dev/null 2>&1; then
+    if (( $+commands[7z] )); then
       pass="$(__mk_read_pass)"
       7z a -tzip -mx="${lvl}" -mem=AES256 "-p$pass" "$out" "$src" >/dev/null
     else zip -er "$out" "$src"; fi
@@ -162,13 +162,24 @@ bak() {
   cp -a -- "$1" "${1}.bak.$(date +%Y%m%d_%H%M%S)"
 }
 
-# Tree view via broot
-tree() { br -hi -T -t -c ':pt' -- "$@"; }
+# Tree view via broot. Named `t` (not `tree`) so the system `tree(1)`
+# binary stays reachable for scripts that depend on its flags. Falls
+# through to `command tree` if broot isn't installed.
+t() {
+  if (( $+commands[br] )); then
+    br -hi -T -t -c ':pt' -- "$@"
+  elif (( $+commands[tree] )); then
+    command tree "$@"
+  else
+    print -u2 "t: neither broot (br) nor tree(1) found"
+    return 1
+  fi
+}
 treex() { br -hi --color no -c ':pt' -- "$@"; }
 
 # Disk size (diskus preferred)
 sizeof() {
-  if command -v diskus >/dev/null 2>&1; then
+  if (( $+commands[diskus] )); then
     [[ $# -eq 0 ]] && { diskus; return; }
     local p
     for p in "$@"; do
@@ -186,9 +197,9 @@ sizeof() {
 
 # Interactive disk-usage explorer
 duse() {
-  if command -v dust &>/dev/null; then
+  if (( $+commands[dust] )); then
     dust -d "${1:-2}" "${@:2}"
-  elif command -v dua &>/dev/null; then
+  elif (( $+commands[dua] )); then
     dua i "${1:-.}"
   else
     command du -h --max-depth="${1:-2}" "${@:2}"
@@ -199,18 +210,26 @@ duse() {
 replace() {
   [[ $# -ne 2 ]] && { echo "Usage: replace 'pattern' 'replacement'"; return 1; }
   local pat="$1" rep="$2"
-  if command -v sd &>/dev/null; then
-    if command -v rg &>/dev/null; then
+  if (( $+commands[sd] )); then
+    if (( $+commands[rg] )); then
       rg -l -0 -- "$pat" . | xargs -0 sd -- "$pat" "$rep"
     else
-      find . -type f -print0 | xargs -0 sd -- "$pat" "$rep"
+      command find . -type f -print0 | xargs -0 sd -- "$pat" "$rep"
     fi
   else
-    if command -v rg &>/dev/null; then
-      rg -l -0 -- "$pat" . | xargs -0 perl -pi -e "s/$pat/$rep/g"
+    # Pass pattern + replacement via env vars so perl reads them as data,
+    # not as source. The previous form `s/$pat/$rep/g` interpolated them
+    # into perl source code at zsh expansion time, which let backticks or
+    # `@` in the replacement run arbitrary perl/shell. Now perl sees
+    # $ENV{PAT} and $ENV{REP} as plain strings; no eval surface.
+    local files=()
+    if (( $+commands[rg] )); then
+      files=( "${(@f)$(rg -l -- "$pat" .)}" )
     else
-      find . -type f -print0 | xargs -0 perl -pi -e "s/$pat/$rep/g"
+      files=( "${(@f)$(command find . -type f)}" )
     fi
+    (( ${#files} )) || return 0
+    PAT="$pat" REP="$rep" perl -pi -e 's/\Q$ENV{PAT}\E/$ENV{REP}/g' "${files[@]}"
   fi
 }
 
@@ -218,13 +237,13 @@ replace() {
 
 # Show what's listening
 listening() {
-  command -v ss &>/dev/null && ss -tulanp | grep LISTEN || netstat -tulpn | grep LISTEN
+  (( $+commands[ss] )) && ss -tulanp | grep LISTEN || netstat -tulpn | grep LISTEN
 }
 
 # Who's using port <n>
 port() {
   [[ -n "${1-}" ]] || { echo "Usage: port <port>"; return 1; }
-  command -v ss &>/dev/null && ss -tulanp | grep ":$1 " || netstat -tulpn | grep ":$1 "
+  (( $+commands[ss] )) && ss -tulanp | grep ":$1 " || netstat -tulpn | grep ":$1 "
 }
 
 # Quick HTTP server in current dir
@@ -236,11 +255,11 @@ serve() {
 
 # Internet speed — uses speedtest/speedtest-cli/fast if installed, else curl
 speed() {
-  if command -v speedtest &>/dev/null; then
+  if (( $+commands[speedtest] )); then
     speedtest "$@"
-  elif command -v speedtest-cli &>/dev/null; then
+  elif (( $+commands[speedtest-cli] )); then
     speedtest-cli "$@"
-  elif command -v fast &>/dev/null; then
+  elif (( $+commands[fast] )); then
     fast "$@"
   else
     local size="${1:-100MB}"
@@ -265,7 +284,7 @@ icat() { [[ $# -eq 0 ]] && { echo "Usage: icat <image>"; return 1; }; kitty +kit
 # Smart cat — images via icat, text via bat -pp
 scat() {
   if [[ $# -eq 0 ]]; then
-    command -v bat &>/dev/null && bat -pp || cat
+    (( $+commands[bat] )) && bat -pp || cat
     return
   fi
   local file="$1"
@@ -273,15 +292,19 @@ scat() {
   local mime; mime=$(file --mime-type -b "$file" 2>/dev/null)
   if [[ "$mime" =~ ^image/ ]]; then
     kitty +kitten icat "$file"
+  elif (( $+commands[bat] )); then
+    bat -pp "$file"
   else
-    command -v bat &>/dev/null && bat -pp "$file" || cat "$file"
+    # `command cat`, NOT `cat`: scat is aliased from `cat`, so a bare `cat`
+    # here would recurse into scat and stack-overflow when bat is absent.
+    command cat "$file"
   fi
 }
 
 # ── Python venv ──────────────────────────────────────────────────────
 mkvenv() {
   local vdir="${1:-.venv}"
-  if command -v uv &>/dev/null; then
+  if (( $+commands[uv] )); then
     uv venv "$vdir" && source "$vdir/bin/activate" && uv pip install -U pip setuptools wheel
   else
     python -m venv "$vdir" && source "$vdir/bin/activate" && python -m pip install -U pip setuptools wheel
@@ -320,22 +343,30 @@ genpass() {
 # UUID
 uuid() { cat /proc/sys/kernel/random/uuid; }
 
-# File hashes
-md5f()    { md5sum    "$@" | awk '{print $1}'; }
-sha1f()   { sha1sum   "$@" | awk '{print $1}'; }
-sha256f() { sha256sum "$@" | awk '{print $1}'; }
+# File hashes. zsh array indexing instead of awk so we shave one fork
+# per call.
+md5f()    { local h=( ${(z)"$(md5sum    "$@")"}    ); print -- "$h[1]"; }
+sha1f()   { local h=( ${(z)"$(sha1sum   "$@")"}    ); print -- "$h[1]"; }
+sha256f() { local h=( ${(z)"$(sha256sum "$@")"}    ); print -- "$h[1]"; }
 
-# Calculator (bc -l with scale=10)
+# Calculator. Use zcalc when available (built-in, supports vars & history)
+# and fall back to a one-shot $((...)) for simple arithmetic, then bc -l
+# for floating-point if we got nothing.
+autoload -Uz zcalc 2>/dev/null
 calc() {
   local expr="$*"
-  [[ -z "$expr" ]] && { echo "Usage: calc <expression>"; return 1; }
-  printf 'scale=10; %s\n' "$expr" | bc -l
+  [[ -z "$expr" ]] && { zcalc; return $?; }
+  if (( $+commands[bc] )); then
+    printf 'scale=10; %s\n' "$expr" | bc -l
+  else
+    print $(( $expr ))
+  fi
 }
 
 # QR code in terminal (requires qrencode)
 qr() {
   [[ -n "${1-}" ]] || { echo "Usage: qr <text-or-url>"; return 1; }
-  if command -v qrencode &>/dev/null; then
+  if (( $+commands[qrencode] )); then
     qrencode -t ansiutf8 "$*"
   else
     echo "qr: qrencode not installed (install via: pacman -S qrencode)"
@@ -379,7 +410,7 @@ note() {
 }
 
 # Manpage via bat (colored, paged)
-mb() { command -v bat &>/dev/null && MANPAGER="sh -c 'col -bx | bat -l man -p'" man "$@" || man "$@"; }
+mb() { (( $+commands[bat] )) && MANPAGER="sh -c 'col -bx | bat -l man -p'" man "$@" || man "$@"; }
 
 # Zsh startup timing — useful to know if the shell is slow
 ztime() {

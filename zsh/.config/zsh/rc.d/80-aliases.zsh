@@ -22,7 +22,7 @@ for i in {1..9}; do alias "$i"="cd -$i"; done
 cdl() { builtin cd "$@" && ls; }
 
 # ── ls (eza) ─────────────────────────────────────────────────────────
-if command -v eza &>/dev/null; then
+if (( $+commands[eza] )); then
   alias ls='eza --group-directories-first --icons=auto'
   alias l='eza -1 --icons=auto'
   alias ll='eza -lah --group-directories-first --icons=auto --git'
@@ -37,21 +37,22 @@ else
   alias la='ls -A'
 fi
 
-# ── cat/bat ──────────────────────────────────────────────────────────
-if command -v bat &>/dev/null; then
-  alias cat='scat'
+# cat/bat. Do NOT alias `cat` itself: scripts and pipelines that source
+# our rc files (and the scat() function below) call cat expecting POSIX
+# behaviour. Use catn/catl/scat explicitly.
+if (( $+commands[bat] )); then
   alias catn='bat'
   alias catl='bat --style=numbers'
 fi
 
-# ── find/grep (fd + rg) ──────────────────────────────────────────────
-if command -v fd &>/dev/null; then
-  alias find='fd'
+# find/grep. Do NOT alias `find` or `grep` themselves: many functions in
+# 85-functions.zsh and replace() etc. call find/grep with POSIX flags
+# that fd/rg don't accept. Use the typed forms (f/ff/fdir, rgi/rgl/rgc).
+if (( $+commands[fd] )); then
   alias ff='fd --type f'
   alias fdir='fd --type d'
 fi
-if command -v rg &>/dev/null; then
-  alias grep='rg'
+if (( $+commands[rg] )); then
   alias rgi='rg -i'
   alias rgl='rg -l'
   alias rgc='rg -c'
@@ -60,18 +61,18 @@ else
 fi
 
 # ── Other modern replacements (only if installed) ────────────────────
-command -v procs  &>/dev/null && alias ps='procs' && alias pst='procs --tree'
-command -v btm    &>/dev/null && alias top='btm' && alias htop='btm'
-command -v duf    &>/dev/null && alias df='duf'
-command -v diskus &>/dev/null && alias du='diskus'
-command -v tldr   &>/dev/null && alias help='tldr'
-command -v tokei  &>/dev/null && alias loc='tokei'
-command -v gping  &>/dev/null && alias ping='gping'
-command -v doggo  &>/dev/null && alias dig='doggo'
-command -v trip   &>/dev/null && alias trace='trip'
-command -v xh     &>/dev/null && alias http='xh'
-command -v dua    &>/dev/null && alias dui='dua i'
-command -v hyperfine &>/dev/null && alias bench='hyperfine'
+(( $+commands[procs] )) && alias ps='procs' && alias pst='procs --tree'
+(( $+commands[btm] )) && alias top='btm' && alias htop='btm'
+(( $+commands[duf] )) && alias df='duf'
+(( $+commands[diskus] )) && alias du='diskus'
+(( $+commands[tldr] )) && alias help='tldr'
+(( $+commands[tokei] )) && alias loc='tokei'
+(( $+commands[gping] )) && alias ping='gping'
+(( $+commands[doggo] )) && alias dig='doggo'
+(( $+commands[trip] )) && alias trace='trip'
+(( $+commands[xh] )) && alias http='xh'
+(( $+commands[dua] )) && alias dui='dua i'
+(( $+commands[hyperfine] )) && alias bench='hyperfine'
 
 # ── Git ──────────────────────────────────────────────────────────────
 alias g='git'
@@ -125,7 +126,7 @@ alias gwip='git add -A && git commit -m "WIP"'
 alias gunwip='git log -1 --format="%s" | grep -q "^WIP$" && git reset HEAD~1'
 
 # Delta diff helpers
-if command -v delta &>/dev/null; then
+if (( $+commands[delta] )); then
   alias gdd='git diff --color=always | delta'
   alias gdsd='git diff --staged --color=always | delta'
   alias gshowd='git show --color=always | delta'
@@ -158,7 +159,7 @@ alias pacclean='sudo pacman -Sc'
 alias pacremove-orphans='sudo pacman -Rns $(pacman -Qdtq)'
 
 # Paru
-if command -v paru &>/dev/null; then
+if (( $+commands[paru] )); then
   alias pars='paru -S --needed'
   alias parr='paru -Rns'
   alias paruu='paru -Syu --needed'
@@ -184,8 +185,9 @@ alias jctl='journalctl -xe'
 alias jctlf='journalctl -f'
 alias jctlu='journalctl --user'
 
-# ── Network ──────────────────────────────────────────────────────────
-alias ip='command ip -c a'
+# Network. `ip -c` adds color, but does NOT swallow subcommands like
+# `ip -c a` would (which only ever runs the addr subcommand).
+alias ip='command ip -c'
 alias ipa='command ip -c -br a'
 alias localip="command ip -4 -o addr show scope global | awk '{print \$4}' | cut -d/ -f1 | head -1"
 alias ports='ss -tulanp'
@@ -193,7 +195,7 @@ alias myip='curl -s ifconfig.me'
 alias reflector='sudo reflector --verbose --sort rate --age 12 -l 20 --fastest 15 --save /etc/pacman.d/mirrorlist'
 
 # ── Audio (pipewire/wireplumber) ─────────────────────────────────────
-if command -v wpctl &>/dev/null; then
+if (( $+commands[wpctl] )); then
   alias vol='wpctl get-volume @DEFAULT_AUDIO_SINK@'
   alias mute='wpctl set-mute @DEFAULT_AUDIO_SINK@ toggle'
   alias volup='wpctl set-volume -l 1.5 @DEFAULT_AUDIO_SINK@ 5%+'
@@ -202,14 +204,14 @@ if command -v wpctl &>/dev/null; then
 fi
 
 # ── Brightness ───────────────────────────────────────────────────────
-if command -v brightnessctl &>/dev/null; then
+if (( $+commands[brightnessctl] )); then
   alias bright='brightnessctl get'
   alias brightmax='brightnessctl set 100%'
   alias brightmin='brightnessctl set 10%'
 fi
 
 # ── Clipboard (Wayland) ──────────────────────────────────────────────
-if command -v wl-copy &>/dev/null; then
+if (( $+commands[wl-copy] )); then
   alias copy='wl-copy'
   alias paste='wl-paste'
   alias copyf='wl-copy <'
@@ -227,7 +229,7 @@ alias cx='chmod +x'
 alias tm='tmux new-session -A -s main'
 
 # ── Hyprland shortcuts ───────────────────────────────────────────────
-if command -v hyprctl &>/dev/null; then
+if (( $+commands[hyprctl] )); then
   alias hypr-reload='hyprctl reload'
   alias hypr-mons='hyprctl monitors'
   alias hypr-clients='hyprctl clients'
@@ -237,7 +239,7 @@ if command -v hyprctl &>/dev/null; then
 fi
 
 # ── uv (Python) shortcuts ────────────────────────────────────────────
-if command -v uv &>/dev/null; then
+if (( $+commands[uv] )); then
   alias uvi='uv pip install'
   alias uvr='uv run'
   alias uvs='uv sync'
@@ -246,7 +248,7 @@ if command -v uv &>/dev/null; then
 fi
 
 # ── Docker (if installed) ────────────────────────────────────────────
-if command -v docker &>/dev/null; then
+if (( $+commands[docker] )); then
   alias dk='docker'
   alias dkps='docker ps'
   alias dkpsa='docker ps -a'
@@ -257,7 +259,7 @@ if command -v docker &>/dev/null; then
   alias dklog='docker logs -f'
   alias dkprune='docker system prune -af'
 fi
-if command -v docker-compose &>/dev/null || docker compose version &>/dev/null 2>&1; then
+if (( $+commands[docker-compose] )) || docker compose version &>/dev/null 2>&1; then
   alias dc='docker compose'
   alias dcu='docker compose up -d'
   alias dcd='docker compose down'
@@ -266,7 +268,7 @@ if command -v docker-compose &>/dev/null || docker compose version &>/dev/null 2
 fi
 
 # ── Kubectl (if installed) ───────────────────────────────────────────
-if command -v kubectl &>/dev/null; then
+if (( $+commands[kubectl] )); then
   alias k='kubectl'
   alias kgp='kubectl get pods'
   alias kgs='kubectl get svc'

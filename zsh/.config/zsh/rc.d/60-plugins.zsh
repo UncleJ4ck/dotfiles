@@ -1,20 +1,15 @@
-# ── System-installed plugins (from /usr/share/zsh/plugins) ─────────────
-# These are deferred via zsh-defer (loaded by antidote first) so startup
-# stays under 100ms. Highlighting/suggestions appear ~50-100ms after the
-# first prompt renders — unnoticeable in practice.
+# History substring search. Deferred is fine: the ↑/↓ widget binds in
+# 70-keybinds.zsh are themselves deferred (via zsh-defer), so the bind
+# fires after this plugin loads its widgets.
+#
+# zsh-autosuggestions and zsh-syntax-highlighting are NOT loaded here.
+# They MUST load synchronously and in a specific order (autosuggestions
+# before syntax-highlighting per upstream); see 99-syntax-highlighting.zsh.
 
 if (( $+functions[zsh-defer] )); then
-  # Autosuggestions (ghost-text completions from history + completion results)
-  [[ -r /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]] \
-    && zsh-defer source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
-
-  # History substring search (↑/↓ matches substring of typed prefix)
   [[ -r /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh ]] \
     && zsh-defer source /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh
 else
-  # Fallback: load eagerly if zsh-defer isn't available (antidote not bootstrapped)
-  [[ -r /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]] \
-    && source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
   [[ -r /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh ]] \
     && source /usr/share/zsh/plugins/zsh-history-substring-search/zsh-history-substring-search.zsh
 fi

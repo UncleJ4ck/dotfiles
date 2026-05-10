@@ -1,11 +1,9 @@
+# Dedup PATH for every shell (interactive, scripts, cron).
+typeset -U path PATH
 
-export PATH="$PATH:/home/j4kuuu/.config/.foundry/bin"
-
-export PATH="$PATH:/home/j4kuuu/.config/.foundry/bin"
-
-export PATH="$PATH:/home/j4kuuu/.local/bin"
-
-export PATH="$PATH:/home/j4kuuu/.config/.foundry/bin"
-
-export PATH="$PATH:/home/j4kuuu/.config/.foundry/bin"
-. "$HOME/.cargo/env"
+path=(
+  "$HOME/.local/bin"
+  "$HOME/.config/.foundry/bin"
+  "$HOME/.cargo/bin"
+  $path
+)

@@ -32,13 +32,24 @@ bindkey '^[[1;5C' forward-word
 bindkey '^[b'     backward-word
 bindkey '^[f'     forward-word
 
-# ── History substring search — ↑ / ↓ / Ctrl+P / Ctrl+N ───────────────
-[[ -n "${key[Up]}"   ]] && bindkey -- "${key[Up]}"   history-substring-search-up
-[[ -n "${key[Down]}" ]] && bindkey -- "${key[Down]}" history-substring-search-down
-bindkey '^[[A' history-substring-search-up
-bindkey '^[[B' history-substring-search-down
-bindkey '^P'   history-substring-search-up
-bindkey '^N'   history-substring-search-down
+# History substring search. The widget is provided by a deferred plugin
+# (zsh-history-substring-search), which means the widget does not exist
+# yet at this point. Defer the bind until the plugin loads. zsh-defer is
+# pulled in by antidote earlier; binding inside a `zsh-defer` callback
+# runs after the plugin is sourced.
+_bind_history_substring() {
+  [[ -n "${key[Up]}"   ]] && bindkey -- "${key[Up]}"   history-substring-search-up
+  [[ -n "${key[Down]}" ]] && bindkey -- "${key[Down]}" history-substring-search-down
+  bindkey '^[[A' history-substring-search-up
+  bindkey '^[[B' history-substring-search-down
+  bindkey '^P'   history-substring-search-up
+  bindkey '^N'   history-substring-search-down
+}
+if (( $+functions[zsh-defer] )); then
+  zsh-defer -c '_bind_history_substring'
+else
+  _bind_history_substring
+fi
 
 # ── Line editing ─────────────────────────────────────────────────────
 bindkey '^U'   backward-kill-line   # Ctrl+U — kill to start
@@ -60,12 +71,18 @@ bindkey '^[e'  edit-command-line
 # ── FZF keybindings (Ctrl+T files, Alt+C cd, Ctrl+R — if atuin disabled) ──
 [[ -r /usr/share/fzf/key-bindings.zsh ]] && source /usr/share/fzf/key-bindings.zsh
 
-# ── Application mode (enables Home/End etc. on some terminals) ───────
+# Application mode (enables Home/End etc. on some terminals).
+# Use add-zle-hook-widget so we don't clobber autosuggestions' own
+# zle-line-init hook (which is registered by the plugin to refresh the
+# suggestion when the line buffer initializes).
 if (( ${+terminfo[smkx]} && ${+terminfo[rmkx]} )); then
-  zle-line-init()   { echoti smkx }
-  zle-line-finish() { echoti rmkx }
-  zle -N zle-line-init
-  zle -N zle-line-finish
+  autoload -Uz add-zle-hook-widget
+  _appmode-on()  { echoti smkx }
+  _appmode-off() { echoti rmkx }
+  zle -N _appmode-on
+  zle -N _appmode-off
+  add-zle-hook-widget zle-line-init   _appmode-on
+  add-zle-hook-widget zle-line-finish _appmode-off
 fi
 
 # ── Ctrl+Z toggles fg/bg ─────────────────────────────────────────────
@@ -93,11 +110,14 @@ bindkey '^[s' _sudo-prepend
 # ── fzf-tab: Alt+, switches preview group (e.g. files ↔ commits) ────
 bindkey '^[,' menu-select 2>/dev/null
 
-# ── Expand-or-complete-with-dots (shows ... on long completion computation) ──
+# Expand-or-complete-with-dots widget kept around but NOT bound to Tab,
+# because fzf-tab owns Tab and binding ^I here used to disable fzf-tab.
+# Bind it yourself (e.g. `bindkey '^[/' _expand_dots`) if you want the
+# spinner on a chord that doesn't conflict with insert-last-word (Alt+.)
+# or fzf-tab.
 _expand_dots() {
-  echo -n "\e[90m ...\e[0m"
+  print -n -P '%F{8} ...%f'
   zle expand-or-complete
   zle redisplay
 }
 zle -N _expand_dots
-bindkey '^I' _expand_dots
