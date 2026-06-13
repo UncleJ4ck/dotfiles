@@ -321,6 +321,28 @@ main() {
     # Stop _rebuild_ukis cold in dry-run.
     _rebuild_ukis() { info "[dry-run] skipped mkinitcpio -P"; return 0; }
 
+    # Sandbox the HOME-scoped state too. Without this a "preview" repoints the
+    # cached wallpaper, overwrites the live matugen color state, and recolors
+    # the live desktop (kitty/gtk/etc.) via matugen templates. Redirect the
+    # state files and neuter the two live-mutating steps.
+    export MATUGEN_JSON_FILE="$preview_dir/matugen-colors.json"
+    export CACHE_FILE="$preview_dir/current_wallpaper"
+    cp -f "${STATE_DIR}/matugen-colors.json" "$MATUGEN_JSON_FILE" 2>/dev/null || true
+    apply_wallpaper() { dbg "[dry-run] skip live wallpaper set + cache write"; return 0; }
+    run_matugen() {
+      local w="${1:-}"
+      is_cmd matugen || return 0
+      [[ -f "$w" ]] || return 0
+      # matugen --dry-run extracts colors and still emits --json, but applies
+      # NO templates, sets no wallpaper, runs no hooks. ~/.config stays untouched.
+      local out
+      out="$(matugen image "$w" -m "${MATUGEN_MODE:-dark}" --json hex --prefer saturation --dry-run 2>/dev/null </dev/null || true)"
+      [[ -n "$out" ]] && printf '%s' "$out" | python3 -c 'import sys,json
+try: print(json.dumps(json.JSONDecoder().raw_decode(sys.stdin.read())[0]))
+except Exception: pass' >"$MATUGEN_JSON_FILE" 2>/dev/null
+      info "[dry-run] matugen colors generated in sandbox (no live templates touched)"
+    }
+
     # Many call sites pass paths that point at /etc/, /usr/, /boot/, or
     # /etc/greetd/xdg even though we already redirected the primary config
     # paths above. Detect those and just log.

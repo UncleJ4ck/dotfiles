@@ -281,7 +281,7 @@ themectl_pacnew_check() {
             -not -path '*/.git/*' 2>/dev/null)" || true
   if [[ -n "$hits" ]]; then
     warn "Unmerged pacman backups found in managed paths:"
-    printf '  %s\n' $hits >&2
+    printf '%s\n' "$hits" | sed 's/^/  /' >&2
     warn "Run \`pacdiff\` to merge before \`themectl apply\` (or set THEMECTL_IGNORE_PACNEW=1 to override)."
     if (( ${THEMECTL_IGNORE_PACNEW:-0} == 0 )); then
       die "Aborting to avoid clobbering user changes / writing against stale schema"
@@ -296,10 +296,13 @@ themectl_drift_check() {
             -newer "$STATE_LAST_APPLY_FILE" \
             -type f \
             -not -name '*.log' \
+            -not -name '*.bak*' \
+            -not -name '*.EFI' -not -name '*.efi' \
+            -not -name 'limine.conf' \
             -not -path '*/.git/*' 2>/dev/null)" || true
   if [[ -n "$hits" ]]; then
     warn "Files in managed paths changed since last themectl apply:"
-    printf '  %s\n' $hits >&2
+    printf '%s\n' "$hits" | sed 's/^/  /' >&2
     warn "These will be overwritten. Set THEMECTL_IGNORE_DRIFT=1 to proceed anyway."
     if (( ${THEMECTL_IGNORE_DRIFT:-0} == 0 )); then
       die "Aborting to preserve manual edits"

@@ -119,6 +119,10 @@ sys.exit(1)
   fi
 
   printf '%s\n' "$json_clean" > "$MATUGEN_JSON_FILE"
+  # Stamp which wallpaper these colors came from, so a silent "keeping previous"
+  # (matugen failed, old colors retained) is detectable: compare this stamp to
+  # the wallpaper themectl thinks is current. Written ONLY on a real refresh.
+  printf '%s\n' "$wall" > "${MATUGEN_JSON_FILE%.json}.src" 2>/dev/null || true
   info "Matugen completed"
 }
 

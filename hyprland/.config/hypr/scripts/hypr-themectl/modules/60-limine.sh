@@ -200,17 +200,68 @@ apply_limine_background() {
 
   [[ -f "$LIMINE_CONFIG" ]] || { dbg "Limine config not found"; return 0; }
 
-  # Typographic mode: no wallpaper, just a solid backdrop.
-  # update_limine_config tolerates empty bg_path and emits a no-wallpaper block.
-  if (( ${LIMINE_USE_WALLPAPER:-0} == 0 )); then
-    dbg "Limine wallpaper disabled (LIMINE_USE_WALLPAPER=0); cleaning stale assets"
-    local f
-    for f in "$LIMINE_BG_DIR"/limine-bg.{png,jpg,bmp}; do
-      [[ -f "$f" ]] && root_exec rm -f "$f" 2>/dev/null || true
-    done
-    write_state "$STATE_LIMINE_BG_FILE" "disabled"
-    return 0
-  fi
+  # Background style (supersedes LIMINE_USE_WALLPAPER):
+  #   radial|gradient|aurora -> generated matugen gradient (clean, no smear)
+  #   solid                  -> flat backdrop, clean stale assets
+  #   photo                  -> blurred wallpaper (pipeline below)
+  case "${LIMINE_BG_STYLE:-solid}" in
+    radial|gradient|aurora)
+      local gmode gbase glift gaccent ggreen gdeep gdest gkey gprev gcmd gtmp gres gf
+      gmode="${MATUGEN_MODE:-dark}"; [[ "$gmode" == "amoled" ]] && gmode="dark"
+      gbase="$(matugen_role_hex "$gmode" background "#16130b")"
+      glift="$(matugen_role_hex "$gmode" surface_container "$gbase")"
+      gaccent="$(matugen_role_hex "$gmode" primary "#ddc66e")"
+      ggreen="$(matugen_role_hex "$gmode" tertiary "#2c4e37")"
+      gdeep="${LIMINE_GRADIENT_DEEP:-#070503}"
+      gres="1920x1080"
+      gdest="$LIMINE_BG_DIR/limine-bg.png"
+      gkey="grad_v1_${LIMINE_BG_STYLE}_${gbase}_${glift}_${gaccent}_${ggreen}_${gdeep}"
+      gprev="$(read_state "$STATE_LIMINE_BG_FILE")"
+      if [[ "$gprev" == "$gkey" && -f "$gdest" ]]; then
+        dbg "Limine gradient unchanged"; echo "$gdest"; return 0
+      fi
+      if ! im_available; then
+        warn "ImageMagick unavailable; gradient skipped"
+        [[ -f "$gdest" ]] && echo "$gdest"; return 0
+      fi
+      gcmd="$(im_cmd)"
+      gtmp="$(mktemp --tmpdir "limine-grad-XXXXXX.png")"
+      info "Creating Limine ${LIMINE_BG_STYLE} backdrop from palette"
+      case "$LIMINE_BG_STYLE" in
+        gradient) "$gcmd" -size "$gres" gradient:"${glift}-${gdeep}" -strip "$gtmp" 2>/dev/null ;;
+        aurora)   "$gcmd" -size "$gres" xc:"$gbase" \
+                    -fill "$gaccent" -draw 'circle 470,300 470,520' \
+                    -fill "$ggreen"  -draw 'circle 1460,810 1460,1000' \
+                    -blur 0x230 -modulate 62 -strip "$gtmp" 2>/dev/null ;;
+        radial)   "$gcmd" -size "$gres" radial-gradient:"${glift}-${gdeep}" -strip "$gtmp" 2>/dev/null ;;
+      esac
+      if [[ ! -s "$gtmp" ]]; then
+        warn "Limine gradient generation failed"; rm -f "$gtmp"
+        [[ -f "$gdest" ]] && echo "$gdest"; return 0
+      fi
+      root_exec mkdir -p "$LIMINE_BG_DIR"
+      root_exec install -m 644 "$gtmp" "$gdest"
+      rm -f "$gtmp"
+      for gf in "$LIMINE_BG_DIR"/limine-bg.*; do
+        [[ -e "$gf" && "$gf" != "$gdest" ]] && root_exec rm -f "$gf" || true
+      done
+      write_state "$STATE_LIMINE_BG_FILE" "$gkey"
+      echo "$gdest"
+      return 0
+      ;;
+    photo)
+      : # fall through to the blurred-wallpaper pipeline below
+      ;;
+    *)
+      dbg "Limine solid backdrop (LIMINE_BG_STYLE=${LIMINE_BG_STYLE:-solid}); cleaning stale assets"
+      local f
+      for f in "$LIMINE_BG_DIR"/limine-bg.{png,jpg,bmp}; do
+        [[ -f "$f" ]] && root_exec rm -f "$f" 2>/dev/null || true
+      done
+      write_state "$STATE_LIMINE_BG_FILE" "disabled"
+      return 0
+      ;;
+  esac
 
   local wall_hash state_key prev_state dest tmp_file cmd ext
   # mtime+size is ~instant and sufficient as a change detector.
@@ -404,6 +455,12 @@ update_limine_config() {
   local branding_line="interface_branding:"
   [[ -n "$LIMINE_INTERFACE_BRANDING" ]] && branding_line="interface_branding: $LIMINE_INTERFACE_BRANDING"
 
+  # Typography: always set glyph spacing; add term_font / term_font_size only when
+  # a custom raw bitmap font is configured (empty by default = built-in font).
+  local font_lines="term_font_spacing: ${LIMINE_TERM_FONT_SPACING:-1}"
+  [[ -n "$LIMINE_TERM_FONT" ]]      && font_lines+=$'\n'"term_font: ${LIMINE_TERM_FONT}"
+  [[ -n "$LIMINE_TERM_FONT_SIZE" ]] && font_lines+=$'\n'"term_font_size: ${LIMINE_TERM_FONT_SIZE}"
+
   local theme_block
   theme_block="$(cat <<EOF
 $BEGIN
@@ -424,6 +481,7 @@ term_foreground_bright: ${FG_BRIGHT}
 term_margin: ${LIMINE_TERM_MARGIN}
 term_margin_gradient: ${LIMINE_TERM_MARGIN_GRADIENT}
 term_font_scale: ${LIMINE_TERM_FONT_SCALE}
+${font_lines}
 
 term_palette: ${PALETTE}
 term_palette_bright: ${PALETTE_BRIGHT}
@@ -431,43 +489,30 @@ $END
 EOF
 )"
 
-  local tmp has_begin=0 has_end=0
-  tmp="$(mktemp)"
+  # Fully regenerate limine.conf: timeout + matugen theme block + the tracked
+  # entries file. Nothing is preserved from the live file, so the whole config
+  # is themectl-owned and dynamic (no static "manual edit" that trips drift).
+  # The entries file is the source of truth for titles, kernel paths, cmdline.
+  local tmp; tmp="$(mktemp)"
+  {
+    printf 'timeout: %s\n\n' "${LIMINE_TIMEOUT:-5}"
+    printf '%s\n\n' "$theme_block"
+    if [[ -f "$LIMINE_ENTRIES_FILE" ]]; then
+      cat "$LIMINE_ENTRIES_FILE"
+    else
+      # Entries file missing: preserve the live entries so a misconfig can
+      # never produce an entry-less (unbootable-menu) config.
+      warn "LIMINE_ENTRIES_FILE missing ($LIMINE_ENTRIES_FILE); preserving live entries"
+      awk '/^\/[^[:space:]]/{p=1} p' "$LIMINE_CONFIG"
+    fi
+  } > "$tmp"
 
-  grep -qF "$BEGIN" "$LIMINE_CONFIG" && has_begin=1 || true
-  grep -qF "$END" "$LIMINE_CONFIG" && has_end=1 || true
-
-  if ((has_begin && has_end)); then
-    # Replace existing block
-    awk -v b="$BEGIN" -v e="$END" -v block="$theme_block" '
-      $0==b { print block; inblk=1; next }
-      $0==e { inblk=0; next }
-      !inblk { print }
-    ' "$LIMINE_CONFIG" > "$tmp"
-
-  elif ((has_begin && !has_end)); then
-    # Broken markers - recreate
-    warn "Found BEGIN but missing END marker, recreating"
-    awk -v begin="$BEGIN" -v block="$theme_block" '
-      BEGIN { done=0; dropping=0 }
-      $0==begin { dropping=1; next }
-      dropping && /^\/[^[:space:]]/ { if (!done) { print block "\n"; done=1 }; dropping=0 }
-      dropping { next }
-      /^\/[^[:space:]]/ && !done { print block "\n"; done=1 }
-      { print }
-      END { if (!done) print "\n" block }
-    ' "$LIMINE_CONFIG" > "$tmp"
-
-  else
-    # No markers - insert before first entry
-    awk -v block="$theme_block" '
-      BEGIN { done=0 }
-      /^\/[^[:space:]]/ && !done { print block "\n"; done=1 }
-      { print }
-      END { if (!done) print "\n" block }
-    ' "$LIMINE_CONFIG" > "$tmp"
+  # Hard safety: never install a config with no boot entries.
+  if ! grep -qE '^/[^[:space:]]' "$tmp"; then
+    rm -f "$tmp"
+    warn "Refusing to write an entry-less limine.conf"
+    return 1
   fi
-
   root_exec install -m 644 "$tmp" "$LIMINE_CONFIG"
   rm -f "$tmp"
 

@@ -75,12 +75,29 @@ set -Eeuo pipefail
 # =============================================================================
 : "${LIMINE_CONFIG:=/boot/EFI/arch-limine/limine.conf}"
 : "${LIMINE_BG_DIR:=/boot/EFI/arch-limine}"
+# themectl regenerates the WHOLE limine.conf each apply (timeout + matugen theme
+# block + these entries), so nothing is a static "manual edit" that trips the
+# drift guard. This file is the source of truth for boot entry titles, kernel
+# paths, and the LUKS cmdline. Edit it (not limine.conf) to change entries.
+: "${LIMINE_ENTRIES_FILE:=$HOME/.config/hypr/scripts/hypr-themectl/limine-entries.conf}"
+: "${LIMINE_TIMEOUT:=5}"
 
 # Wallpaper-merge mode (default): blurred + matugen-tinted wallpaper.
 # Each themectl run regenerates the boot background from the current
 # wallpaper so the boot menu matches the desktop palette automatically.
 # Set LIMINE_USE_WALLPAPER=0 to fall back to the typographic solid-backdrop look.
-: "${LIMINE_USE_WALLPAPER:=1}"
+# 0 = no wallpaper image, solid matugen backdrop, palette stays dynamic per wallpaper.
+: "${LIMINE_USE_WALLPAPER:=0}"
+# Boot background art (supersedes LIMINE_USE_WALLPAPER):
+#   radial   = matugen vignette, glow center fading to near-black edges (default)
+#   gradient = vertical fade, lifted top to deep bottom
+#   aurora   = soft gold + green palette glows on the base
+#   solid    = flat backdrop, no image
+#   photo    = blurred wallpaper (the old merge look)
+# radial/gradient/aurora regenerate a clean gradient PNG from the matugen palette
+# each apply, so it stays dynamic and never smears (gradients scale distortion-free).
+: "${LIMINE_BG_STYLE:=radial}"
+: "${LIMINE_GRADIENT_DEEP:=#070503}"
 # Heavy blur. The boot menu needs the wallpaper to read as ambience, not
 # as a recognizable image, so menu text dominates.
 : "${LIMINE_BG_BLUR_RADIUS:=0x22}"
@@ -105,8 +122,15 @@ set -Eeuo pipefail
 : "${LIMINE_TERM_MARGIN:=48}"
 : "${LIMINE_TERM_MARGIN_GRADIENT:=24}"
 : "${LIMINE_TERM_BG_ALPHA:=E6}"
-: "${LIMINE_INTERFACE_BRANDING:=hyprland · arch}"
+: "${LIMINE_INTERFACE_BRANDING:=}"
 : "${LIMINE_TERM_FONT_SCALE:=1x2}"
+# Typography: a little glyph spacing reads more "designed" (works on the built-in
+# font, zero risk). LIMINE_TERM_FONT is an OPTIONAL custom font path; Limine wants
+# a RAW bitmap font (not TTF/PSF) plus LIMINE_TERM_FONT_SIZE as WxH. Empty = the
+# built-in font (safe). Only set it once you have a verified raw font in /boot.
+: "${LIMINE_TERM_FONT_SPACING:=1}"
+: "${LIMINE_TERM_FONT:=}"
+: "${LIMINE_TERM_FONT_SIZE:=}"
 : "${LIMINE_HELP_HIDDEN:=yes}"
 
 # Variant: pin to dark|light|amoled, or "auto" for luma-driven flipping.
@@ -129,7 +153,12 @@ set -Eeuo pipefail
 # Wallpaper-merge mode (default): blurred + matugen-tinted wallpaper.
 # Same philosophy as Limine. Plymouth picks up the current wallpaper and
 # applies the matugen tint so the LUKS prompt feels native to the desktop.
-: "${PLYMOUTH_USE_WALLPAPER:=1}"
+# 0 = solid matugen backdrop (no wallpaper image), palette stays dynamic.
+: "${PLYMOUTH_USE_WALLPAPER:=0}"
+# LUKS background art, mirrors LIMINE_BG_STYLE so boot + unlock match: radial /
+# gradient / aurora / solid / photo. radial/gradient/aurora generate a clean
+# matugen gradient PNG each apply (no smear), same look as the Limine backdrop.
+: "${PLYMOUTH_BG_STYLE:=${LIMINE_BG_STYLE:-radial}}"
 : "${PLYMOUTH_BG_FORMAT:=png}"
 # Slightly less aggressive than Limine — Plymouth shows for several seconds
 # while typing a password, so a hint of wallpaper structure is welcome.
@@ -147,8 +176,8 @@ set -Eeuo pipefail
 : "${PLYMOUTH_VARIANT_PIN:=dark}"
 
 # Accent line at the bottom of the prompt (single horizontal rule, low alpha).
-: "${PLYMOUTH_ACCENT_LINE_WIDTH:=320}"
-: "${PLYMOUTH_ACCENT_LINE_ALPHA:=0.32}"
+: "${PLYMOUTH_ACCENT_LINE_WIDTH:=380}"
+: "${PLYMOUTH_ACCENT_LINE_ALPHA:=0.55}"
 
 : "${STATE_PLYMOUTH_FILE:=$STATE_DIR/current_plymouth}"
 

@@ -57,7 +57,7 @@ _assets_ok() {
   local missing=0
   local f
   local required=(bullet.png accent_line.png)
-  (( ${PLYMOUTH_USE_WALLPAPER:-0} == 1 )) && required+=("background.${PLYMOUTH_BG_FORMAT}")
+  plymouth_use_bg_image && required+=("background.${PLYMOUTH_BG_FORMAT}")
 
   for f in "${required[@]}"; do
     [[ -s "${PLYMOUTH_THEME_DIR}/${f}" ]] || {
@@ -128,7 +128,7 @@ EOT
   # is the solid Window background colors set above. Avoids the JPEG/blur
   # banding that the previous design produced on bright wallpapers.
   local wallpaper_section wallpaper_setup_call=""
-  if (( ${PLYMOUTH_USE_WALLPAPER:-0} == 1 )); then
+  if plymouth_use_bg_image; then
     wallpaper_section="# ----------------------------
 # Background (wallpaper)
 # ----------------------------
@@ -338,6 +338,14 @@ EOT
   rm -f "$tmp"
 }
 
+# True (0) when Plymouth should use a background IMAGE (blurred wallpaper or a
+# generated matugen gradient) instead of a flat solid color.
+plymouth_use_bg_image() {
+  (( ${PLYMOUTH_USE_WALLPAPER:-0} == 1 )) && return 0
+  case "${PLYMOUTH_BG_STYLE:-solid}" in radial|gradient|aurora) return 0 ;; esac
+  return 1
+}
+
 _generate_plymouth_assets() {
   local wall="$1" bg="$2" fg="$3" accent="$4" border_hex="$5"
 
@@ -363,33 +371,64 @@ _generate_plymouth_assets() {
   # primary as a tint so the LUKS prompt feels native to the desktop
   # palette. Same philosophy as the Limine merge.
   local bg_out="${PLYMOUTH_THEME_DIR}/background.${PLYMOUTH_BG_FORMAT}"
-  if (( ${PLYMOUTH_USE_WALLPAPER:-0} == 1 )); then
-    local tmp_bg tint_pct luma_ceiling
-    tmp_bg="$(mktemp --tmpdir "plymouth-bg-XXXXXX.${PLYMOUTH_BG_FORMAT}")"
-    tint_pct="${PLYMOUTH_BG_TINT_PERCENT:-15}"
-    # See LIMINE_BG_LUMA_CEILING for rationale. Plymouth has no term-bg
-    # alpha, so the ceiling is the only guarantor of password-label legibility
-    # on bright wallpapers.
-    luma_ceiling="${PLYMOUTH_BG_LUMA_CEILING:-110}"
-    if "$cmd" "$wall" \
-      -filter Lanczos \
-      -resize "${PLYMOUTH_TARGET_RES}^" \
-      -gravity center -extent "$PLYMOUTH_TARGET_RES" \
-      -blur "$PLYMOUTH_BG_BLUR_RADIUS" \
-      -modulate "$PLYMOUTH_BG_MODULATE" \
-      -evaluate Min "$luma_ceiling" \
-      -fill "$accent" -colorize "$tint_pct" \
-      -strip \
-      "$tmp_bg" 2>/dev/null; then
-      root_exec install -m 644 "$tmp_bg" "$bg_out"
-      dbg "Plymouth bg: blur=$PLYMOUTH_BG_BLUR_RADIUS modulate=$PLYMOUTH_BG_MODULATE ceil=$luma_ceiling tint=${accent}@${tint_pct}%"
-    else
-      warn "ImageMagick failed generating Plymouth background"
-    fi
-    rm -f "$tmp_bg" 2>/dev/null || true
-  else
-    [[ -e "$bg_out" ]] && root_exec rm -f "$bg_out" || true
-  fi
+  case "${PLYMOUTH_BG_STYLE:-solid}" in
+    radial|gradient|aurora)
+      # Generated matugen gradient, matching the Limine backdrop. Clean, no smear.
+      local pmode pbase plift paccent pgreen pdeep pres ptmp
+      pmode="${MATUGEN_MODE:-dark}"; [[ "$pmode" == "amoled" ]] && pmode="dark"
+      pbase="$(matugen_role_hex "$pmode" background '#16130b')"
+      plift="$(matugen_role_hex "$pmode" surface_container '#221f17')"
+      paccent="$(matugen_role_hex "$pmode" primary '#ddc66e')"
+      pgreen="$(matugen_role_hex "$pmode" tertiary '#2c4e37')"
+      pdeep="${LIMINE_GRADIENT_DEEP:-#070503}"
+      pres="${PLYMOUTH_TARGET_RES:-1920x1080}"
+      ptmp="$(mktemp --tmpdir "plymouth-grad-XXXXXX.${PLYMOUTH_BG_FORMAT}")"
+      case "${PLYMOUTH_BG_STYLE}" in
+        gradient) "$cmd" -size "$pres" gradient:"${plift}-${pdeep}" -strip "$ptmp" 2>/dev/null ;;
+        aurora)   "$cmd" -size "$pres" xc:"$pbase" \
+                    -fill "$paccent" -draw 'circle 470,300 470,520' \
+                    -fill "$pgreen"  -draw 'circle 1460,810 1460,1000' \
+                    -blur 0x230 -modulate 62 -strip "$ptmp" 2>/dev/null ;;
+        radial)   "$cmd" -size "$pres" radial-gradient:"${plift}-${pdeep}" -strip "$ptmp" 2>/dev/null ;;
+      esac
+      if [[ -s "$ptmp" ]]; then
+        root_exec install -m 644 "$ptmp" "$bg_out"
+        dbg "Plymouth gradient backdrop (${PLYMOUTH_BG_STYLE})"
+      else
+        warn "Plymouth gradient generation failed"
+      fi
+      rm -f "$ptmp" 2>/dev/null || true
+      ;;
+    *)
+      if (( ${PLYMOUTH_USE_WALLPAPER:-0} == 1 )); then
+        local tmp_bg tint_pct luma_ceiling
+        tmp_bg="$(mktemp --tmpdir "plymouth-bg-XXXXXX.${PLYMOUTH_BG_FORMAT}")"
+        tint_pct="${PLYMOUTH_BG_TINT_PERCENT:-15}"
+        # See LIMINE_BG_LUMA_CEILING for rationale. Plymouth has no term-bg
+        # alpha, so the ceiling is the only guarantor of password-label legibility
+        # on bright wallpapers.
+        luma_ceiling="${PLYMOUTH_BG_LUMA_CEILING:-110}"
+        if "$cmd" "$wall" \
+          -filter Lanczos \
+          -resize "${PLYMOUTH_TARGET_RES}^" \
+          -gravity center -extent "$PLYMOUTH_TARGET_RES" \
+          -blur "$PLYMOUTH_BG_BLUR_RADIUS" \
+          -modulate "$PLYMOUTH_BG_MODULATE" \
+          -evaluate Min "$luma_ceiling" \
+          -fill "$accent" -colorize "$tint_pct" \
+          -strip \
+          "$tmp_bg" 2>/dev/null; then
+          root_exec install -m 644 "$tmp_bg" "$bg_out"
+          dbg "Plymouth bg: blur=$PLYMOUTH_BG_BLUR_RADIUS modulate=$PLYMOUTH_BG_MODULATE ceil=$luma_ceiling tint=${accent}@${tint_pct}%"
+        else
+          warn "ImageMagick failed generating Plymouth background"
+        fi
+        rm -f "$tmp_bg" 2>/dev/null || true
+      else
+        [[ -e "$bg_out" ]] && root_exec rm -f "$bg_out" || true
+      fi
+      ;;
+  esac
 
   # ── Bullet + accent line ───────────────────────────────────────────
   # Vibrancy still nudges bullet size, but the box/entry are gone — the
@@ -583,7 +622,7 @@ update_plymouth_theme() {
   # v5: luma ceiling — bumped to force bg PNG regeneration with the new
   # -evaluate Min step that clamps absolute brightness for legibility on
   # bright wallpapers.
-  state_key="v5_${wall_hash}_${variant}_${MATUGEN_MODE}_${PLYMOUTH_USE_WALLPAPER:-0}_${PLYMOUTH_VARIANT_PIN:-dark}_${PLYMOUTH_BG_BLUR_RADIUS}_${PLYMOUTH_BG_MODULATE}_${PLYMOUTH_BG_LUMA_CEILING:-110}_${PLYMOUTH_BG_TINT_PERCENT:-15}_${PLYMOUTH_BG_QUALITY}_${PLYMOUTH_TARGET_RES}_${PLYMOUTH_BG_FORMAT}_${PLYMOUTH_ACCENT_LINE_WIDTH}_${PLYMOUTH_ACCENT_LINE_ALPHA}_${accent}_${bg}_${fg}"
+  state_key="v5_${wall_hash}_${variant}_${MATUGEN_MODE}_${PLYMOUTH_USE_WALLPAPER:-0}_${PLYMOUTH_VARIANT_PIN:-dark}_${PLYMOUTH_BG_BLUR_RADIUS}_${PLYMOUTH_BG_MODULATE}_${PLYMOUTH_BG_LUMA_CEILING:-110}_${PLYMOUTH_BG_TINT_PERCENT:-15}_${PLYMOUTH_BG_QUALITY}_${PLYMOUTH_TARGET_RES}_${PLYMOUTH_BG_FORMAT}_${PLYMOUTH_ACCENT_LINE_WIDTH}_${PLYMOUTH_ACCENT_LINE_ALPHA}_${accent}_${bg}_${fg}_${PLYMOUTH_BG_STYLE:-solid}"
   prev="$(read_state "$STATE_PLYMOUTH_FILE")"
 
   if [[ "$prev" == "$state_key" ]] &&
