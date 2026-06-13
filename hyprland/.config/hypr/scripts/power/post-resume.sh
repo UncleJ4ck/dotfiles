@@ -28,4 +28,4 @@ if [[ "$disabled_count" =~ ^[0-9]+$ ]] && (( disabled_count > 0 )); then
 fi
 
 # Full monitor recovery (lid state, workspace ordering, waybar, wallpaper)
-~/.config/hypr/scripts/lid-manager.sh
+~/.config/hypr/scripts/power/lid-manager.sh

@@ -1,5 +1,7 @@
 #!/bin/bash
-# Pre-boot lid decision for 3-CRTC safety (Intel HD 630)
+# Pre-boot lid decision: disable eDP-1 when externals would exceed the Intel iGPU
+# CRTC budget (LID_DISABLE_AT) or the lid is closed. Tuned for the old Dell HD 630;
+# reverify LID_DISABLE_AT for the current MSI Intel UHD if a blank screen appears.
 LID_DISABLE_AT=3
 ext=0
 for f in /sys/class/drm/card*-{DP,HDMI,VGA}*/status; do

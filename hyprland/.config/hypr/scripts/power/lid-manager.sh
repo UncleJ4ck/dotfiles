@@ -152,10 +152,20 @@ plugin {
 }
 EOF
 
-  # Inotify triggers the reload automatically. Wait for it to settle,
-  # then re-enable hyprpm plugins (reload unloads them).
+  # Inotify triggers the reload automatically. Wait for it to settle, then make
+  # sure split-monitor-workspaces survived. It is currently loaded MANUALLY (the
+  # hyprpm-disabled .so workaround), so `hyprpm reload` would not restore it.
+  # Only act if the plugin actually got dropped (avoids a slow hyprpm rebuild on
+  # every monitor change), and restore via whichever mechanism is active.
   sleep 0.8
-  hyprpm reload >/dev/null 2>&1 || true
+  if ! hyprctl plugins list 2>/dev/null | grep -qi 'split-monitor-workspaces'; then
+    local smw_so="$HOME/.config/hypr/plugins/libsplit-monitor-workspaces.so"
+    if [[ -f "$smw_so" ]]; then
+      hyprctl plugin load "$smw_so" >/dev/null 2>&1 || true
+    else
+      hyprpm reload >/dev/null 2>&1 || true
+    fi
+  fi
   PRIORITY_WRITTEN=1
 }
 

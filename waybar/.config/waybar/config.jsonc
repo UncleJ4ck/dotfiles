@@ -132,7 +132,7 @@
   },
 
   "custom/keyboard": {
-    "exec": "~/.config/hypr/scripts/waybar-keyboard.sh",
+    "exec": "~/.config/hypr/scripts/waybar/waybar-keyboard.sh",
     "return-type": "json",
     "tooltip": true,
     "on-click": "hyprctl switchxkblayout all next"

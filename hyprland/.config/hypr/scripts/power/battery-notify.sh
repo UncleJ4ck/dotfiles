@@ -58,6 +58,8 @@ declare -g STATE_LAST_FULL_NOTIFY=0
 declare -g STATE_LAST_LOW_NOTIFY=0
 declare -g STATE_LAST_CRITICAL_NOTIFY=0
 declare -g STATE_LAST_SUSPEND_TIME=0
+declare -g STATE_AWAITING_RESUME=0
+declare -g STATE_SUSPEND_REQUEST_AT=0
 
 ##########################
 # SIGNAL HANDLING
@@ -259,6 +261,7 @@ process_battery_event() {
     # Reset suspend timer when charging
     if [[ "$state" == "Charging" || "$state" == "Full" ]]; then
         STATE_LAST_SUSPEND_TIME=0
+        STATE_AWAITING_RESUME=0
     fi
 
     # --- STATE TRANSITION ---
@@ -348,8 +351,13 @@ process_battery_event() {
             sleep 2
 
             if eval "$CMD_CRITICAL"; then
-                STATE_LAST_SUSPEND_TIME=$(get_timestamp)
-                log "System resumed - grace period started (${SUSPEND_GRACE_SEC}s)"
+                # systemctl suspend can return BEFORE the kernel freezes us, so
+                # stamping the time here would measure the suspend REQUEST, not the
+                # resume. Flag it; check_resume() in the main loop detects the
+                # post-resume wall-clock jump and starts the grace from there.
+                STATE_AWAITING_RESUME=1
+                STATE_SUSPEND_REQUEST_AT=$(get_timestamp)
+                log "Suspend requested - grace period will start on resume"
             else
                 log "Critical command failed (exit: $?)"
             fi
@@ -371,6 +379,23 @@ reset_state() {
     STATE_LAST_LOW_NOTIFY=0
     STATE_LAST_CRITICAL_NOTIFY=0
     STATE_LAST_SUSPEND_TIME=0
+    STATE_AWAITING_RESUME=0
+    STATE_SUSPEND_REQUEST_AT=0
+}
+
+# After a critical-battery suspend, anchor the grace period to the ACTUAL resume
+# (a large wall-clock jump means the process was frozen during S3) instead of to
+# the suspend request. Without this, waking at still-critical battery after a long
+# suspend finds the grace already expired and re-suspends instantly.
+check_resume() {
+    (( STATE_AWAITING_RESUME == 1 )) || return 0
+    local now
+    now=$(get_timestamp)
+    if (( now - STATE_SUSPEND_REQUEST_AT >= 10 )); then
+        STATE_LAST_SUSPEND_TIME=$now
+        STATE_AWAITING_RESUME=0
+        log "Resume detected after $((now - STATE_SUSPEND_REQUEST_AT))s - grace period started (${SUSPEND_GRACE_SEC}s)"
+    fi
 }
 
 ##########################
@@ -426,6 +451,7 @@ main_loop() {
 
     local line
     while [[ "$RUNNING" == "true" ]]; do
+        check_resume
         if read -r -t "$SAFETY_POLL_INTERVAL" line < "$monitor_fifo"; then
             if [[ "$line" == *"$CURRENT_DEVICE"* || "$line" == *"battery"* ]]; then
                 sleep 0.1
