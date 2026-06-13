@@ -55,10 +55,7 @@ step claude "restore ~/.claude config from private backup"
 if command -v gh &>/dev/null && gh auth status &>/dev/null; then
   t=$(mktemp -d)
   if gh repo clone UncleJ4ck/claude-config "$t" &>/dev/null; then
-    mkdir -p "$HOME/.claude/projects/-home-j4kuuu"
-    { rsync -a "$t"/{skills,agents,commands,hooks,CLAUDE.md,settings.json,settings.local.json} "$HOME/.claude/" \
-      && rsync -a "$t"/projects/-home-j4kuuu/memory "$HOME/.claude/projects/-home-j4kuuu/" \
-      && info "claude config restored"; } || info "claude restore partial"
+    { ( cd "$t" && ./restore.sh ) && info "claude config restored"; } || info "claude restore partial"
   else
     info "skipped: could not clone claude-config (auth/access?)"
   fi
