@@ -25,6 +25,10 @@
   input_path  = "/home/j4kuuu/.config/matugen/templates/ui/gtk/gtk4-libadwaita-full.css"
   output_path = "/home/j4kuuu/.config/gtk-4.0/gtk.css"
 
+[templates.hyprtoolkit]
+  input_path  = "~/.config/matugen/templates/ui/hyprtoolkit.conf"
+  output_path = "~/.config/hypr/hyprtoolkit.conf"
+
 [templates.qt5ct]
   input_path  = "~/.config/matugen/templates/ui/qt/qtct.conf"
   output_path = "~/.config/qt5ct/colors/matugen.conf"

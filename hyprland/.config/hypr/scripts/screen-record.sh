@@ -16,6 +16,11 @@ fi
 PID_FILE="${STATE_DIR}/wf-recorder.pid"
 LAST_FILE="${STATE_DIR}/last-recording"
 LOG_FILE="${STATE_DIR}/wf-recorder.log"
+VIDEO_TMP="${STATE_DIR}/video.mkv"
+DESKTOP_WAV="${STATE_DIR}/desktop.wav"
+MIC_WAV="${STATE_DIR}/mic.wav"
+DESKTOP_PID_FILE="${STATE_DIR}/desktop-audio.pid"
+MIC_PID_FILE="${STATE_DIR}/mic-audio.pid"
 
 if command -v xdg-user-dir >/dev/null 2>&1; then
     video_dir_override="$(xdg-user-dir VIDEOS 2>/dev/null || true)"
@@ -38,7 +43,15 @@ notify() {
 }
 
 cleanup_stale_state() {
-    rm -f "$PID_FILE" "$LAST_FILE"
+    local apid
+    for pid_file in "$DESKTOP_PID_FILE" "$MIC_PID_FILE"; do
+        if [[ -f "$pid_file" ]]; then
+            apid="$(<"$pid_file")"
+            [[ "$apid" =~ ^[0-9]+$ ]] && kill -INT "$apid" 2>/dev/null || true
+        fi
+    done
+    rm -f "$PID_FILE" "$LAST_FILE" "$DESKTOP_PID_FILE" "$MIC_PID_FILE"
+    rm -f "$VIDEO_TMP" "$DESKTOP_WAV" "$MIC_WAV"
 }
 
 get_target_output() {
@@ -60,6 +73,22 @@ is_active_recording() {
     [[ "$(ps -p "$pid" -o comm= 2>/dev/null | tr -d ' ')" == "wf-recorder" ]]
 }
 
+stop_audio_process() {
+    local pid_file="$1"
+    local apid attempt
+
+    [[ -f "$pid_file" ]] || return 0
+    apid="$(<"$pid_file")"
+    [[ "$apid" =~ ^[0-9]+$ ]] || return 0
+    [[ "$(ps -p "$apid" -o comm= 2>/dev/null | tr -d ' ')" == "pw-record" ]] || return 0
+    kill -INT "$apid" 2>/dev/null || true
+    for ((attempt = 0; attempt < 30; attempt++)); do
+        kill -0 "$apid" 2>/dev/null || break
+        sleep 0.1
+    done
+    rm -f "$pid_file"
+}
+
 stop_recording() {
     local pid output attempt
 
@@ -67,20 +96,81 @@ stop_recording() {
     output=""
     [[ -f "$LAST_FILE" ]] && output="$(<"$LAST_FILE")"
 
-    kill -INT "$pid"
+    kill -INT "$pid" 2>/dev/null || true
     for ((attempt = 0; attempt < 50; attempt++)); do
-        if ! kill -0 "$pid" 2>/dev/null; then
-            break
-        fi
+        kill -0 "$pid" 2>/dev/null || break
         sleep 0.1
     done
 
-    cleanup_stale_state
+    stop_audio_process "$DESKTOP_PID_FILE"
+    stop_audio_process "$MIC_PID_FILE"
+
+    if [[ -n "$output" ]] && [[ -f "$VIDEO_TMP" ]] && command -v ffmpeg >/dev/null 2>&1; then
+        local -a ffmpeg_inputs=(-i "$VIDEO_TMP")
+        local filter_inputs=""
+        local audio_count=0
+        local idx=1
+
+        if [[ -s "$DESKTOP_WAV" ]]; then
+            ffmpeg_inputs+=(-i "$DESKTOP_WAV")
+            filter_inputs+="[${idx}:a]"
+            idx=$(( idx + 1 ))
+            audio_count=$(( audio_count + 1 ))
+        fi
+        if [[ -s "$MIC_WAV" ]]; then
+            ffmpeg_inputs+=(-i "$MIC_WAV")
+            filter_inputs+="[${idx}:a]"
+            audio_count=$(( audio_count + 1 ))
+        fi
+
+        if (( audio_count > 1 )); then
+            ffmpeg "${ffmpeg_inputs[@]}" \
+                -filter_complex "${filter_inputs}amix=inputs=${audio_count}:duration=longest:normalize=0[aout]" \
+                -map 0:v -map "[aout]" \
+                -c:v copy -c:a aac -b:a 192k \
+                "$output" -y 2>>"$LOG_FILE" \
+            && rm -f "$VIDEO_TMP" "$DESKTOP_WAV" "$MIC_WAV" \
+            || mv "$VIDEO_TMP" "$output"
+        elif (( audio_count == 1 )); then
+            ffmpeg "${ffmpeg_inputs[@]}" \
+                -map 0:v -map 1:a \
+                -c:v copy -c:a aac -b:a 192k \
+                "$output" -y 2>>"$LOG_FILE" \
+            && rm -f "$VIDEO_TMP" "$DESKTOP_WAV" "$MIC_WAV" \
+            || mv "$VIDEO_TMP" "$output"
+        else
+            mv "$VIDEO_TMP" "$output"
+        fi
+    elif [[ -f "$VIDEO_TMP" && -n "$output" ]]; then
+        mv "$VIDEO_TMP" "$output"
+    fi
+
+    rm -f "$PID_FILE" "$LAST_FILE"
 
     if [[ -n "$output" ]]; then
         notify "Recording saved" "$output"
     else
         notify "Recording stopped"
+    fi
+}
+
+start_audio() {
+    command -v pw-record >/dev/null 2>&1 || return 0
+    command -v pactl >/dev/null 2>&1 || return 0
+
+    local desktop_source mic_source default_sink
+
+    default_sink="$(pactl get-default-sink 2>/dev/null || true)"
+    if [[ -n "$default_sink" ]]; then
+        desktop_source="${default_sink}.monitor"
+        pw-record --target "$desktop_source" "$DESKTOP_WAV" >"${LOG_FILE}.desktop" 2>&1 &
+        printf '%s\n' "$!" > "$DESKTOP_PID_FILE"
+    fi
+
+    mic_source="$(pactl get-default-source 2>/dev/null || true)"
+    if [[ -n "$mic_source" ]]; then
+        pw-record --target "$mic_source" "$MIC_WAV" >"${LOG_FILE}.mic" 2>&1 &
+        printf '%s\n' "$!" > "$MIC_PID_FILE"
     fi
 }
 
@@ -109,7 +199,7 @@ start_recording() {
             exit 0
         fi
 
-        cmd=(wf-recorder -g "$geometry" -f "$output")
+        cmd=(wf-recorder -g "$geometry" -f "$VIDEO_TMP")
     else
         target_output="$(get_target_output || true)"
         if [[ -z "$target_output" ]]; then
@@ -117,7 +207,7 @@ start_recording() {
             exit 1
         fi
 
-        cmd=(wf-recorder -o "$target_output" -f "$output")
+        cmd=(wf-recorder -o "$target_output" -f "$VIDEO_TMP")
     fi
 
     "${cmd[@]}" >"$LOG_FILE" 2>&1 &
@@ -137,6 +227,8 @@ start_recording() {
         fi
         exit 1
     fi
+
+    start_audio
 
     notify "Recording started" "$output"
 }
