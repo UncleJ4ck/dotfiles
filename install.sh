@@ -7,6 +7,7 @@
 #   2. install AUR helper (paru) if missing
 #   3. install AUR packages from packages-aur.txt
 #   4. stow user configs into ~/.config
+#   4b. restore ~/.claude config (skills/agents/commands/hooks/memory) from private backup
 #   5. install system files (greetd, plymouth, polkit, btrbk, pacman hooks)
 #   6. enable systemd user units
 #   7. one-time first apply
@@ -48,6 +49,23 @@ stow_pkgs=(zsh starship hyprland hyprpolkit kitty kvantum matugen nvim qt rofi
 for pkg in "${stow_pkgs[@]}"; do
   [[ -d "$pkg" ]] && stow -t "$HOME" -R "$pkg"
 done
+
+# 4b. restore ~/.claude config from the private backup repo (best effort; needs gh auth)
+step claude "restore ~/.claude config from private backup"
+if command -v gh &>/dev/null && gh auth status &>/dev/null; then
+  t=$(mktemp -d)
+  if gh repo clone UncleJ4ck/claude-config "$t" &>/dev/null; then
+    mkdir -p "$HOME/.claude/projects/-home-j4kuuu"
+    { rsync -a "$t"/{skills,agents,commands,hooks,CLAUDE.md,settings.json,settings.local.json} "$HOME/.claude/" \
+      && rsync -a "$t"/projects/-home-j4kuuu/memory "$HOME/.claude/projects/-home-j4kuuu/" \
+      && info "claude config restored"; } || info "claude restore partial"
+  else
+    info "skipped: could not clone claude-config (auth/access?)"
+  fi
+  rm -rf "$t"
+else
+  info "skipped: gh not authed (run 'gh auth login', then re-run or clone UncleJ4ck/claude-config)"
+fi
 
 # 5. system files (greetd, plymouth, polkit, btrbk, pacman hooks)
 step 5 "install system files into /etc and /usr"
