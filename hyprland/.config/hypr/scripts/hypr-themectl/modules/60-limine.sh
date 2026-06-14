@@ -461,17 +461,30 @@ update_limine_config() {
   [[ -n "$LIMINE_TERM_FONT" ]]      && font_lines+=$'\n'"term_font: ${LIMINE_TERM_FONT}"
   [[ -n "$LIMINE_TERM_FONT_SIZE" ]] && font_lines+=$'\n'"term_font_size: ${LIMINE_TERM_FONT_SIZE}"
 
+  # Interface element colors (limine-themination standard, RRGGBB hex). Without
+  # these Limine paints branding/help in its default cyan/green; here branding +
+  # help-bright track the accent (BLUE = slot 4 / selected-entry color) and the
+  # help footer uses a muted text role so it reads as a subtle hint, not noise.
+  local brand_color help_color help_color_bright
+  brand_color="${BLUE}"
+  help_color="$(matugen_role_hex "$mode" "${LIMINE_HELP_COLOR_ROLE:-on_surface_variant}" '#cdc6b4')"
+  help_color="${help_color#\#}"; help_color="${help_color^^}"
+  help_color_bright="${BLUE}"
+
   local theme_block
   theme_block="$(cat <<EOF
 $BEGIN
 # generated: $(date '+%Y-%m-%d %H:%M:%S')
-# style: catppuccin (matugen $mode, variant=$variant)
+# style: pure matugen (mode=$mode, variant=$variant)
 
 $([[ -n "$limine_bg_path" ]] && printf 'wallpaper: %s\nwallpaper_style: %s\n' "$limine_bg_path" "$LIMINE_WALLPAPER_STYLE")
 backdrop: ${BASE}
 
 ${branding_line}
+interface_branding_color: ${brand_color}
 interface_help_hidden: ${LIMINE_HELP_HIDDEN}
+interface_help_color: ${help_color}
+interface_help_color_bright: ${help_color_bright}
 
 term_background: ${alpha}${MENU_BG}
 term_foreground: ${TEXT}

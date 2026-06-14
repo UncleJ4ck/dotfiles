@@ -46,5 +46,15 @@ ABBR_QUIETER=1
 ABBR_AUTOLOAD=0
 ABBR_USER_ABBREVIATIONS_FILE="$XDG_CONFIG_HOME/zsh-abbr/user-abbreviations"
 
+# ── zsh-you-should-use — break the "typed the long command again" habit ──
+# Reminders alone weren't sticking. ALL flags every matching alias; HARDCORE
+# refuses the long command so you're forced to use the shortcut (that IS the
+# training). Bypass one command with a leading backslash: `\git ...`.
+# Too aggressive? set YSU_HARDCORE=0 here to go back to remind-only.
+export YSU_MODE=ALL
+export YSU_HARDCORE=1
+YSU_IGNORED_ALIASES=("sudo" "please")
+export YSU_MESSAGE_FORMAT="💡 use the alias \"%alias\"  (you typed: %command)"
+
 # ── atuin ────────────────────────────────────────────────────────────
 export ATUIN_NOBIND=0   # we let atuin bind Ctrl+R

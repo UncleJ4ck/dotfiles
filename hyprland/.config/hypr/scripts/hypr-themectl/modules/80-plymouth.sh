@@ -56,7 +56,7 @@ _blend_hex() {
 _assets_ok() {
   local missing=0
   local f
-  local required=(bullet.png accent_line.png)
+  local required=(card.png input.png lock.png bullet.png caret.png)
   plymouth_use_bg_image && required+=("background.${PLYMOUTH_BG_FORMAT}")
 
   for f in "${required[@]}"; do
@@ -109,37 +109,33 @@ EOT
   root_exec install -m 644 "$tmp" "${PLYMOUTH_THEME_DIR}/${PLYMOUTH_THEME_NAME}.plymouth"
   rm -f "$tmp"
 
-  local bg_r bg_g bg_b fg_r fg_g fg_b ac_r ac_g ac_b
+  local bg_r bg_g bg_b fg_r fg_g fg_b sub_r sub_g sub_b
   read -r bg_r bg_g bg_b < <(_hex_to_rgb01 "$bg")
   read -r fg_r fg_g fg_b < <(_hex_to_rgb01 "$fg")
-  read -r ac_r ac_g ac_b < <(_hex_to_rgb01 "$accent")
 
-  # Validate the accent-line opacity before splatting it into the Plymouth
-  # script. Plymouth-script doesn't have great error reporting; if the user
-  # sets a non-numeric value, the daemon would silently fail to parse the
-  # script and fall back to text mode.
-  local accent_alpha="${PLYMOUTH_ACCENT_LINE_ALPHA:-0.32}"
-  if ! [[ "$accent_alpha" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
-    warn "PLYMOUTH_ACCENT_LINE_ALPHA='$accent_alpha' is not numeric; using 0.32"
-    accent_alpha="0.32"
-  fi
+  # Hint + status text color: on_surface_variant (softer than the title).
+  local pmode sub_hex
+  pmode="${MATUGEN_MODE:-dark}"; [[ "$pmode" == "amoled" ]] && pmode="dark"
+  sub_hex="$(matugen_role_hex "$pmode" on_surface_variant '#cdc6b4')"
+  read -r sub_r sub_g sub_b < <(_hex_to_rgb01 "$sub_hex")
 
-  # Wallpaper section — only emitted when USE_WALLPAPER=1. Otherwise the bg
-  # is the solid Window background colors set above. Avoids the JPEG/blur
-  # banding that the previous design produced on bright wallpapers.
+  # Geometry — must match the asset generator in _generate_plymouth_assets.
+  local PAD="${PLYMOUTH_CARD_PAD:-48}"
+  local FIELD_DY="${PLYMOUTH_FIELD_DY:-150}"
+  local LOCK_SZ="${PLYMOUTH_LOCK_SIZE:-40}"
+  local BSZ="${PLYMOUTH_BULLET_SIZE:-12}"
+  local BGAP="${PLYMOUTH_BULLET_GAP:-8}"
+
+  # Wallpaper section — only emitted when a background image is in use.
   local wallpaper_section wallpaper_setup_call=""
   if plymouth_use_bg_image; then
-    wallpaper_section="# ----------------------------
-# Background (wallpaper)
-# ----------------------------
-wallpaper_image  = Image(\"background.${PLYMOUTH_BG_FORMAT}\");
+    wallpaper_section="wallpaper_image  = Image(\"background.${PLYMOUTH_BG_FORMAT}\");
 wallpaper_sprite = Sprite();
 
 fun background_setup()
 {
   screen_width  = Window.GetWidth();
   screen_height = Window.GetHeight();
-
   if (screen_width > 0 && screen_height > 0)
   {
     resized_wallpaper_image = wallpaper_image.Scale(screen_width, screen_height);
@@ -150,13 +146,12 @@ fun background_setup()
 }"
     wallpaper_setup_call="background_setup();"
   else
-    wallpaper_section="# Background: solid matugen color set on Window above (no wallpaper).
-fun background_setup() { }"
+    wallpaper_section="fun background_setup() { }"
   fi
 
   tmp="$(mktemp)"
   cat >"$tmp" <<EOT
-# Matugen Plymouth script (typographic, generated)
+# Matugen Plymouth — material card (generated)
 # Variant: ${variant}
 
 Window.SetBackgroundTopColor(${bg_r}, ${bg_g}, ${bg_b});
@@ -167,26 +162,72 @@ status = "normal";
 ${wallpaper_section}
 
 # ----------------------------
-# Accent line — single horizontal rule beneath the prompt
+# Card assets (shadow, panel, input, lock, caret)
 # ----------------------------
-accent_line.image  = Image("accent_line.png");
-accent_line.sprite = Sprite();
-accent_line.sprite.SetImage(accent_line.image);
-accent_line.sprite.SetOpacity(0);
+shadow.image  = Image("shadow.png");
+shadow.sprite = Sprite(shadow.image);
+card.image    = Image("card.png");
+card.sprite   = Sprite(card.image);
+input.image   = Image("input.png");
+input.sprite  = Sprite(input.image);
+lock.image    = Image("lock.png");
+lock.sprite   = Sprite(lock.image);
+caret.image   = Image("caret.png");
+caret.sprite  = Sprite(caret.image);
 
-fun accent_line_layout()
+shadow.sprite.SetOpacity(0);
+card.sprite.SetOpacity(0);
+input.sprite.SetOpacity(0);
+lock.sprite.SetOpacity(0);
+caret.sprite.SetOpacity(0);
+
+global.card_x  = 0;
+global.card_y  = 0;
+global.input_x = 0;
+global.input_y = 0;
+
+fun card_layout()
 {
-  cx = Window.GetX() + Window.GetWidth()  / 2;
-  cy = Window.GetY() + Window.GetHeight() / 2;
-  accent_line.sprite.SetPosition(
-    cx - accent_line.image.GetWidth() / 2,
-    cy + 56,
-    150
-  );
+  sw = Window.GetWidth();
+  sh = Window.GetHeight();
+  cx = Window.GetX() + sw / 2;
+  cy = Window.GetY() + sh / 2;
+
+  cw = card.image.GetWidth();
+  ch = card.image.GetHeight();
+  cardx = cx - cw / 2;
+  cardy = cy - ch / 2;
+  card.sprite.SetPosition(cardx, cardy, 10);
+
+  shadow.sprite.SetPosition(cx - shadow.image.GetWidth() / 2,
+                            cy - shadow.image.GetHeight() / 2, 5);
+
+  lock.sprite.SetPosition(cardx + ${PAD}, cardy + ${PAD}, 30);
+
+  iw = input.image.GetWidth();
+  inx = cx - iw / 2;
+  iny = cardy + ${FIELD_DY};
+  input.sprite.SetPosition(inx, iny, 20);
+
+  global.card_x  = cardx;
+  global.card_y  = cardy;
+  global.input_x = inx;
+  global.input_y = iny;
+
+  if (global.dialog)
+    dialog_relayout();
+}
+
+fun card_show(vis)
+{
+  shadow.sprite.SetOpacity(vis);
+  card.sprite.SetOpacity(vis);
+  input.sprite.SetOpacity(vis);
+  lock.sprite.SetOpacity(vis);
 }
 
 # ----------------------------
-# Password prompt — pure typography (label + bullet trail)
+# Password dialog (title + bullets + caret + hint)
 # ----------------------------
 fun dialog_opacity(opacity)
 {
@@ -196,65 +237,56 @@ fun dialog_opacity(opacity)
     for (index = 0; dialog.bullet[index]; index++)
       dialog.bullet[index].sprite.SetOpacity(opacity);
   }
-
-  if (opacity > 0)
-    accent_line.sprite.SetOpacity(${accent_alpha});
-  else
-    accent_line.sprite.SetOpacity(0);
+  caret.sprite.SetOpacity(opacity);
+  if (global.hint)
+    global.hint.sprite.SetOpacity(opacity);
 }
 
 fun dialog_setup()
 {
   local.label;
-
   label.sprite = Sprite();
-  label.z      = 200;
-
+  label.z      = 30;
   global.dialog.label        = label;
   global.dialog.bullet_image = Image("bullet.png");
   global.dialog.bullet_count = 0;
-
-  dialog_opacity(0);
 }
 
 fun dialog_relayout()
 {
-  cx = Window.GetX() + Window.GetWidth()  / 2;
-  cy = Window.GetY() + Window.GetHeight() / 2;
+  ih = input.image.GetHeight();
 
-  # Label: above the centerline, soft & restrained
+  # Title: right of the lock, top of the card content column.
   if (dialog.label.image)
   {
-    dialog.label.x = cx - dialog.label.image.GetWidth() / 2;
-    dialog.label.y = cy - dialog.label.image.GetHeight() - 18;
-    dialog.label.sprite.SetPosition(dialog.label.x, dialog.label.y, dialog.label.z);
+    tx = global.card_x + ${PAD} + ${LOCK_SZ} + 18;
+    ty = global.card_y + ${PAD} - 2;
+    dialog.label.sprite.SetPosition(tx, ty, 30);
   }
 
-  # Bullets: centered horizontally on the centerline, generous gap so each
-  # dot reads as a discrete glyph instead of a sausage bar.
-  bullet_w   = dialog.bullet_image.GetWidth();
-  bullet_h   = dialog.bullet_image.GetHeight();
-  bullet_gap = 10;
-  slot_w     = bullet_w + bullet_gap;
-  count      = dialog.bullet_count;
+  # Hint: under the field.
+  if (global.hint)
+    global.hint.sprite.SetPosition(global.input_x, global.input_y + ih + 14, 30);
 
-  total_w = (count * slot_w) - bullet_gap;
-  start_x = cx - (total_w / 2);
-  start_y = cy - bullet_h / 2 + 4;
+  # Bullets: inside the field, left padded, vertically centered.
+  bw    = ${BSZ};
+  slot  = bw + ${BGAP};
+  sx    = global.input_x + 24;
+  sy    = global.input_y + ih / 2 - bw / 2;
+  count = dialog.bullet_count;
 
   for (index = 0; dialog.bullet[index]; index++)
-  {
-    dialog.bullet[index].x = start_x + index * slot_w;
-    dialog.bullet[index].y = start_y;
-    dialog.bullet[index].sprite.SetPosition(dialog.bullet[index].x, dialog.bullet[index].y, dialog.bullet[index].z);
-  }
+    dialog.bullet[index].sprite.SetPosition(sx + index * slot, sy, 40);
 
-  accent_line_layout();
+  # Caret after the last bullet.
+  caret.sprite.SetPosition(sx + count * slot + 2,
+                           global.input_y + ih / 2 - 13, 45);
 }
 
 fun display_normal_callback()
 {
   status = "normal";
+  card_show(0);
   if (global.dialog)
     dialog_opacity(0);
 }
@@ -263,35 +295,39 @@ fun display_password_callback(prompt_text, bullets)
 {
   status = "password";
 
-  if (!prompt_text || prompt_text == "")
-    prompt_text = "Unlock disk";
+  # Always show a clean fixed title; cryptsetup's raw prompt is long/ugly.
+  prompt_text = "Unlock disk";
 
   if (!global.dialog)
     dialog_setup();
 
+  card_layout();
+  card_show(1);
+
   dialog.bullet_count = bullets;
 
-  dialog.label.image = Image.Text(prompt_text, ${fg_r}, ${fg_g}, ${fg_b}, 0.78, "Sans 16");
+  dialog.label.image = Image.Text(prompt_text, ${fg_r}, ${fg_g}, ${fg_b}, 1, "Sans 20");
   dialog.label.sprite.SetImage(dialog.label.image);
+
+  if (!global.hint)
+  {
+    global.hint.image  = Image.Text("Enter passphrase to unlock the root volume", ${sub_r}, ${sub_g}, ${sub_b}, 1, "Sans 11");
+    global.hint.sprite = Sprite(global.hint.image);
+  }
 
   for (index = 0; index < bullets; index++)
   {
     if (!dialog.bullet[index])
     {
       dialog.bullet[index].sprite = Sprite(dialog.bullet_image);
-      dialog.bullet[index].z = dialog.label.z;
+      dialog.bullet[index].z      = 40;
     }
     dialog.bullet[index].sprite.SetOpacity(1);
   }
 
-  # dialog_opacity(1) MUST come before the hide-excess loop below.
-  # It iterates every bullet sprite ever created and sets opacity to 1,
-  # so calling it after we hide excess bullets would re-show them — which
-  # is exactly the backspace bug: typing "abcde" then backspacing to "abc"
-  # left the d/e bullets visible.
+  # dialog_opacity(1) before the hide-excess loop (backspace bug guard).
   dialog_opacity(1);
 
-  # Hide bullets from a previous, longer entry (e.g. backspace).
   for (index = bullets; dialog.bullet[index]; index++)
     dialog.bullet[index].sprite.SetOpacity(0);
 
@@ -304,17 +340,13 @@ Plymouth.SetDisplayPasswordFunction(display_password_callback);
 fun refresh_callback()
 {
   background_setup();
-  accent_line_layout();
-  if (global.dialog)
-    dialog_relayout();
+  card_layout();
 }
 Plymouth.SetRefreshFunction(refresh_callback);
 
-# Status messages (top-left, accent color, low opacity).
-# Hide the sprite when text is empty — otherwise an old message lingers on
-# screen until the next non-empty message arrives.
+# Status messages (top-left, subtle).
 message_sprite = Sprite();
-message_sprite.SetPosition(20, 20, 250);
+message_sprite.SetPosition(20, 20, 60);
 message_sprite.SetOpacity(0);
 
 fun message_callback(text)
@@ -324,14 +356,14 @@ fun message_callback(text)
     message_sprite.SetOpacity(0);
     return;
   }
-  message_image = Image.Text(text, ${ac_r}, ${ac_g}, ${ac_b}, 0.65, "Sans 11");
+  message_image = Image.Text(text, ${sub_r}, ${sub_g}, ${sub_b}, 1, "Sans 11");
   message_sprite.SetImage(message_image);
   message_sprite.SetOpacity(1);
 }
 Plymouth.SetMessageFunction(message_callback);
 
 ${wallpaper_setup_call}
-accent_line_layout();
+card_layout();
 EOT
 
   root_exec install -m 644 "$tmp" "${PLYMOUTH_THEME_DIR}/${PLYMOUTH_THEME_NAME}.script"
@@ -361,7 +393,7 @@ _generate_plymouth_assets() {
   # Retire stale assets from the previous box/entry/glassmorphism design.
   # Leaving them around isn't harmful but it's also not theirs anymore.
   local stale
-  for stale in box.png entry.png; do
+  for stale in box.png entry.png accent_line.png; do
     [[ -e "${PLYMOUTH_THEME_DIR}/${stale}" ]] && root_exec rm -f "${PLYMOUTH_THEME_DIR}/${stale}" || true
   done
 
@@ -433,38 +465,79 @@ _generate_plymouth_assets() {
   # ── Bullet + accent line ───────────────────────────────────────────
   # Vibrancy still nudges bullet size, but the box/entry are gone — the
   # prompt is now pure typography on a clean surface.
-  local vibrancy bullet_size
-  vibrancy="$(wall_vibrancy_band "$wall")"
-  if [[ "$vibrancy" == "vibrant" ]]; then
-    bullet_size="12"
-  else
-    bullet_size="10"
-  fi
-  dbg "Plymouth vibrancy: $vibrancy (bullet=${bullet_size}px)"
+  # ── Material card assets ───────────────────────────────────────────
+  # Rounded surface panel + soft shadow + recessed input field + padlock +
+  # bullet + caret, all regenerated from the matugen palette so the unlock
+  # card tracks the live theme. Mirrors the verified /tmp preview.
+  local pmode card_hex card_border field_fill field_border lock_hex
+  pmode="${MATUGEN_MODE:-dark}"; [[ "$pmode" == "amoled" ]] && pmode="dark"
+  card_hex="$(matugen_role_hex "$pmode" surface_container '#221f17')"
+  card_border="$(matugen_role_hex "$pmode" outline_variant '#4b4739')"
+  field_fill="$(matugen_role_hex "$pmode" surface_container_lowest '#100e07')"
+  field_border="$accent"   # focused field border = primary
+  lock_hex="$accent"
 
-  local bg_r bg_g bg_b ac_r ac_g ac_b
-  read -r bg_r bg_g bg_b < <(_hex_to_rgb255 "$bg")
+  local CW="${PLYMOUTH_CARD_W:-600}" CH="${PLYMOUTH_CARD_H:-300}"
+  local FW="${PLYMOUTH_FIELD_W:-504}" FH="${PLYMOUTH_FIELD_H:-58}"
+  local CR="${PLYMOUTH_CARD_RADIUS:-28}" FR="${PLYMOUTH_FIELD_RADIUS:-14}"
+  local lock_sz="${PLYMOUTH_LOCK_SIZE:-40}" bsz="${PLYMOUTH_BULLET_SIZE:-12}"
+  local spad=80
+
+  local ac_r ac_g ac_b
   read -r ac_r ac_g ac_b < <(_hex_to_rgb255 "$accent")
 
-  local tmp_bullet tmp_line
-  tmp_bullet="$(mktemp --tmpdir 'plymouth-bullet-XXXXXX.png')"
-  tmp_line="$(mktemp --tmpdir 'plymouth-line-XXXXXX.png')"
+  local t_card t_shadow t_input t_lock t_bullet t_caret
+  t_card="$(mktemp --tmpdir 'ply-card-XXXXXX.png')"
+  t_shadow="$(mktemp --tmpdir 'ply-shadow-XXXXXX.png')"
+  t_input="$(mktemp --tmpdir 'ply-input-XXXXXX.png')"
+  t_lock="$(mktemp --tmpdir 'ply-lock-XXXXXX.png')"
+  t_bullet="$(mktemp --tmpdir 'ply-bullet-XXXXXX.png')"
+  t_caret="$(mktemp --tmpdir 'ply-caret-XXXXXX.png')"
 
-  # Bullet: small accent dot. Generous gap in the script keeps them readable.
-  "$cmd" -size "${bullet_size}x${bullet_size}" xc:none \
-    -fill "rgba(${ac_r},${ac_g},${ac_b},0.95)" \
-    -draw "circle $((bullet_size/2)),$((bullet_size/2)) $((bullet_size/2)),$((bullet_size/2 - bullet_size/4))" \
-    -strip "$tmp_bullet" 2>/dev/null && \
-    root_exec install -m 644 "$tmp_bullet" "${PLYMOUTH_THEME_DIR}/bullet.png" || true
+  # Card: exact CWxCH (clean geometry), fill + subtle border.
+  "$cmd" -size "${CW}x${CH}" xc:none \
+    -fill "$card_hex" -stroke "$card_border" -strokewidth 1.5 \
+    -draw "roundrectangle 1,1 $((CW-2)),$((CH-2)) ${CR},${CR}" \
+    -strip "$t_card" 2>/dev/null \
+    && root_exec install -m 644 "$t_card" "${PLYMOUTH_THEME_DIR}/card.png" || true
 
-  # Accent line: 2px tall, ACCENT_LINE_WIDTH wide. Drawn opaque; the script
-  # applies PLYMOUTH_ACCENT_LINE_ALPHA via SetOpacity at runtime.
-  local line_w="${PLYMOUTH_ACCENT_LINE_WIDTH:-320}"
-  "$cmd" -size "${line_w}x2" "xc:rgba(${ac_r},${ac_g},${ac_b},1.0)" \
-    -strip "$tmp_line" 2>/dev/null && \
-    root_exec install -m 644 "$tmp_line" "${PLYMOUTH_THEME_DIR}/accent_line.png" || true
+  # Shadow: padded blurred black roundrect, centered behind the card.
+  "$cmd" -size "$((CW+spad))x$((CH+spad))" xc:none \
+    -fill black -draw "roundrectangle $((spad/2)),$((spad/2)) $((spad/2+CW-1)),$((spad/2+CH-1)) ${CR},${CR}" \
+    -blur 0x18 -channel A -evaluate multiply 0.55 +channel \
+    -strip "$t_shadow" 2>/dev/null \
+    && root_exec install -m 644 "$t_shadow" "${PLYMOUTH_THEME_DIR}/shadow.png" || true
 
-  rm -f "$tmp_bullet" "$tmp_line" 2>/dev/null || true
+  # Recessed input field, primary focus border.
+  "$cmd" -size "${FW}x${FH}" xc:none \
+    -fill "$field_fill" -stroke "$field_border" -strokewidth 2 \
+    -draw "roundrectangle 1,1 $((FW-2)),$((FH-2)) ${FR},${FR}" \
+    -strip "$t_input" 2>/dev/null \
+    && root_exec install -m 644 "$t_input" "${PLYMOUTH_THEME_DIR}/input.png" || true
+
+  # Padlock (IM primitives, primary). Keyhole punched to card color.
+  "$cmd" -size 64x64 xc:none \
+    -stroke "$lock_hex" -strokewidth 6 -fill none \
+    -draw "arc 20,12 44,48 180,360" \
+    -stroke none -fill "$lock_hex" \
+    -draw "roundrectangle 14,32 50,58 7,7" \
+    -fill "$card_hex" \
+    -draw "circle 32,42 32,46" \
+    -draw "polygon 30,42 34,42 35,53 29,53" \
+    -resize "${lock_sz}x${lock_sz}" \
+    -strip "$t_lock" 2>/dev/null \
+    && root_exec install -m 644 "$t_lock" "${PLYMOUTH_THEME_DIR}/lock.png" || true
+
+  # Bullet dot + caret, primary.
+  "$cmd" -size "${bsz}x${bsz}" xc:none -fill "rgb(${ac_r},${ac_g},${ac_b})" \
+    -draw "circle $((bsz/2)),$((bsz/2)) $((bsz/2)),1" \
+    -strip "$t_bullet" 2>/dev/null \
+    && root_exec install -m 644 "$t_bullet" "${PLYMOUTH_THEME_DIR}/bullet.png" || true
+  "$cmd" -size 2x26 "xc:rgb(${ac_r},${ac_g},${ac_b})" \
+    -strip "$t_caret" 2>/dev/null \
+    && root_exec install -m 644 "$t_caret" "${PLYMOUTH_THEME_DIR}/caret.png" || true
+
+  rm -f "$t_card" "$t_shadow" "$t_input" "$t_lock" "$t_bullet" "$t_caret" 2>/dev/null || true
 }
 
 _set_plymouth_default_theme() {
@@ -622,7 +695,7 @@ update_plymouth_theme() {
   # v5: luma ceiling — bumped to force bg PNG regeneration with the new
   # -evaluate Min step that clamps absolute brightness for legibility on
   # bright wallpapers.
-  state_key="v5_${wall_hash}_${variant}_${MATUGEN_MODE}_${PLYMOUTH_USE_WALLPAPER:-0}_${PLYMOUTH_VARIANT_PIN:-dark}_${PLYMOUTH_BG_BLUR_RADIUS}_${PLYMOUTH_BG_MODULATE}_${PLYMOUTH_BG_LUMA_CEILING:-110}_${PLYMOUTH_BG_TINT_PERCENT:-15}_${PLYMOUTH_BG_QUALITY}_${PLYMOUTH_TARGET_RES}_${PLYMOUTH_BG_FORMAT}_${PLYMOUTH_ACCENT_LINE_WIDTH}_${PLYMOUTH_ACCENT_LINE_ALPHA}_${accent}_${bg}_${fg}_${PLYMOUTH_BG_STYLE:-solid}"
+  state_key="v6mat_${wall_hash}_${variant}_${MATUGEN_MODE}_${PLYMOUTH_USE_WALLPAPER:-0}_${PLYMOUTH_VARIANT_PIN:-dark}_${PLYMOUTH_BG_BLUR_RADIUS}_${PLYMOUTH_BG_MODULATE}_${PLYMOUTH_BG_LUMA_CEILING:-110}_${PLYMOUTH_BG_TINT_PERCENT:-15}_${PLYMOUTH_BG_QUALITY}_${PLYMOUTH_TARGET_RES}_${PLYMOUTH_BG_FORMAT}_${PLYMOUTH_CARD_W:-600}x${PLYMOUTH_CARD_H:-300}_${PLYMOUTH_FIELD_W:-504}x${PLYMOUTH_FIELD_H:-58}_${PLYMOUTH_LOCK_SIZE:-40}_${PLYMOUTH_BULLET_SIZE:-12}_${accent}_${bg}_${fg}_${PLYMOUTH_BG_STYLE:-solid}"
   prev="$(read_state "$STATE_PLYMOUTH_FILE")"
 
   if [[ "$prev" == "$state_key" ]] &&

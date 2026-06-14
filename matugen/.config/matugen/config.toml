@@ -1,5 +1,17 @@
 [config]
 
+[templates.firefox-userContent]
+  input_path  = "~/.config/matugen/templates/apps/firefox-userContent.css"
+  output_path = "~/.mozilla/firefox/a6o5mkw8.default-release-1769379869607/chrome/userContent.css"
+
+[templates.firefox-start]
+  input_path  = "~/.config/matugen/templates/apps/firefox-start.css"
+  output_path = "~/.config/firefox-start/style.css"
+
+[templates.firefox-cascade-colours]
+  input_path  = "~/.config/matugen/templates/apps/cascade-colours.css"
+  output_path = "~/.mozilla/firefox/a6o5mkw8.default-release-1769379869607/chrome/includes/cascade-colours.css"
+
 [templates.nvim]
   input_path  = "~/.config/matugen/templates/shell/matugen.lua"
   output_path = "~/.config/nvim/colors/matugen.lua"

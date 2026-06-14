@@ -131,7 +131,9 @@ set -Eeuo pipefail
 : "${LIMINE_TERM_FONT_SPACING:=1}"
 : "${LIMINE_TERM_FONT:=}"
 : "${LIMINE_TERM_FONT_SIZE:=}"
-: "${LIMINE_HELP_HIDDEN:=yes}"
+# Show the bottom key-hint footer (now matugen-colored, not Limine's default
+# green) so the menu reads as styled rather than a bare list. Set to yes to hide.
+: "${LIMINE_HELP_HIDDEN:=no}"
 
 # Variant: pin to dark|light|amoled, or "auto" for luma-driven flipping.
 # auto-flip caused jarring light-mode boot screens on bright wallpapers,
@@ -143,6 +145,11 @@ set -Eeuo pipefail
 : "${LIMINE_ALPHA_LIGHT:=F2}"
 : "${LIMINE_ACCENT_LIGHT:=tertiary}"
 : "${LIMINE_ACCENT_DARK:=primary}"
+
+# Interface element colors (limine-themination standard). Branding + help-bright
+# track the accent; the help footer uses a muted text role. Without these, Limine
+# paints branding/help in its default cyan/green and ignores the matugen palette.
+: "${LIMINE_HELP_COLOR_ROLE:=on_surface_variant}"
 
 # =============================================================================
 # Plymouth (LUKS prompt) - Theme generated from Matugen JSON
@@ -175,9 +182,20 @@ set -Eeuo pipefail
 # Variant: pin to dark|light|amoled, or "auto" for luma-driven flipping.
 : "${PLYMOUTH_VARIANT_PIN:=dark}"
 
-# Accent line at the bottom of the prompt (single horizontal rule, low alpha).
-: "${PLYMOUTH_ACCENT_LINE_WIDTH:=380}"
-: "${PLYMOUTH_ACCENT_LINE_ALPHA:=0.55}"
+# Material card geometry (unlock prompt). The asset generator and the Plymouth
+# script both read these. The .script recomputes positions from the actual PNG
+# sizes, so a tweak degrades gracefully instead of breaking the prompt.
+: "${PLYMOUTH_CARD_W:=600}"
+: "${PLYMOUTH_CARD_H:=300}"
+: "${PLYMOUTH_CARD_RADIUS:=28}"
+: "${PLYMOUTH_CARD_PAD:=48}"
+: "${PLYMOUTH_FIELD_W:=504}"
+: "${PLYMOUTH_FIELD_H:=58}"
+: "${PLYMOUTH_FIELD_RADIUS:=14}"
+: "${PLYMOUTH_FIELD_DY:=150}"
+: "${PLYMOUTH_LOCK_SIZE:=40}"
+: "${PLYMOUTH_BULLET_SIZE:=12}"
+: "${PLYMOUTH_BULLET_GAP:=8}"
 
 : "${STATE_PLYMOUTH_FILE:=$STATE_DIR/current_plymouth}"
 

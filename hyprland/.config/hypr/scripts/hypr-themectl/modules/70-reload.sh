@@ -73,6 +73,14 @@ reload_desktop() {
     dbg "Rofi closed"
   }
 
+  # Firefox - push the live palette to the pywalfox addon. pywalfox reads
+  # ~/.cache/wal/colors (matugen regenerates it each apply) and sends it to the
+  # running addon via the native host. No-op when Firefox isn't running.
+  if is_cmd pywalfox && pgrep -x firefox &>/dev/null; then
+    timeout 5s pywalfox update >/dev/null 2>&1 || true
+    dbg "pywalfox: pushed palette to Firefox"
+  fi
+
   # Hyprpolkitagent - systemd service restart
   if is_cmd systemctl && systemctl --user cat hyprpolkitagent.service &>/dev/null 2>&1; then
     systemctl --user try-restart hyprpolkitagent.service 2>/dev/null || true

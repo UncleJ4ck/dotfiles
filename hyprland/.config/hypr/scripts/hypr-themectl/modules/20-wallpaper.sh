@@ -277,6 +277,7 @@ apply_wallpaper() {
 
   printf '%s\n' "$wall" > "$CACHE_FILE"
   ln -sf "$wall" "$HOME/.config/rofi/.current_wallpaper"
+  [[ -d "$HOME/.config/firefox-start" ]] && ln -sf "$wall" "$HOME/.config/firefox-start/wall" 2>/dev/null || true
   dbg "Cached: $CACHE_FILE"
 
   # Reapply to defeat late overrides

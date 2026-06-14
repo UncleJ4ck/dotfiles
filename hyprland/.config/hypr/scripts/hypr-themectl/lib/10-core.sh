@@ -299,6 +299,7 @@ themectl_drift_check() {
             -not -name '*.bak*' \
             -not -name '*.EFI' -not -name '*.efi' \
             -not -name 'limine.conf' \
+            -not -name 'limine-bg.*' \
             -not -path '*/.git/*' 2>/dev/null)" || true
   if [[ -n "$hits" ]]; then
     warn "Files in managed paths changed since last themectl apply:"

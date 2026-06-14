@@ -1,0 +1,27 @@
+/* userContent.css — matugen-generated (themectl), safe-scope web theming.
+ * Styled sites go dark via prefers-color-scheme (set in user.js). This file
+ * only themes scrollbars, form accents, selection, Firefox internal pages, and
+ * plain/local pages. It deliberately does NOT force colors on styled site
+ * content, which is exactly what re-breaks Google/Gmail/etc.
+ * Regenerated on every theme switch by matugen. */
+
+/* Site-wide cosmetic accents — safe everywhere */
+@-moz-document regexp(".*") {
+  :root {
+    scrollbar-color: {{ colors.primary.default.hex }} {{ colors.surface_container.default.hex }} !important;
+    accent-color: {{ colors.primary.default.hex }} !important;
+  }
+  ::selection { background-color: {{ colors.primary.default.hex }}40 !important; }
+}
+
+/* Firefox internal pages */
+@-moz-document url-prefix("about:"), url-prefix("chrome:") {
+  :root { background-color: {{ colors.background.default.hex }} !important; color: {{ colors.on_background.default.hex }} !important; }
+}
+
+/* Plain / local pages (raw text, file://) */
+@-moz-document url-prefix("file://"),
+  regexp("^[^?#]*\\.(txt|log|md|csv|json)(\\?.*)?$") {
+  html { background-color: {{ colors.background.default.hex }} !important; color: {{ colors.on_background.default.hex }} !important; }
+  pre, body { color: {{ colors.on_surface.default.hex }} !important; }
+}
