@@ -190,7 +190,9 @@
     "modules": [
       "cpu",
       "memory",
-      "temperature"
+      "temperature",
+      "disk",
+      "custom/gpu"
     ]
   },
 
@@ -216,6 +218,20 @@
     "format-critical": "󱗗 {temperatureC}°C",
     "format": "󰔏 {temperatureC}°C",
     "tooltip-format": "CPU Temperature: {temperatureC}°C"
+  },
+
+  "disk": {
+    "interval": 30,
+    "path": "/",
+    "format": "󰋊 {percentage_used}%",
+    "tooltip-format": "Disk /: {used} used of {total} ({percentage_used}% used, {free} free)"
+  },
+
+  "custom/gpu": {
+    "exec": "~/.config/hypr/scripts/waybar/waybar-gpu.sh",
+    "return-type": "json",
+    "interval": 3,
+    "tooltip": true
   },
 
   "battery": {

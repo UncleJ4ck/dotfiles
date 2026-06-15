@@ -281,7 +281,9 @@ window#waybar.empty #window {
 
 #cpu,
 #memory,
-#temperature {
+#temperature,
+#disk,
+#custom-gpu {
     background: transparent;
     padding: 0 8px;
     font-size: 14px;
@@ -290,15 +292,20 @@ window#waybar.empty #window {
 #cpu { color: @primary; }
 #memory { color: @secondary; }
 #temperature { color: @tertiary; }
+#disk { color: @secondary; }
+#custom-gpu { color: @tertiary; }
 
 #cpu:hover,
 #memory:hover,
-#temperature:hover {
+#temperature:hover,
+#disk:hover,
+#custom-gpu:hover {
     color: @on_surface;
     background: @surface_container_high;
 }
 
-#temperature.critical {
+#temperature.critical,
+#custom-gpu.critical {
     color: @error;
 }
 
