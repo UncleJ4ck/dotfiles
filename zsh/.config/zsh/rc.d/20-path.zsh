@@ -13,7 +13,6 @@ path=(
   "$HOME/.gobrew/bin"
   "$HOME/.gobrew/current/go"
   "$HOME/.opencode/bin"
-  "$HOME/.dual-graph"
   $path
 )
 export PATH

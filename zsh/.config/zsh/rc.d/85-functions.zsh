@@ -281,25 +281,33 @@ speed() {
 
 icat() { [[ $# -eq 0 ]] && { echo "Usage: icat <image>"; return 1; }; kitty +kitten icat "$@"; }
 
-# Smart cat — images via icat, text via bat -pp
-scat() {
-  if [[ $# -eq 0 ]]; then
-    (( $+commands[bat] )) && bat -pp || cat
-    return
+# Smart cat: highlight a single text file (bat) and render images inline
+# (kitty icat) when writing to a TTY; POSIX for everything else (flags, multiple
+# files, pipes, `$(...)`, redirects, non-TTY). Because command substitution and
+# pipes are non-TTY, scripts that do `x=$(cat f)` or `cat f | ...` get plain cat.
+# Uses `command cat`/`command file` so it never recurses into itself.
+cat() {
+  if (( ! $+commands[bat] )) || [[ ! -t 1 || $# -ne 1 || $1 == -* ]]; then
+    command cat "$@"; return
   fi
-  local file="$1"
-  [[ ! -f "$file" ]] && { echo "scat: $file: No such file"; return 1; }
-  local mime; mime=$(file --mime-type -b "$file" 2>/dev/null)
-  if [[ "$mime" =~ ^image/ ]]; then
-    kitty +kitten icat "$file"
-  elif (( $+commands[bat] )); then
-    bat -pp "$file"
-  else
-    # `command cat`, NOT `cat`: scat is aliased from `cat`, so a bare `cat`
-    # here would recurse into scat and stack-overflow when bat is absent.
-    command cat "$file"
-  fi
+  local f=$1
+  [[ -f $f && -r $f ]] || { command cat "$@"; return; }
+  local mime; mime=$(command file --mime-type -b -- "$f" 2>/dev/null)
+  case $mime in
+    image/*)
+      if (( $+commands[kitty] )) && [[ -n $KITTY_WINDOW_ID ]]; then
+        kitty +kitten icat -- "$f"
+      else
+        command cat "$@"
+      fi ;;
+    text/*|application/json|application/javascript|application/xml|application/x-sh|application/x-shellscript|application/x-yaml|application/toml|application/x-php|application/x-perl|application/x-ruby)
+      bat --style=plain --paging=never -- "$f" ;;
+    *)
+      command cat "$@" ;;
+  esac
 }
+# Back-compat: scat was the old name for this behaviour.
+scat() { cat "$@"; }
 
 # ── Python venv ──────────────────────────────────────────────────────
 mkvenv() {

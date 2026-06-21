@@ -1,12 +1,7 @@
 [config]
 
-[templates.firefox-userContent]
-  input_path  = "~/.config/matugen/templates/apps/firefox-userContent.css"
-  output_path = "~/.mozilla/firefox/a6o5mkw8.default-release-1769379869607/chrome/userContent.css"
-
-[templates.firefox-start]
-  input_path  = "~/.config/matugen/templates/apps/firefox-start.css"
-  output_path = "~/.config/firefox-start/style.css"
+# Firefox theming is left entirely to pywalfox (native host + addon). matugen no
+# longer generates userContent.css or the start-page style.css. Removed 2026-06-20.
 
 [templates.nvim]
   input_path  = "~/.config/matugen/templates/shell/matugen.lua"

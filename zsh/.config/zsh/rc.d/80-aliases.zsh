@@ -37,9 +37,10 @@ else
   alias la='ls -A'
 fi
 
-# cat/bat. Do NOT alias `cat` itself: scripts and pipelines that source
-# our rc files (and the scat() function below) call cat expecting POSIX
-# behaviour. Use catn/catl/scat explicitly.
+# cat/bat. `cat` is a smart function (see 85-functions.zsh): on a TTY it
+# highlights a single text file and renders images inline, and stays POSIX for
+# everything else (flags, multiple files, pipes, `$(...)`, non-TTY) so scripts
+# are unaffected. catn/catl force bat explicitly.
 if (( $+commands[bat] )); then
   alias catn='bat'
   alias catl='bat --style=numbers'
