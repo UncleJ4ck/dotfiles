@@ -1,7 +1,11 @@
 [config]
 
-# Firefox theming is left entirely to pywalfox (native host + addon). matugen no
-# longer generates userContent.css or the start-page style.css. Removed 2026-06-20.
+# Firefox CHROME theming is pywalfox alone (matugen never touches userContent.css).
+# The local start page (firefox-start) is NOT themed by pywalfox, so matugen
+# regenerates its style.css on every theme switch. Re-added 2026-06-23.
+[templates.firefox-start]
+  input_path  = "~/.config/matugen/templates/apps/firefox-start.css"
+  output_path = "~/.config/firefox-start/style.css"
 
 [templates.nvim]
   input_path  = "~/.config/matugen/templates/shell/matugen.lua"
