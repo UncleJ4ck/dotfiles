@@ -2,7 +2,7 @@
 set -euo pipefail
 
 LID="eDP-1"
-LID_DISABLE_AT="${LID_DISABLE_AT:-3}"
+LID_DISABLE_AT="${LID_DISABLE_AT:-4}"
 LOCKFILE="${XDG_RUNTIME_DIR:-/tmp}/hypr-lid-manager.lock"
 
 lid_is_open() {
