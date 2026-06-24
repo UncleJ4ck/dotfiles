@@ -2,5 +2,5 @@
 vt = 1
 
 [default_session]
-command = "env WLR_DRM_DEVICES=/dev/dri/intel-igpu XKB_DEFAULT_LAYOUT=fr LIBSEAT_BACKEND=logind HOME=/var/lib/greetd XDG_CONFIG_HOME=/etc/greetd/xdg cage -d -s -- regreet --style /etc/greetd/regreet.css >/tmp/greetd.log 2>&1"
+command = "env GSK_RENDERER=cairo XCURSOR_THEME=macOS XCURSOR_SIZE=16 WLR_DRM_DEVICES=/dev/dri/intel-igpu XKB_DEFAULT_LAYOUT=fr LIBSEAT_BACKEND=logind HOME=/var/lib/greetd XDG_CONFIG_HOME=/etc/greetd/xdg cage -d -s -- regreet --style /etc/greetd/regreet.css"
 user = "greeter"
