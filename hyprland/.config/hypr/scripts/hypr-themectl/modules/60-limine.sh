@@ -55,16 +55,18 @@ limine_pure_matugen() {
   primary_container="$(matugen_role_hex "$mode" primary_container "#3b4858")"
   tertiary_container="$(matugen_role_hex "$mode" tertiary_container "#4f3a52")"
   surface_container="$(matugen_role_hex "$mode" surface_container "$bg")"
+  local surface_container_high
+  surface_container_high="$(matugen_role_hex "$mode" surface_container_high "$surface_container")"
 
   local py
   py="$(get_python)"
 
   "$py" - "$mode" "$bg" "$text" "$error" "$primary" "$secondary" "$tertiary" \
-        "$primary_container" "$tertiary_container" "$surface_container" <<'PY'
+        "$primary_container" "$tertiary_container" "$surface_container" "$surface_container_high" <<'PY'
 import sys
 
 (mode, bg, text, error, primary, secondary, tertiary,
- primary_container, tertiary_container, surface_container) = sys.argv[1:]
+ primary_container, tertiary_container, surface_container, surface_container_high) = sys.argv[1:]
 
 def hex_only(h):
     return h.lstrip("#").upper()
@@ -130,19 +132,19 @@ teal   = hex_only(primary_container)    # darker primary partner
 if roles_collapsed:
     print("ROLES_COLLAPSED=1", file=sys.stderr)
 
-# Bright variants. Limine darkens/lightens via the alt palette for
-# selected items and emphasis. We use surface_container (a real M3 role,
-# already a few ladder steps lifted from background) so selected entries
-# actually look elevated rather than synthesized.
-bg_bright = hex_only(surface_container)
+# Bright variants = the SELECTED-entry background. With the menu box now at
+# surface_container (the Plymouth unlock-card surface), the selection needs one
+# ladder step higher (surface_container_high) to stay visibly elevated off it.
+bg_bright = hex_only(surface_container_high)
 
 # Selected/hovered foreground stays primary so emphasized text reads as
 # the matugen accent — consistent with the branding line.
 fg_bright = blue
 
-# Light mode: lift the menu surface above the page bg so the menu reads
-# as a card. Dark/amoled keep the deep base for the cinematic feel.
-menu_bg = hex_only(surface_container) if mode == "light" else base
+# Menu box = surface_container in every mode: the SAME role as the Plymouth
+# unlock card, so the boot menu reads as the same lifted material surface over
+# the shared blurred wallpaper instead of a deep cinematic void.
+menu_bg = hex_only(surface_container)
 
 palette        = f"{base};{red};{green};{yellow};{blue};{pink};{teal};{txt}"
 palette_bright = f"{bg_bright};{red};{green};{yellow};{blue};{pink};{teal};{txt}"
