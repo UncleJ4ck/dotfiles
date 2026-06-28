@@ -152,6 +152,28 @@ set -Eeuo pipefail
 : "${LIMINE_HELP_COLOR_ROLE:=on_surface_variant}"
 
 # =============================================================================
+# GRUB Bootloader - gfxmenu theme generated from Matugen (mirrors the Plymouth card)
+# =============================================================================
+: "${GRUB_CFG:=/boot/grub/grub.cfg}"
+: "${GRUB_THEME_NAME:=matugen}"
+: "${GRUB_THEME_DIR:=/boot/grub/themes/$GRUB_THEME_NAME}"
+: "${GRUB_FONT_TTF:=/usr/share/fonts/TTF/JetBrainsMonoNLNerdFont-Regular.ttf}"
+# Official Arch logo SVG, recolored to the matugen primary for the GRUB menu +
+# Plymouth top icon (shared by both so boot + unlock carry the same dynamic logo).
+: "${ARCH_SVG:=/usr/share/pixmaps/archlinux-logo.svg}"
+: "${GRUB_RES:=1920x1080}"
+# Card geometry (matches the Plymouth material card).
+: "${GRUB_CARD_W:=650}"
+: "${GRUB_CARD_H:=430}"
+: "${GRUB_CARD_RADIUS:=26}"
+# Background (reuses the Plymouth blurred wallpaper if present; these only apply
+# to the fallback self-generated background).
+: "${GRUB_BG_BLUR:=0x18}"
+: "${GRUB_BG_MODULATE:=46,88,100}"
+: "${GRUB_BG_LUMA_CEILING:=27%}"
+: "${GRUB_BG_TINT:=15}"
+
+# =============================================================================
 # Plymouth (LUKS prompt) - Theme generated from Matugen JSON
 # =============================================================================
 : "${PLYMOUTH_THEME_NAME:=matugen}"

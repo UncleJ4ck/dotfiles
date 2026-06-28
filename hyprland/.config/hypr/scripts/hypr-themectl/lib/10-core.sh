@@ -183,6 +183,16 @@ root_exec() {
   return $rc
 }
 
+# Atomically install a file to a (possibly root-owned) destination: stage to a
+# sibling temp on the SAME filesystem via root_exec, then rename. A crash/OOM
+# mid-write can only leave the temp, never a truncated $dst (a torn
+# /boot/grub.cfg or /etc/greetd/config.toml = broken boot / blocked login).
+install_atomic() {  # src dst [mode]
+  local src="$1" dst="$2" mode="${3:-644}"
+  local tmp="${dst}.themectl-tmp.$$"
+  root_exec install -m "$mode" "$src" "$tmp" && root_exec mv -f "$tmp" "$dst"
+}
+
 # =============================================================================
 # Dependency Check
 # =============================================================================

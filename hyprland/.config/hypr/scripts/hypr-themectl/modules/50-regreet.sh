@@ -97,7 +97,7 @@ _patch_regreet_gtk_section() {
     rm -f "$tmp"
     return 0
   fi
-  root_exec install -m 644 "$tmp" "$REGREET_CONFIG"
+  install_atomic "$tmp" "$REGREET_CONFIG"
   rm -f "$tmp"
 }
 
@@ -160,7 +160,7 @@ _patch_regreet_commands_section() {
     return 0
   fi
   info "Patching ReGreet [commands] to use loginctl"
-  root_exec install -m 644 "$tmp" "$REGREET_CONFIG"
+  install_atomic "$tmp" "$REGREET_CONFIG"
   rm -f "$tmp"
 }
 
@@ -187,7 +187,7 @@ EOF
   local dir
   for dir in "/etc/greetd/xdg/gtk-4.0" "/etc/greetd/xdg/gtk-3.0"; do
     root_exec mkdir -p "$dir"
-    root_exec install -m 644 "$tmp" "$dir/gtk.css"
+    install_atomic "$tmp" "$dir/gtk.css"
   done
 
   rm -f "$tmp"
@@ -503,7 +503,7 @@ PY
     ensure_regreet_gtk_user_css
     return 0
   fi
-  root_exec install -m 644 "$tmp" "$REGREET_STYLE_CSS"
+  install_atomic "$tmp" "$REGREET_STYLE_CSS"
   rm -f "$tmp"
 
   ensure_regreet_gtk_user_css
@@ -542,7 +542,7 @@ ensure_greetd_uses_regreet_style() {
     rm -f "$tmp"
     return 0
   fi
-  root_exec install -m 644 "$tmp" "$GREETD_CONFIG"
+  install_atomic "$tmp" "$GREETD_CONFIG"
   rm -f "$tmp"
 }
 
@@ -584,7 +584,7 @@ update_regreet_background_config() {
     rm -f "$tmp"
     return 0
   fi
-  root_exec install -m 644 "$tmp" "$REGREET_CONFIG"
+  install_atomic "$tmp" "$REGREET_CONFIG"
   rm -f "$tmp"
 }
 
@@ -658,7 +658,7 @@ apply_regreet_background() {
       }
     fi
 
-    root_exec install -m 644 "$tmp_file" "$dest"
+    install_atomic "$tmp_file" "$dest"
     rm -f "$tmp_file"
   else
     warn "ImageMagick not available for ReGreet"

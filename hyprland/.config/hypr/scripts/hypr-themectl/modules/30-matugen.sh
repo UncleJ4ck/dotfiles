@@ -118,11 +118,10 @@ sys.exit(1)
     return 0
   fi
 
-  printf '%s\n' "$json_clean" > "$MATUGEN_JSON_FILE"
-  # Stamp which wallpaper these colors came from, so a silent "keeping previous"
-  # (matugen failed, old colors retained) is detectable: compare this stamp to
-  # the wallpaper themectl thinks is current. Written ONLY on a real refresh.
-  printf '%s\n' "$wall" > "${MATUGEN_JSON_FILE%.json}.src" 2>/dev/null || true
+  # Atomic write: a torn JSON would make every theme reader (matugen_role_hex ->
+  # grub/limine/plymouth/regreet) silently fall back to defaults.
+  local _mj_tmp="${MATUGEN_JSON_FILE}.tmp.$$"
+  printf '%s\n' "$json_clean" > "$_mj_tmp" && mv -f "$_mj_tmp" "$MATUGEN_JSON_FILE"
   info "Matugen completed"
 }
 

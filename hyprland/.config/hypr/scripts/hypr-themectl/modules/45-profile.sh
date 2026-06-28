@@ -16,11 +16,14 @@ _list_profile_candidates() {
 
 _profile_state_key() {
   local wall="$1" scorer="${2:-histogram}"
-  local wall_hash
+  local wall_hash cand_hash
   wall_hash="$(md5sum "$wall" 2>/dev/null | awk '{print $1}')" || wall_hash="unknown"
+  # Fold the candidate set into the key so adding/removing a profile picture
+  # invalidates the cache (otherwise it sticks until the wallpaper/mode changes).
+  cand_hash="$(_list_profile_candidates 2>/dev/null | sort | md5sum | awk '{print $1}')" || cand_hash="x"
 
   if [[ "$scorer" == "clip" ]]; then
-    printf '%s\n' "${PROFILE_PICKER_VERSION}_${wall_hash}_${MATUGEN_MODE}_clip"
+    printf '%s\n' "${PROFILE_PICKER_VERSION}_${wall_hash}_${cand_hash}_${MATUGEN_MODE}_clip"
     return
   fi
 
@@ -30,7 +33,7 @@ _profile_state_key() {
   t="$(matugen_role_hex "$MATUGEN_MODE" tertiary "#f5c2e7")"
   bg="$(matugen_role_hex "$MATUGEN_MODE" background "#11111b")"
 
-  printf '%s\n' "${PROFILE_PICKER_VERSION}_${wall_hash}_${MATUGEN_MODE}_${p}_${s}_${t}_${bg}_${PROFILE_PICKER_SAMPLE}_${PROFILE_PICKER_MAX_COLORS}_${PROFILE_PICKER_SAT_MIN}_${PROFILE_PICKER_LUMA_MIN}_${PROFILE_PICKER_LUMA_MAX}_${PROFILE_PICKER_W_MEANLAB}_${PROFILE_PICKER_W_PALETTE}_${PROFILE_PICKER_W_SAT}_${PROFILE_PICKER_W_LUMA}_${PROFILE_PICKER_W_COLORFUL}_${PROFILE_PICKER_W_COV}"
+  printf '%s\n' "${PROFILE_PICKER_VERSION}_${wall_hash}_${cand_hash}_${MATUGEN_MODE}_${p}_${s}_${t}_${bg}_${PROFILE_PICKER_SAMPLE}_${PROFILE_PICKER_MAX_COLORS}_${PROFILE_PICKER_SAT_MIN}_${PROFILE_PICKER_LUMA_MIN}_${PROFILE_PICKER_LUMA_MAX}_${PROFILE_PICKER_W_MEANLAB}_${PROFILE_PICKER_W_PALETTE}_${PROFILE_PICKER_W_SAT}_${PROFILE_PICKER_W_LUMA}_${PROFILE_PICKER_W_COLORFUL}_${PROFILE_PICKER_W_COV}"
 }
 
 _render_profile_for_hyprlock() {

@@ -81,7 +81,7 @@ _set_plymouth_fallback_theme() {
 Theme=spinner
 EOT
   root_exec mkdir -p /etc/plymouth
-  root_exec install -m 644 "$tmp" /etc/plymouth/plymouthd.conf
+  install_atomic "$tmp" /etc/plymouth/plymouthd.conf
   rm -f "$tmp"
 }
 
@@ -106,7 +106,7 @@ ModuleName=script
 ImageDir=${PLYMOUTH_THEME_DIR}
 ScriptFile=${PLYMOUTH_THEME_DIR}/${PLYMOUTH_THEME_NAME}.script
 EOT
-  root_exec install -m 644 "$tmp" "${PLYMOUTH_THEME_DIR}/${PLYMOUTH_THEME_NAME}.plymouth"
+  install_atomic "$tmp" "${PLYMOUTH_THEME_DIR}/${PLYMOUTH_THEME_NAME}.plymouth"
   rm -f "$tmp"
 
   local bg_r bg_g bg_b fg_r fg_g fg_b sub_r sub_g sub_b
@@ -366,7 +366,7 @@ ${wallpaper_setup_call}
 card_layout();
 EOT
 
-  root_exec install -m 644 "$tmp" "${PLYMOUTH_THEME_DIR}/${PLYMOUTH_THEME_NAME}.script"
+  install_atomic "$tmp" "${PLYMOUTH_THEME_DIR}/${PLYMOUTH_THEME_NAME}.script"
   rm -f "$tmp"
 }
 
@@ -424,7 +424,7 @@ _generate_plymouth_assets() {
         radial)   "$cmd" -size "$pres" radial-gradient:"${plift}-${pdeep}" -strip "$ptmp" 2>/dev/null ;;
       esac
       if [[ -s "$ptmp" ]]; then
-        root_exec install -m 644 "$ptmp" "$bg_out"
+        install_atomic "$ptmp" "$bg_out"
         dbg "Plymouth gradient backdrop (${PLYMOUTH_BG_STYLE})"
       else
         warn "Plymouth gradient generation failed"
@@ -450,7 +450,7 @@ _generate_plymouth_assets() {
           -fill "$accent" -colorize "$tint_pct" \
           -strip \
           "$tmp_bg" 2>/dev/null; then
-          root_exec install -m 644 "$tmp_bg" "$bg_out"
+          install_atomic "$tmp_bg" "$bg_out"
           dbg "Plymouth bg: blur=$PLYMOUTH_BG_BLUR_RADIUS modulate=$PLYMOUTH_BG_MODULATE ceil=$luma_ceiling tint=${accent}@${tint_pct}%"
         else
           warn "ImageMagick failed generating Plymouth background"
@@ -499,43 +499,46 @@ _generate_plymouth_assets() {
     -fill "$card_hex" -stroke "$card_border" -strokewidth 1.5 \
     -draw "roundrectangle 1,1 $((CW-2)),$((CH-2)) ${CR},${CR}" \
     -strip "$t_card" 2>/dev/null \
-    && root_exec install -m 644 "$t_card" "${PLYMOUTH_THEME_DIR}/card.png" || true
+    && install_atomic "$t_card" "${PLYMOUTH_THEME_DIR}/card.png" || true
 
   # Shadow: padded blurred black roundrect, centered behind the card.
   "$cmd" -size "$((CW+spad))x$((CH+spad))" xc:none \
     -fill black -draw "roundrectangle $((spad/2)),$((spad/2)) $((spad/2+CW-1)),$((spad/2+CH-1)) ${CR},${CR}" \
     -blur 0x18 -channel A -evaluate multiply 0.55 +channel \
     -strip "$t_shadow" 2>/dev/null \
-    && root_exec install -m 644 "$t_shadow" "${PLYMOUTH_THEME_DIR}/shadow.png" || true
+    && install_atomic "$t_shadow" "${PLYMOUTH_THEME_DIR}/shadow.png" || true
 
   # Recessed input field, primary focus border.
   "$cmd" -size "${FW}x${FH}" xc:none \
     -fill "$field_fill" -stroke "$field_border" -strokewidth 2 \
     -draw "roundrectangle 1,1 $((FW-2)),$((FH-2)) ${FR},${FR}" \
     -strip "$t_input" 2>/dev/null \
-    && root_exec install -m 644 "$t_input" "${PLYMOUTH_THEME_DIR}/input.png" || true
+    && install_atomic "$t_input" "${PLYMOUTH_THEME_DIR}/input.png" || true
 
-  # Padlock (IM primitives, primary). Keyhole punched to card color.
-  "$cmd" -size 64x64 xc:none \
-    -stroke "$lock_hex" -strokewidth 6 -fill none \
-    -draw "arc 20,12 44,48 180,360" \
-    -stroke none -fill "$lock_hex" \
-    -draw "roundrectangle 14,32 50,58 7,7" \
-    -fill "$card_hex" \
-    -draw "circle 32,42 32,46" \
-    -draw "polygon 30,42 34,42 35,53 29,53" \
-    -resize "${lock_sz}x${lock_sz}" \
-    -strip "$t_lock" 2>/dev/null \
-    && root_exec install -m 644 "$t_lock" "${PLYMOUTH_THEME_DIR}/lock.png" || true
+  # Top icon = the official Arch logo recolored to primary (dynamic, matches GRUB).
+  # Falls back to the primary padlock if the SVG is ever absent.
+  local lico="${PLYMOUTH_LOGO_SIZE:-52}"
+  if [[ -f "$ARCH_SVG" ]] && "$cmd" -background none "$ARCH_SVG" -colorspace sRGB \
+        -fill "$lock_hex" -colorize 100 -resize "x${lico}" -trim +repage \
+        -strip "$t_lock" 2>/dev/null; then
+    install_atomic "$t_lock" "${PLYMOUTH_THEME_DIR}/lock.png" || true
+  else
+    "$cmd" -size 64x64 xc:none \
+      -stroke "$lock_hex" -strokewidth 6 -fill none -draw "arc 20,12 44,48 180,360" \
+      -stroke none -fill "$lock_hex" -draw "roundrectangle 14,32 50,58 7,7" \
+      -fill "$card_hex" -draw "circle 32,42 32,46" -draw "polygon 30,42 34,42 35,53 29,53" \
+      -resize "${lock_sz}x${lock_sz}" -strip "$t_lock" 2>/dev/null \
+      && install_atomic "$t_lock" "${PLYMOUTH_THEME_DIR}/lock.png" || true
+  fi
 
   # Bullet dot + caret, primary.
   "$cmd" -size "${bsz}x${bsz}" xc:none -fill "rgb(${ac_r},${ac_g},${ac_b})" \
     -draw "circle $((bsz/2)),$((bsz/2)) $((bsz/2)),1" \
     -strip "$t_bullet" 2>/dev/null \
-    && root_exec install -m 644 "$t_bullet" "${PLYMOUTH_THEME_DIR}/bullet.png" || true
+    && install_atomic "$t_bullet" "${PLYMOUTH_THEME_DIR}/bullet.png" || true
   "$cmd" -size 2x26 "xc:rgb(${ac_r},${ac_g},${ac_b})" \
     -strip "$t_caret" 2>/dev/null \
-    && root_exec install -m 644 "$t_caret" "${PLYMOUTH_THEME_DIR}/caret.png" || true
+    && install_atomic "$t_caret" "${PLYMOUTH_THEME_DIR}/caret.png" || true
 
   rm -f "$t_card" "$t_shadow" "$t_input" "$t_lock" "$t_bullet" "$t_caret" 2>/dev/null || true
 }
@@ -552,7 +555,7 @@ _set_plymouth_default_theme() {
 Theme=${PLYMOUTH_THEME_NAME}
 EOT
   root_exec mkdir -p /etc/plymouth
-  root_exec install -m 644 "$tmp" /etc/plymouth/plymouthd.conf
+  install_atomic "$tmp" /etc/plymouth/plymouthd.conf
   rm -f "$tmp"
 }
 

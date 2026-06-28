@@ -173,8 +173,11 @@ ensure_papirus_folders_bin() {
   fi
 
   info "Installing papirus-folders helper"
-  curl -fsSL "https://raw.githubusercontent.com/PapirusDevelopmentTeam/papirus-folders/master/papirus-folders" \
-    -o "$PAPIRUS_FOLDERS_BIN"
+  if ! curl -fsSL "https://raw.githubusercontent.com/PapirusDevelopmentTeam/papirus-folders/master/papirus-folders" \
+      -o "$PAPIRUS_FOLDERS_BIN"; then
+    warn "papirus-folders download failed (offline?); skipping icon recolor"
+    return 1
+  fi
   chmod +x "$PAPIRUS_FOLDERS_BIN"
   echo "$PAPIRUS_FOLDERS_BIN"
 }
@@ -197,14 +200,9 @@ ensure_catpp_repo() {
     printf '%s\n' "$now" > "$marker"
   else
     info "Cloning catppuccin-papirus-folders"
-    git clone --depth 1 "https://github.com/catppuccin/papirus-folders.git" "$CATPP_REPO_DIR" >/dev/null
+    git clone --depth 1 "https://github.com/catppuccin/papirus-folders.git" "$CATPP_REPO_DIR" >/dev/null \
+      || { warn "catppuccin clone failed (offline?); skipping folder recolor"; return 1; }
   fi
-}
-
-ensure_palette_json() {
-  [[ -s "$PALETTE_JSON" ]] && return 0
-  info "Downloading Catppuccin palette"
-  curl -fsSL "$PALETTE_URL" -o "$PALETTE_JSON"
 }
 
 # =============================================================================

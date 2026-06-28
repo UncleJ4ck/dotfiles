@@ -186,7 +186,7 @@ sync_limine_wallpaper_from_file() {
   fi
 
   root_exec mkdir -p "$LIMINE_BG_DIR"
-  root_exec install -m 644 "$src" "$dst"
+  install_atomic "$src" "$dst"
 
   # Clean other formats
   local f
@@ -242,7 +242,7 @@ apply_limine_background() {
         [[ -f "$gdest" ]] && echo "$gdest"; return 0
       fi
       root_exec mkdir -p "$LIMINE_BG_DIR"
-      root_exec install -m 644 "$gtmp" "$gdest"
+      install_atomic "$gtmp" "$gdest"
       rm -f "$gtmp"
       for gf in "$LIMINE_BG_DIR"/limine-bg.*; do
         [[ -e "$gf" && "$gf" != "$gdest" ]] && root_exec rm -f "$gf" || true
@@ -360,7 +360,7 @@ apply_limine_background() {
       ;;
   esac
 
-  root_exec install -m 644 "$tmp_file" "$dest"
+  install_atomic "$tmp_file" "$dest"
   rm -f "$tmp_file"
 
   write_state "$STATE_LIMINE_BG_FILE" "$state_key"
@@ -528,7 +528,7 @@ EOF
     warn "Refusing to write an entry-less limine.conf"
     return 1
   fi
-  root_exec install -m 644 "$tmp" "$LIMINE_CONFIG"
+  install_atomic "$tmp" "$LIMINE_CONFIG"
   rm -f "$tmp"
 
   info "Limine theme updated"

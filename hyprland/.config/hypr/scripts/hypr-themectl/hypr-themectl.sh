@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)"
 export SCRIPT_DIR
 
 # shellcheck source=lib/00-config.sh
@@ -21,6 +21,8 @@ source "$SCRIPT_DIR/modules/45-profile.sh"
 source "$SCRIPT_DIR/modules/50-regreet.sh"
 # shellcheck source=modules/60-limine.sh
 source "$SCRIPT_DIR/modules/60-limine.sh"
+# shellcheck source=modules/60-grub.sh
+source "$SCRIPT_DIR/modules/60-grub.sh"
 # shellcheck source=modules/70-reload.sh
 source "$SCRIPT_DIR/modules/70-reload.sh"
 # shellcheck source=modules/80-plymouth.sh
@@ -193,7 +195,7 @@ main() {
     run_matugen "$wall"
 
     PROFILE_PICKER_FORCE=1 apply_profile_picture "$wall"
-    apply_icons "$wall"
+    apply_icons "$wall" || warn "icon theming skipped (deps offline?)"
     install_system_icons
 
     local regreet_bg=""
@@ -209,6 +211,7 @@ main() {
     update_plymouth_theme "$wall"
 
     [[ -f "$LIMINE_CONFIG" ]] && update_limine_config "$wall" "$regreet_bg"
+    update_grub_theme "$wall"
     reload_desktop
     themectl_stamp_apply
     ;;
@@ -286,6 +289,14 @@ main() {
     update_limine_config "$wall" "$regreet_bg"
     ;;
 
+  grub)
+    parse_wall_args "$@"
+    local wall
+    wall="$(resolve_wall_from_mode)"
+    info "Wallpaper: $wall"
+    update_grub_theme "$wall"
+    ;;
+
   reload)
     reload_desktop
     ;;
@@ -342,6 +353,10 @@ try: print(json.dumps(json.JSONDecoder().raw_decode(sys.stdin.read())[0]))
 except Exception: pass' >"$MATUGEN_JSON_FILE" 2>/dev/null
       info "[dry-run] matugen colors generated in sandbox (no live templates touched)"
     }
+    # apply_icons patches LIVE ~/.config/gtk-*/qt*ct + gsettings + ~/.config/icons
+    # directly (no root_exec), so the root_exec sandbox below can't catch it.
+    # Stub it like wallpaper/matugen so a preview never recolors the live desktop.
+    apply_icons() { dbg "[dry-run] skip live icon recolor + gtk/qt patch"; return 0; }
 
     # Many call sites pass paths that point at /etc/, /usr/, /boot/, or
     # /etc/greetd/xdg even though we already redirected the primary config
