@@ -19,8 +19,6 @@ source "$SCRIPT_DIR/modules/40-icons.sh"
 source "$SCRIPT_DIR/modules/45-profile.sh"
 # shellcheck source=modules/50-regreet.sh
 source "$SCRIPT_DIR/modules/50-regreet.sh"
-# shellcheck source=modules/60-limine.sh
-source "$SCRIPT_DIR/modules/60-limine.sh"
 # shellcheck source=modules/60-grub.sh
 source "$SCRIPT_DIR/modules/60-grub.sh"
 # shellcheck source=modules/70-reload.sh
@@ -36,7 +34,7 @@ Usage:
   hypr-themectl.sh [--debug] <command> [options]
 
 Commands:
-  apply        Full pipeline (wallpaper → matugen → profile → icons → regreet → plymouth → limine → reload)
+  apply        Full pipeline (wallpaper → matugen → profile → icons → regreet → plymouth → grub → reload)
   wallpaper    Set wallpaper only (random/set/reapply)
   matugen      Generate colors from wallpaper
   profile      Select best hyprlock profile picture
@@ -44,7 +42,7 @@ Commands:
   system-icons Install icon theme system-wide
   regreet      Update ReGreet login screen
   plymouth     Update Plymouth LUKS prompt theme (Matugen)
-  limine       Update Limine bootloader theme
+  grub         Update GRUB bootloader theme
   reload       Reload desktop components
   dry-run      Preview the apply without touching /etc, /boot, or /usr.
                Writes to /tmp/themectl-preview/ for diff inspection.
@@ -198,19 +196,17 @@ main() {
     apply_icons "$wall" || warn "icon theming skipped (deps offline?)"
     install_system_icons
 
-    local regreet_bg=""
     if [[ -f "$REGREET_CONFIG" ]]; then
       update_regreet_icon_theme
       update_regreet_power_commands
       write_regreet_style_css
       ensure_greetd_uses_regreet_style
-      regreet_bg="$(apply_regreet_background "$wall" || true)"
+      apply_regreet_background "$wall" >/dev/null || true
     fi
 
     # Plymouth must NOT depend on ReGreet existing
     update_plymouth_theme "$wall"
 
-    [[ -f "$LIMINE_CONFIG" ]] && update_limine_config "$wall" "$regreet_bg"
     update_grub_theme "$wall"
     reload_desktop
     themectl_stamp_apply
@@ -278,17 +274,6 @@ main() {
     update_plymouth_theme "$wall"
     ;;
 
-  limine)
-    parse_wall_args "$@"
-    local wall
-    wall="$(resolve_wall_from_mode)"
-    info "Wallpaper: $wall"
-    [[ -f "$LIMINE_CONFIG" ]] || die "Limine config not found: $LIMINE_CONFIG"
-    local regreet_bg=""
-    [[ -f "$REGREET_CONFIG" ]] && regreet_bg="$(apply_regreet_background "$wall" || true)"
-    update_limine_config "$wall" "$regreet_bg"
-    ;;
-
   grub)
     parse_wall_args "$@"
     local wall
@@ -321,9 +306,9 @@ main() {
     # Redirect every "managed" path to the preview tree. Each module reads
     # these env-var paths; root_exec becomes a sandbox that runs the command
     # only when its target lands in the preview dir, and otherwise logs.
-    export LIMINE_CONFIG="$preview_dir/limine.conf"
-    export LIMINE_BG_DIR="$preview_dir/arch-limine"
     export PLYMOUTH_THEME_DIR="$preview_dir/plymouth-matugen"
+    export GRUB_THEME_DIR="$preview_dir/grub-theme"
+    export GRUB_CFG="$preview_dir/grub.cfg"
     export REGREET_CONFIG="$preview_dir/regreet.toml"
     export REGREET_STYLE_CSS="$preview_dir/regreet.css"
     export REGREET_BG_DIR="$preview_dir/regreet-bg"
@@ -338,6 +323,10 @@ main() {
     # state files and neuter the two live-mutating steps.
     export MATUGEN_JSON_FILE="$preview_dir/matugen-colors.json"
     export CACHE_FILE="$preview_dir/current_wallpaper"
+    # State caches the regreet + plymouth steps write: redirect so a preview stays
+    # side-effect-free (it was otherwise writing the live current_plymouth state).
+    export STATE_PLYMOUTH_FILE="$preview_dir/state-plymouth"
+    export STATE_REGREET_BG_FILE="$preview_dir/state-regreet-bg"
     cp -f "${STATE_DIR}/matugen-colors.json" "$MATUGEN_JSON_FILE" 2>/dev/null || true
     apply_wallpaper() { dbg "[dry-run] skip live wallpaper set + cache write"; return 0; }
     run_matugen() {
@@ -376,38 +365,31 @@ except Exception: pass' >"$MATUGEN_JSON_FILE" 2>/dev/null
     }
     # Seed empty starting files so awk patchers have something to read.
     : > "$REGREET_CONFIG"
-    : > "$LIMINE_CONFIG"
-    mkdir -p "$LIMINE_BG_DIR" "$PLYMOUTH_THEME_DIR" "$REGREET_BG_DIR"
-    # Prime limine.conf with a fake entry so update_limine_config doesn't
-    # bail (it requires at least one /Entry block).
-    cat >"$LIMINE_CONFIG" <<'EOF'
-timeout: 5
-
-/Arch Linux (linux)
-    protocol: efi
-    path: boot():/EFI/Linux/arch-linux.efi
-EOF
+    mkdir -p "$PLYMOUTH_THEME_DIR" "$REGREET_BG_DIR" "$GRUB_THEME_DIR"
+    # Seed grub.cfg from the live one so the grub step can count menuentries and
+    # find the gfxterm line; fall back to a minimal stub off a grub host.
+    cp -f /boot/grub/grub.cfg "$GRUB_CFG" 2>/dev/null \
+      || printf 'terminal_output gfxterm\nmenuentry "Arch Linux" {\n}\n' > "$GRUB_CFG"
 
     wait_monitors_stable
     apply_wallpaper "$wall"
     run_matugen "$wall"
     apply_icons "$wall" 2>/dev/null || true
 
-    local regreet_bg=""
     update_regreet_icon_theme || true
     update_regreet_power_commands || true
     write_regreet_style_css || true
-    regreet_bg="$(apply_regreet_background "$wall" 2>/dev/null || true)"
+    apply_regreet_background "$wall" >/dev/null 2>&1 || true
 
     update_plymouth_theme "$wall" || true
-    update_limine_config "$wall" "$regreet_bg" || true
+    update_grub_theme "$wall" || true
 
     info "Preview written to: $preview_dir"
     info "Diff against live state with:"
     info "  diff -u /etc/greetd/regreet.toml   $REGREET_CONFIG"
     info "  diff -u /etc/greetd/regreet.css    $REGREET_STYLE_CSS"
-    info "  diff -u /boot/EFI/arch-limine/limine.conf $LIMINE_CONFIG"
     info "  ls -la $PLYMOUTH_THEME_DIR/"
+    info "  ls -la $GRUB_THEME_DIR/   (+ diff -u /boot/grub/grub.cfg $GRUB_CFG)"
     [[ -s "$preview_dir/root_exec.log" ]] && {
       info "Skipped root operations recorded in: $preview_dir/root_exec.log"
     }

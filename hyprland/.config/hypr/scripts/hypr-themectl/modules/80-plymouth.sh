@@ -21,9 +21,9 @@ plymouth_wall_variant() {
   luma="$(wall_mean_luma "$img" 2>/dev/null)" || luma="0.5"
   [[ "$luma" == "nan" || -z "$luma" ]] && luma="0.5"
 
-  if float_ge "$luma" "$LIMINE_LUMA_LIGHT_THRESH"; then
+  if float_ge "$luma" "$PLYMOUTH_LUMA_LIGHT_THRESH"; then
     echo "light"
-  elif float_lt "$luma" "$LIMINE_LUMA_DARK_THRESH"; then
+  elif float_lt "$luma" "$PLYMOUTH_LUMA_DARK_THRESH"; then
     echo "amoled"
   else
     echo "dark"
@@ -412,7 +412,7 @@ _generate_plymouth_assets() {
       plift="$(matugen_role_hex "$pmode" surface_container '#221f17')"
       paccent="$(matugen_role_hex "$pmode" primary '#ddc66e')"
       pgreen="$(matugen_role_hex "$pmode" tertiary '#2c4e37')"
-      pdeep="${LIMINE_GRADIENT_DEEP:-#070503}"
+      pdeep="${PLYMOUTH_GRADIENT_DEEP:-#070503}"
       pres="${PLYMOUTH_TARGET_RES:-1920x1080}"
       ptmp="$(mktemp --tmpdir "plymouth-grad-XXXXXX.${PLYMOUTH_BG_FORMAT}")"
       case "${PLYMOUTH_BG_STYLE}" in
@@ -436,7 +436,7 @@ _generate_plymouth_assets() {
         local tmp_bg tint_pct luma_ceiling
         tmp_bg="$(mktemp --tmpdir "plymouth-bg-XXXXXX.${PLYMOUTH_BG_FORMAT}")"
         tint_pct="${PLYMOUTH_BG_TINT_PERCENT:-15}"
-        # See LIMINE_BG_LUMA_CEILING for rationale. Plymouth has no term-bg
+        # See PLYMOUTH_BG_LUMA_CEILING for rationale. Plymouth has no term-bg
         # alpha, so the ceiling is the only guarantor of password-label legibility
         # on bright wallpapers.
         luma_ceiling="${PLYMOUTH_BG_LUMA_CEILING:-110}"

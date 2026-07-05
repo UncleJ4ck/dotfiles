@@ -31,7 +31,7 @@ ensure_grub_theme_loaded() {
       print "fi"
       ins = 1
     }
-  ' "$GRUB_CFG" > "$tmp"
+  ' "$GRUB_CFG" > "$tmp" || { warn "could not rewrite $GRUB_CFG; theme not wired"; rm -f "$tmp"; return 0; }
   if grep -q 'set theme=' "$tmp"; then
     install_atomic "$tmp" "$GRUB_CFG" && dbg "grub.cfg now loads the matugen theme"
   else
@@ -44,18 +44,28 @@ ensure_grub_theme_loaded() {
 # $1=cmd $2=dir $3=name $4=fill $5=stroke $6=size $7=radius
 _grub_9slice() {
   local cmd="$1" dir="$2" name="$3" fill="$4" stroke="$5" sz="$6" r="$7"
-  local base="$dir/.${name}_base.png" e=$((sz-r)) m=$((sz/2))
-  "$cmd" -size "${sz}x${sz}" xc:none -fill "$fill" -stroke "$stroke" -strokewidth 1.5 \
-    -draw "roundrectangle 1,1 $((sz-2)),$((sz-2)) ${r},${r}" -depth 8 -strip "$base" 2>/dev/null || return 1
-  "$cmd" "$base" -crop "${r}x${r}+0+0"   +repage -strip "$dir/${name}_nw.png" 2>/dev/null
-  "$cmd" "$base" -crop "1x${r}+${m}+0"   +repage -strip "$dir/${name}_n.png"  2>/dev/null
-  "$cmd" "$base" -crop "${r}x${r}+${e}+0" +repage -strip "$dir/${name}_ne.png" 2>/dev/null
-  "$cmd" "$base" -crop "${r}x1+0+${m}"   +repage -strip "$dir/${name}_w.png"  2>/dev/null
-  "$cmd" "$base" -crop "1x1+${m}+${m}"   +repage -strip "$dir/${name}_c.png"  2>/dev/null
-  "$cmd" "$base" -crop "${r}x1+${e}+${m}" +repage -strip "$dir/${name}_e.png" 2>/dev/null
-  "$cmd" "$base" -crop "${r}x${r}+0+${e}" +repage -strip "$dir/${name}_sw.png" 2>/dev/null
-  "$cmd" "$base" -crop "1x${r}+${m}+${e}" +repage -strip "$dir/${name}_s.png" 2>/dev/null
-  "$cmd" "$base" -crop "${r}x${r}+${e}+${e}" +repage -strip "$dir/${name}_se.png" 2>/dev/null
+  local base="$dir/.${name}_base.png" e=$((sz-r)) m=$((sz/2)) ss=$((sz*4)) rr=$((r*4))
+  # Supersample 4x then downscale => clean anti-aliased corners (no fringing). Stroke is
+  # optional: "none" gives a borderless shape (a stroked rounded corner is what produced
+  # the pink/green corner fringing GRUB showed).
+  if [[ "$stroke" == none ]]; then
+    "$cmd" -size "${ss}x${ss}" xc:none -fill "$fill" \
+      -draw "roundrectangle 0,0 $((ss-1)),$((ss-1)) ${rr},${rr}" \
+      -resize "${sz}x${sz}" -depth 8 "$base" 2>/dev/null || return 1
+  else
+    "$cmd" -size "${ss}x${ss}" xc:none -fill "$fill" -stroke "$stroke" -strokewidth 5 \
+      -draw "roundrectangle 3,3 $((ss-4)),$((ss-4)) ${rr},${rr}" \
+      -resize "${sz}x${sz}" -depth 8 "$base" 2>/dev/null || return 1
+  fi
+  "$cmd" "$base" -crop "${r}x${r}+0+0"   +repage -depth 8 "$dir/${name}_nw.png" 2>/dev/null
+  "$cmd" "$base" -crop "1x${r}+${m}+0"   +repage -depth 8 "$dir/${name}_n.png"  2>/dev/null
+  "$cmd" "$base" -crop "${r}x${r}+${e}+0" +repage -depth 8 "$dir/${name}_ne.png" 2>/dev/null
+  "$cmd" "$base" -crop "${r}x1+0+${m}"   +repage -depth 8 "$dir/${name}_w.png"  2>/dev/null
+  "$cmd" "$base" -crop "1x1+${m}+${m}"   +repage -depth 8 "$dir/${name}_c.png"  2>/dev/null
+  "$cmd" "$base" -crop "${r}x1+${e}+${m}" +repage -depth 8 "$dir/${name}_e.png" 2>/dev/null
+  "$cmd" "$base" -crop "${r}x${r}+0+${e}" +repage -depth 8 "$dir/${name}_sw.png" 2>/dev/null
+  "$cmd" "$base" -crop "1x${r}+${m}+${e}" +repage -depth 8 "$dir/${name}_s.png" 2>/dev/null
+  "$cmd" "$base" -crop "${r}x${r}+${e}+${e}" +repage -depth 8 "$dir/${name}_se.png" 2>/dev/null
   rm -f "$base"
 }
 
@@ -77,6 +87,10 @@ update_grub_theme() {
   info "Updating GRUB theme (matugen $mode)"
   local cmd; cmd="$(im_cmd)"
   local tmp; tmp="$(mktemp -d "${TMPDIR:-/tmp}/grub-theme-XXXXXX")"
+  # Clean up on EVERY exit path: the unguarded ImageMagick steps below can fail
+  # under set -e and skip the rm at the end, leaking the temp dir. Path baked at
+  # set-time so it survives local going out of scope (same pattern as 30-matugen).
+  trap "rm -rf '$tmp' 2>/dev/null || true" RETURN
 
   # Count the real boot entries so the card is sized to its CONTENT (no dead gap),
   # and the progress bar sits right under the last item, not glued to the bottom.
@@ -85,58 +99,36 @@ update_grub_theme() {
   (( n_items < 1 )) && n_items=4
   (( n_items > 7 )) && n_items=7      # cap so a snapshot pile can't overflow the screen
 
-  # edge = canvas->content inset (shadow_pad margin + inner padding); content is
-  # positioned from the CANVAS edge so the contained-shadow card aligns exactly.
-  local res_w="${GRUB_RES%x*}" res_h="${GRUB_RES#*x}"
-  local card_w=$(( res_w*36/100 ))
-  local edge=48 shadow_pad=18
-  local item_h=46 item_gap=8 g1=14 title_h=34 g2=22 g3=26 prog_h=6 g4=18 hint_h=22
-  local item_pitch=$(( item_h+item_gap ))
-  local menu_content=$(( n_items*item_pitch - item_gap ))
-  local card_h=$(( 2*edge + GRUB_LOGO_H + g1 + title_h + g2 + menu_content + g3 + prog_h + g4 + hint_h ))
-  local card_x=$(( (res_w-card_w)/2 )) card_y=$(( (res_h-card_h)/2 ))
-  local cl=$(( card_x+edge ))
-  local logo_y=$(( card_y+edge ))
-  local title_y=$(( logo_y+GRUB_LOGO_H+g1 ))
-  local menu_w=$(( card_w-2*edge ))
-  local menu_x=$cl menu_y=$(( title_y+title_h+g2 ))
-  local menu_h=$(( menu_content+6 ))
-  local prog_w=$(( menu_w-30 )) prog_x=$(( cl+15 ))
-  local prog_y=$(( menu_y+menu_content+g3 ))
-  local hint_y=$(( prog_y+prog_h+g4 ))
+  # geometry: resolution-independent (percentage positions in theme.txt); only the card
+  # HEIGHT is computed in px, from the live entry count, so it fits the content snugly.
+  local item_h=48 item_gap=6
+  local menu_content=$(( n_items*item_h + (n_items-1)*item_gap ))
+  local card_h=$(( menu_content + 130 ))   # + inner padding + selection-pill headroom
+  # rgb tints pulled from the palette (translucent card + primary glow + selection pill)
+  local surf_rgb prim_rgb
+  surf_rgb="$(printf '%d,%d,%d' "0x${surface:1:2}" "0x${surface:3:2}" "0x${surface:5:2}")"
+  prim_rgb="$(printf '%d,%d,%d' "0x${primary:1:2}" "0x${primary:3:2}" "0x${primary:5:2}")"
 
-  # 1. background: Plymouth blurred wallpaper + radial vignette (depth, focus the card)
-  local basebg="$tmp/_basebg.png"
-  if [[ -f "$PLYMOUTH_THEME_DIR/background.png" ]]; then
-    cp -f "$PLYMOUTH_THEME_DIR/background.png" "$basebg"
-  else
-    "$cmd" "$wall" -filter Lanczos -resize "${GRUB_RES}^" -gravity center -extent "$GRUB_RES" \
-      -blur "$GRUB_BG_BLUR" -modulate "$GRUB_BG_MODULATE" -evaluate Min "$GRUB_BG_LUMA_CEILING" \
-      -fill "$primary" -colorize "$GRUB_BG_TINT" "$basebg" 2>/dev/null || cp -f "$wall" "$basebg"
-  fi
-  "$cmd" "$basebg" -resize "${GRUB_RES}^" -gravity center -extent "$GRUB_RES" \
-    \( -size "$GRUB_RES" radial-gradient:'rgba(0,0,0,0)'-'rgba(0,0,0,0.6)' \) -compose over -composite \
-    -depth 8 -strip "$tmp/background.png" 2>/dev/null
-  rm -f "$basebg"
+  # 1. background: cohesive matugen gradient + soft primary glow + vignette. No wallpaper,
+  #    so the boot screen tracks the palette instead of bleeding random wallpaper colours.
+  #    -depth 8 is MANDATORY: GRUB renders 16-bit PNGs as rainbow garbage.
+  "$cmd" -size "$GRUB_RES" radial-gradient:"$bg"-"$lowest" \
+    \( -size "$GRUB_RES" radial-gradient:"rgba(${prim_rgb},0.16)"-"rgba(${prim_rgb},0)" \) -compose over -composite \
+    \( -size "$GRUB_RES" radial-gradient:'rgba(0,0,0,0)'-'rgba(0,0,0,0.58)' \) -compose multiply -composite \
+    -depth 8 "$tmp/background.png" 2>/dev/null
 
-  # 2. card at exactly card_w x card_h, with a CONTAINED drop shadow (cropped back
-  # to size) so placing it at (card_x,card_y) lands the visible card precisely.
-  "$cmd" -size "${card_w}x${card_h}" xc:none -fill "$surface" -stroke "$border" -strokewidth 1.5 \
-    -draw "roundrectangle ${shadow_pad},${shadow_pad} $((card_w-shadow_pad)),$((card_h-shadow_pad)) 30,30" \
-    \( +clone -background black -shadow 55x12+0+6 \) +swap -background none -layers merge \
-    -gravity center -extent "${card_w}x${card_h}" -depth 8 -strip "$tmp/card.png" 2>/dev/null
+  # 2. card = the boot_menu's OWN rounded box (menu_pixmap_style): translucent surface with a
+  #    faint primary "glass" border for definition. GRUB draws it BEHIND the items, so it can
+  #    never cover the text. Supersampled slices => clean corners (no colour fringing).
+  _grub_9slice "$cmd" "$tmp" menu "rgba(${surf_rgb},0.90)" "rgba(${prim_rgb},0.22)" 72 26 || true
+  # 3. selection: soft primary-tint pill behind the highlighted row
+  _grub_9slice "$cmd" "$tmp" sel  "rgba(${prim_rgb},0.22)" none 44 12 || true
 
-  # 3. dynamic Arch logo: the official SVG recolored to the matugen primary
-  local logo_w="$GRUB_LOGO_H"
+  # 4. Arch logo recoloured to the matugen primary
   if [[ -f "$ARCH_SVG" ]]; then
     "$cmd" -background none "$ARCH_SVG" -colorspace sRGB -fill "$primary" -colorize 100 \
-      -resize "x${GRUB_LOGO_H}" -trim +repage -depth 8 -strip "$tmp/arch.png" 2>/dev/null \
-      && read -r logo_w _ < <(identify -format '%w %h' "$tmp/arch.png" 2>/dev/null) || true
+      -resize x60 -trim +repage -depth 8 "$tmp/arch.png" 2>/dev/null || true
   fi
-  local logo_x=$(( (res_w-logo_w)/2 ))
-
-  # 4. RECESSED selection field (surface_container_lowest + primary border), Plymouth-style
-  _grub_9slice "$cmd" "$tmp" select "$lowest" "$primary" 44 12 || true
 
   # 5. fonts (palette-independent, build only when missing on the ESP)
   if [[ ! -f "$GRUB_THEME_DIR/jb16.pf2" || ! -f "$GRUB_THEME_DIR/jb22.pf2" ]]; then
@@ -148,9 +140,17 @@ update_grub_theme() {
     fi
   fi
 
-  # 6. theme.txt (pixel layout matching the card; only references assets that exist)
+  # 6. theme.txt: the PROVEN structure (percentage layout, label heights, the card drawn as
+  #    the boot_menu's own menu_pixmap_style box). Verified via QEMU offline render.
   local logo_block=""
-  [[ -f "$tmp/arch.png" ]] && printf -v logo_block '+ image {\n    file = "arch.png"\n    left = %s\n    top = %s\n    width = %s\n    height = %s\n}\n' "$logo_x" "$logo_y" "$logo_w" "$GRUB_LOGO_H"
+  [[ -f "$tmp/arch.png" ]] && logo_block='+ image {
+    file = "arch.png"
+    top = 17%
+    left = 50%-30
+    width = 60
+    height = 60
+}
+'
   cat > "$tmp/theme.txt" <<EOF
 # generated by hypr-themectl from the matugen palette (mode=$mode)
 title-text: ""
@@ -158,52 +158,43 @@ desktop-image: "background.png"
 desktop-color: "$bg"
 terminal-font: "JetBrains Mono Regular 16"
 
-+ image { file = "card.png"; left = ${card_x}; top = ${card_y}; width = ${card_w}; height = ${card_h} }
 ${logo_block}+ label {
+    top = 25% left = 0 width = 100% height = 34
     text = "Arch Linux"
+    align = "center"
     font = "JetBrains Mono Regular 22"
     color = "$primary"
-    align = "center"
-    left = ${card_x}
-    top = ${title_y}
-    width = ${card_w}
 }
+
 + boot_menu {
-    left = ${menu_x}
-    top = ${menu_y}
-    width = ${menu_w}
-    height = ${menu_h}
+    left = 33% top = 33% width = 34% height = ${card_h}
+    menu_pixmap_style = "menu_*.png"
+    selected_item_pixmap_style = "sel_*.png"
     item_font = "JetBrains Mono Regular 16"
     item_color = "$on_sv"
     selected_item_font = "JetBrains Mono Regular 16"
-    selected_item_color = "$primary"
-    selected_item_pixmap_style = "select_*.png"
-    item_height = 44
-    item_padding = 10
-    item_spacing = 6
-    scrollbar = false
+    selected_item_color = "$on_surface"
+    item_height = ${item_h}
+    item_padding = 16
+    item_spacing = ${item_gap}
 }
-+ progress_bar {
-    id = "__timeout__"
-    left = ${prog_x}
-    top = ${prog_y}
-    width = ${prog_w}
-    height = 6
-    fg_color = "$primary"
-    bg_color = "$lowest"
-    border_color = "$border"
-    text = ""
-}
+
 + label {
-    text = "Up / Down   Enter   e   c"
+    top = 100%-56 left = 0 width = 100% height = 22
+    text = "Up / Down      Enter  boot      e  edit      c  console"
+    align = "center"
     font = "JetBrains Mono Regular 16"
     color = "$on_sv"
-    align = "center"
-    left = ${card_x}
-    top = ${hint_y}
-    width = ${card_w}
 }
 EOF
+
+  # 6b. GRUB's png.mod rejects indexed/palette PNGs (colortype 3): it aborts with
+  # "png: color type not supported", so the card/logo/selection slices silently fail to
+  # load (blank card, no logo, no menu selection box). ImageMagick auto-optimizes
+  # few-color images to a palette, which is exactly what these are. Force truecolor+alpha
+  # (colortype 6) on every generated PNG so GRUB can decode them. background.png is already
+  # RGB but re-encoding it to RGBA is harmless. Fonts (*.pf2) are untouched.
+  command -v mogrify >/dev/null && mogrify -depth 8 -define png:color-type=6 "$tmp"/*.png 2>/dev/null || true
 
   # 7. install to the ESP theme dir (atomic, root)
   root_exec mkdir -p "$GRUB_THEME_DIR"

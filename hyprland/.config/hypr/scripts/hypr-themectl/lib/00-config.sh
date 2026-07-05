@@ -71,87 +71,6 @@ set -Eeuo pipefail
 : "${REGREET_BG_FORMAT:=png}"
 
 # =============================================================================
-# Limine Bootloader
-# =============================================================================
-: "${LIMINE_CONFIG:=/boot/EFI/arch-limine/limine.conf}"
-: "${LIMINE_BG_DIR:=/boot/EFI/arch-limine}"
-# themectl regenerates the WHOLE limine.conf each apply (timeout + matugen theme
-# block + these entries), so nothing is a static "manual edit" that trips the
-# drift guard. This file is the source of truth for boot entry titles, kernel
-# paths, and the LUKS cmdline. Edit it (not limine.conf) to change entries.
-: "${LIMINE_ENTRIES_FILE:=$HOME/.config/hypr/scripts/hypr-themectl/limine-entries.conf}"
-: "${LIMINE_TIMEOUT:=5}"
-
-# Wallpaper-merge mode (default): blurred + matugen-tinted wallpaper.
-# Each themectl run regenerates the boot background from the current
-# wallpaper so the boot menu matches the desktop palette automatically.
-# Set LIMINE_USE_WALLPAPER=0 to fall back to the typographic solid-backdrop look.
-# 0 = no wallpaper image, solid matugen backdrop, palette stays dynamic per wallpaper.
-: "${LIMINE_USE_WALLPAPER:=1}"
-# Boot background art (supersedes LIMINE_USE_WALLPAPER):
-#   radial   = matugen vignette, glow center fading to near-black edges (default)
-#   gradient = vertical fade, lifted top to deep bottom
-#   aurora   = soft gold + green palette glows on the base
-#   solid    = flat backdrop, no image
-#   photo    = blurred wallpaper (the old merge look)
-# radial/gradient/aurora regenerate a clean gradient PNG from the matugen palette
-# each apply, so it stays dynamic and never smears (gradients scale distortion-free).
-: "${LIMINE_BG_STYLE:=photo}"
-: "${LIMINE_GRADIENT_DEEP:=#070503}"
-# Heavy blur. The boot menu needs the wallpaper to read as ambience, not
-# as a recognizable image, so menu text dominates.
-: "${LIMINE_BG_BLUR_RADIUS:=0x22}"
-# Brightness/saturation: drop both so the menu palette is the loudest thing
-# on screen. Format is "brightness,saturation,hue" (% of original).
-: "${LIMINE_BG_MODULATE:=46,85,100}"
-# Absolute luma ceiling expressed as a percentage of full white. ImageMagick
-# `-evaluate Min "N%"` clamps every channel value to at most N%. Works
-# correctly across Q8 and Q16 builds (a raw integer would be interpreted
-# against QuantumRange and silently produce near-black on Q16). 41% ≈ luma
-# 105/255; with on_background ≈ 233 the floor contrast ratio works out to
-# ~4.7:1 (WCAG AA passes).
-: "${LIMINE_BG_LUMA_CEILING:=27%}"
-# Matugen-tint blend: ImageMagick `-colorize` percentage applied with the
-# matugen primary as fill. 0=no tint (raw blurred wallpaper), 100=solid color.
-# 18 gives a clear hue unification without flattening the image.
-: "${LIMINE_BG_TINT_PERCENT:=18}"
-: "${LIMINE_BG_QUALITY:=92}"
-: "${LIMINE_BG_FORMAT:=jpg}"
-: "${LIMINE_WALLPAPER_STYLE:=stretched}"
-
-: "${LIMINE_TERM_MARGIN:=48}"
-: "${LIMINE_TERM_MARGIN_GRADIENT:=24}"
-: "${LIMINE_TERM_BG_ALPHA:=E6}"
-: "${LIMINE_INTERFACE_BRANDING:=}"
-: "${LIMINE_TERM_FONT_SCALE:=1x2}"
-# Typography: a little glyph spacing reads more "designed" (works on the built-in
-# font, zero risk). LIMINE_TERM_FONT is an OPTIONAL custom font path; Limine wants
-# a RAW bitmap font (not TTF/PSF) plus LIMINE_TERM_FONT_SIZE as WxH. Empty = the
-# built-in font (safe). Only set it once you have a verified raw font in /boot.
-: "${LIMINE_TERM_FONT_SPACING:=1}"
-: "${LIMINE_TERM_FONT:=}"
-: "${LIMINE_TERM_FONT_SIZE:=}"
-# Show the bottom key-hint footer (now matugen-colored, not Limine's default
-# green) so the menu reads as styled rather than a bare list. Set to yes to hide.
-: "${LIMINE_HELP_HIDDEN:=no}"
-
-# Variant: pin to dark|light|amoled, or "auto" for luma-driven flipping.
-# auto-flip caused jarring light-mode boot screens on bright wallpapers,
-# so we pin dark by default.
-: "${LIMINE_VARIANT_PIN:=dark}"
-: "${LIMINE_LUMA_LIGHT_THRESH:=0.62}"
-: "${LIMINE_LUMA_DARK_THRESH:=0.25}"
-: "${LIMINE_ALPHA_DARK:=$LIMINE_TERM_BG_ALPHA}"
-: "${LIMINE_ALPHA_LIGHT:=F2}"
-: "${LIMINE_ACCENT_LIGHT:=tertiary}"
-: "${LIMINE_ACCENT_DARK:=primary}"
-
-# Interface element colors (limine-themination standard). Branding + help-bright
-# track the accent; the help footer uses a muted text role. Without these, Limine
-# paints branding/help in its default cyan/green and ignores the matugen palette.
-: "${LIMINE_HELP_COLOR_ROLE:=on_surface_variant}"
-
-# =============================================================================
 # GRUB Bootloader - gfxmenu theme generated from Matugen (mirrors the Plymouth card)
 # =============================================================================
 : "${GRUB_CFG:=/boot/grub/grub.cfg}"
@@ -184,10 +103,9 @@ set -Eeuo pipefail
 # applies the matugen tint so the LUKS prompt feels native to the desktop.
 # 0 = solid matugen backdrop (no wallpaper image), palette stays dynamic.
 : "${PLYMOUTH_USE_WALLPAPER:=1}"
-# LUKS background art, mirrors LIMINE_BG_STYLE so boot + unlock match: radial /
-# gradient / aurora / solid / photo. radial/gradient/aurora generate a clean
-# matugen gradient PNG each apply (no smear), same look as the Limine backdrop.
-: "${PLYMOUTH_BG_STYLE:=${LIMINE_BG_STYLE:-radial}}"
+# LUKS background art: radial / gradient / aurora / solid / photo.
+# radial/gradient/aurora generate a clean matugen gradient PNG each apply (no smear).
+: "${PLYMOUTH_BG_STYLE:=radial}"
 : "${PLYMOUTH_BG_FORMAT:=png}"
 # Slightly less aggressive than Limine — Plymouth shows for several seconds
 # while typing a password, so a hint of wallpaper structure is welcome.
@@ -199,10 +117,15 @@ set -Eeuo pipefail
 # entirely on bg luma being low enough that on_background text reads.
 : "${PLYMOUTH_BG_LUMA_CEILING:=27%}"
 : "${PLYMOUTH_BG_TINT_PERCENT:=15}"
+# Deepest color of the generated gradient backdrop (radial/gradient/aurora).
+: "${PLYMOUTH_GRADIENT_DEEP:=#070503}"
 : "${PLYMOUTH_TARGET_RES:=1920x1080}"
 
 # Variant: pin to dark|light|amoled, or "auto" for luma-driven flipping.
+# In auto mode 80-plymouth.sh compares wallpaper luma against these thresholds.
 : "${PLYMOUTH_VARIANT_PIN:=dark}"
+: "${PLYMOUTH_LUMA_LIGHT_THRESH:=0.62}"
+: "${PLYMOUTH_LUMA_DARK_THRESH:=0.25}"
 
 # Material card geometry (unlock prompt). The asset generator and the Plymouth
 # script both read these. The .script recomputes positions from the actual PNG
@@ -254,7 +177,7 @@ set -Eeuo pipefail
 : "${STATE_LAST_APPLY_FILE:=$STATE_DIR/last-apply}"
 # Paths themectl writes to. The drift preflight scans these for unexpected
 # changes (.pacnew/.pacsave files, mtimes after the last apply).
-: "${MANAGED_ETC_PATHS:=/etc/greetd /etc/plymouth /etc/polkit-1/rules.d /usr/share/plymouth/themes/matugen /boot/EFI/arch-limine}"
+: "${MANAGED_ETC_PATHS:=/etc/greetd /etc/plymouth /etc/polkit-1/rules.d /usr/share/plymouth/themes/matugen}"
 
 : "${LOCK_PATH:=$XDG_RUNTIME_DIR/hypr-theme-${UID}.lock}"
 : "${STATE_FLAVOR_FILE:=$STATE_DIR/current_flavor}"
@@ -262,7 +185,6 @@ set -Eeuo pipefail
 : "${STATE_MODE_FILE:=$STATE_DIR/current_matugen_mode}"
 : "${STATE_THEME_FILE:=$STATE_DIR/current_icon_theme}"
 : "${STATE_REGREET_BG_FILE:=$STATE_DIR/current_regreet_bg}"
-: "${STATE_LIMINE_BG_FILE:=$STATE_DIR/current_limine_bg}"
 : "${STATE_PROFILE_FILE:=$STATE_DIR/current_profile}"
 
 # =============================================================================

@@ -60,7 +60,7 @@ run_matugen() {
     # and silently corrupt the JSON file we're about to write.
     if ! json_out=$("${mg_args[@]}" 2>"$err_file" </dev/null); then
       warn "Matugen failed, using fallbacks"
-      ((DEBUG)) && dbg "matugen retry stderr: $(<"$err_file" 2>/dev/null || true)"
+      ((DEBUG)) && dbg "matugen retry stderr: $(cat "$err_file" 2>/dev/null || true)"
       return 0
     fi
   fi
