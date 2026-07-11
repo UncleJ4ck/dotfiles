@@ -1,0 +1,12 @@
+[Unit]
+Description=Sync Desktop/Now to external disk
+After=systemd-cryptsetup@external.service
+Wants=systemd-cryptsetup@external.service
+ConditionPathIsMountPoint=/mnt/Lair
+
+[Service]
+Type=oneshot
+TimeoutStartSec=1h
+TimeoutStopSec=30s
+ExecStart=/usr/local/bin/sync-now-folder.sh
+User=j4kuuu

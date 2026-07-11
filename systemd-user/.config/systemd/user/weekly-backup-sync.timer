@@ -1,0 +1,10 @@
+[Unit]
+Description=Weekly backup sync timer (dotfiles + claude-config + Lair)
+
+[Timer]
+OnCalendar=Sun 12:00
+Persistent=true
+RandomizedDelaySec=15min
+
+[Install]
+WantedBy=timers.target

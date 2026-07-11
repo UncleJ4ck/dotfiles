@@ -1,0 +1,9 @@
+[Unit]
+Description=Weekly backup sync (dotfiles + claude-config to GitHub, Lair mirror if mounted)
+After=graphical-session.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/weekly-backup-sync.sh
+# Best-effort: never fail the timer chain.
+SuccessExitStatus=0 1
