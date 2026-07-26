@@ -219,8 +219,10 @@ recover_after_change() {
   #    On S3 resume a monitor may still be in a disabled/recovering state.
   wait_for_all_monitors_active
 
-  # 5. Restart waybar via systemd (avoid duplicates from Restart=on-failure)
-  systemctl --user restart waybar.service 2>/dev/null || true
+  # 5. Rebuild waybar. reload (SIGUSR2, ExecReload) recreates the bars in place and
+  #    re-attaches output surfaces without a full process + GTK cold start, so the bar
+  #    comes back roughly twice as fast on resume. Falls back to restart if not running.
+  systemctl --user reload-or-restart waybar.service 2>/dev/null || true
   sleep 0.5
 
   # 6. Ensure awww-daemon is running (it may have exited cleanly during S3).
