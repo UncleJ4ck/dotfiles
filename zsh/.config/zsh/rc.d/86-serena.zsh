@@ -1,31 +1,24 @@
-# Serena as the default code-context layer for Claude Code, scoped to large repos.
+# Serena is registered at USER scope now, so this wrapper is retired.
 #
-# A bare `claude` inside a sizable git repo registers Serena's MCP (LSP-grounded
-# symbol navigation + editing) for that project, then launches Claude Code.
-# Small repos, non-repos, ~/, flagged launches, or SERENA_OFF=1 fall through to
-# plain `claude` so daily sessions stay lean (native Grep/Glob/Read + the
-# ast-grep MCP already cover small-repo navigation at zero added context).
+# It used to define a `claude()` function that registered Serena per-project, but
+# that only fired for a bare `claude` typed in this shell. Launching from the
+# desktop app, an IDE, or a cron/headless run got nothing, and the mechanism was
+# invisible when it failed: `claude mcp add` never validates the command, so when
+# upstream renamed the entry point from `serena-mcp-server` to
+# `serena start-mcp-server`, registration kept "succeeding" while Serena's tools
+# never appeared.
 #
-# Gate: only repos with >= SERENA_MIN_FILES tracked files (default 200).
-# Escape: `SERENA_OFF=1 claude`, or pass any flag (e.g. `claude --resume`).
-# First launch in a repo downloads Serena via uvx (one-time, slow). The MCP is
-# registered at local scope (stored per-project in ~/.claude.json, not committed
-# to the repo). All inner `claude` calls use `command claude` to avoid recursion.
-claude() {
-  if [[ $# -ne 0 || -n ${SERENA_OFF:-} ]] \
-     || (( ! $+commands[uvx] )) \
-     || ! git rev-parse --is-inside-work-tree &>/dev/null; then
-    command claude "$@"
-    return
-  fi
-  local root nfiles
-  root=$(git rev-parse --show-toplevel)
-  nfiles=$(git -C "$root" ls-files | wc -l)
-  if (( nfiles >= ${SERENA_MIN_FILES:-200} )); then
-    command claude mcp list 2>/dev/null | grep -q 'serena' \
-      || command claude mcp add serena -- \
-           uvx --from git+https://github.com/oraios/serena serena-mcp-server \
-           --context ide-assistant --project "$root" >/dev/null 2>&1
-  fi
-  command claude
-}
+# The replacement is one user-scope registration using `--project-from-cwd`,
+# which auto-detects the repo root at launch and starts cleanly outside a repo
+# too. Every launch path gets it, nothing to remember:
+#
+#   claude mcp add serena -s user -- uvx --from git+https://github.com/oraios/serena \
+#     serena start-mcp-server --context ide-assistant --project-from-cwd --transport stdio
+#
+# Trade-off taken deliberately: the old 200-tracked-file gate kept Serena out of
+# small repos. Tool schemas are deferred now, so an idle server costs a process
+# and its language-server boot, not context. Automatic beat lean.
+#
+# SERENA_OFF no longer applies. To disable: `claude mcp remove serena -s user`.
+# Tests for the retired wrapper are gone with it; the live check is that
+# `claude mcp list` shows serena connected.
