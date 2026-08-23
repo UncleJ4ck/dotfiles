@@ -7,23 +7,23 @@ if not ok then
 end
 
 local palette = {
-  base00 = "#101417",
-  base01 = "#0a0f12",
-  base02 = "#1c2024",
-  base03 = "#41484d",
-  base04 = "#c1c7ce",
-  base05 = "#dfe3e7",
-  base06 = "#353a3d",
-  base07 = "#313539",
+  base00 = "#1a1110",
+  base01 = "#140c0b",
+  base02 = "#271d1c",
+  base03 = "#534341",
+  base04 = "#d8c2bf",
+  base05 = "#f1dedc",
+  base06 = "#423735",
+  base07 = "#3d3231",
 
   base08 = "#ffb4ab",
-  base09 = "#ccc0e9",
-  base0A = "#d5c871",
-  base0B = "#91d5ad",
-  base0C = "#9dcbfb",
-  base0D = "#92cef6",
-  base0E = "#b6c9d8",
-  base0F = "#004c6c",
+  base09 = "#dfc38c",
+  base0A = "#f5bd6f",
+  base0B = "#b1d18a",
+  base0C = "#b8c4ff",
+  base0D = "#ffb4aa",
+  base0E = "#e7bdb7",
+  base0F = "#73342d",
 }
 
 local function is_light(hex)

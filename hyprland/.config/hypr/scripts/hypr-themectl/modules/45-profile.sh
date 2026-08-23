@@ -71,6 +71,11 @@ _select_best_profile_clip() {
   local wall="$1"
   is_cmd uv || return 1
 
+  if [[ -f "$CLIP_SKIP_FILE" ]] && [[ "$(<"$CLIP_SKIP_FILE")" == "$CLIP_MODEL" ]]; then
+    dbg "CLIP skipped: $CLIP_MODEL marked unavailable (run clip-setup to re-enable)"
+    return 1
+  fi
+
   local -a clip_args=(
     uv run --quiet
     "$SCRIPT_DIR/lib/clip-match.py"
@@ -82,9 +87,22 @@ _select_best_profile_clip() {
   )
   ((DEBUG)) && clip_args+=(--debug)
 
-  local result
-  result="$("${clip_args[@]}" 2>&"$LOG_FD")" || return 1
+  # Without this the whole apply pipeline blocks on a stalled model download and
+  # never reaches the histogram fallback below.
+  if ((CLIP_TIMEOUT > 0)) && is_cmd timeout; then
+    clip_args=(timeout "$CLIP_TIMEOUT" "${clip_args[@]}")
+  fi
+
+  local result rc=0
+  result="$("${clip_args[@]}" 2>&"$LOG_FD")" || rc=$?
+  if ((rc == 124)); then
+    printf '%s\n' "$CLIP_MODEL" >"$CLIP_SKIP_FILE"
+    warn "CLIP scoring timed out after ${CLIP_TIMEOUT}s, skipping it from now on (run: hypr-themectl.sh clip-setup)"
+    return 1
+  fi
+  ((rc == 0)) || return 1
   [[ -n "$result" && -f "$result" ]] || return 1
+  rm -f "$CLIP_SKIP_FILE"
   echo "$result"
 }
 

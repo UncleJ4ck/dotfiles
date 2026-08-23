@@ -32,6 +32,46 @@ _on_err() {
 }
 trap '_on_err $LINENO $?' ERR
 
+# Stages that depend on the environment (root auth, a live greeter, a network
+# mirror) fail for reasons that have nothing to do with the rest of the theme.
+# Under set -e the first one took the whole apply down with it, so the desktop
+# kept the new wallpaper and got none of the login or boot theming, and the run
+# looked like it had simply stopped. Route those through stage(): it records the
+# failure, says so, and lets the remaining stages run. stage_report then makes
+# the run exit non-zero, so a partial apply is never reported as a success.
+_FAILED_STAGES=()
+
+# Bash suppresses errexit for anything called from a || list, and the
+# suppression is inherited by the function body and by subshells inside it
+# (`( set -e; f )` does NOT re-arm it). So a module invoked through stage()
+# runs past its own failed root_exec and returns 0, and the stage prints
+# success while /usr or /boot was never written. Counting the failures in
+# root_exec itself is the only signal that survives that, so stage() judges on
+# the counter and not on the exit status.
+_ROOT_FAILS=0
+
+stage() {
+  local name="$1" rc=0 before=$_ROOT_FAILS
+  shift
+  "$@" || rc=$?
+  if ((rc == 0 && _ROOT_FAILS == before)); then
+    return 0
+  fi
+  _FAILED_STAGES+=("$name")
+  if ((_ROOT_FAILS > before)); then
+    warn "stage '$name' failed: $((_ROOT_FAILS - before)) root operation(s) refused, continuing with the rest"
+  else
+    warn "stage '$name' failed (exit $rc), continuing with the rest"
+  fi
+  return 0
+}
+
+stage_report() {
+  ((${#_FAILED_STAGES[@]})) || return 0
+  warn "incomplete: ${#_FAILED_STAGES[@]} stage(s) skipped -> ${_FAILED_STAGES[*]}"
+  return 1
+}
+
 # =============================================================================
 # State Helpers
 # =============================================================================
@@ -169,6 +209,7 @@ root_exec() {
     fi
     if (( rc != 126 && rc != 127 )); then
       # Inner command failed after pkexec authenticated. Don't retry.
+      _ROOT_FAILS=$((_ROOT_FAILS + 1))
       return $rc
     fi
     dbg "pkexec auth/dispatch failed (rc=$rc), trying sudo"
@@ -178,6 +219,7 @@ root_exec() {
   rc=0
   sudo "$@" || rc=$?
   if (( rc != 0 )); then
+    _ROOT_FAILS=$((_ROOT_FAILS + 1))
     warn "sudo failed (exit $rc)"
   fi
   return $rc
@@ -321,6 +363,10 @@ themectl_drift_check() {
   fi
 }
 
+# Refreshed by `apply` and by every targeted subcommand that writes a managed
+# path. Without the latter, `hypr-theme plymouth` followed by `hypr-theme apply`
+# aborts on drift the tool caused itself, and the guard is meant to catch manual
+# edits, not our own writes.
 themectl_stamp_apply() {
   mkdir -p "$STATE_DIR"
   : > "$STATE_LAST_APPLY_FILE"

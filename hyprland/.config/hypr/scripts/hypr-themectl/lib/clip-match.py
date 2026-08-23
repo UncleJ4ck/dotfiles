@@ -340,6 +340,9 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-    except Exception:
-        # Silent failure — let bash fallback to histogram scorer
-        pass
+    except Exception as exc:
+        # stdout stays empty so bash falls back to the histogram scorer, but the
+        # reason goes to stderr and the exit code is non-zero. Swallowing both is
+        # what let `clip-setup` report a model as ready after a failed download.
+        print(f"clip-match: {type(exc).__name__}: {exc}", file=sys.stderr)
+        sys.exit(1)

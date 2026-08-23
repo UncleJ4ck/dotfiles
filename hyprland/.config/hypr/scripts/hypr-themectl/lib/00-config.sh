@@ -168,6 +168,15 @@ set -Eeuo pipefail
 : "${CLIP_MODEL:=openai/clip-vit-base-patch32}"
 : "${CLIP_CACHE_FILE:=$STATE_DIR/clip-profile-cache.json}"
 : "${CLIP_COLOR_WEIGHT:=0.5}"  # 0.0=pure CLIP, 0.5=balanced, 1.0=pure color
+# A cold HF cache makes the first scoring run download ~605MB of weights, and
+# apply then sits silently on the profile step for a quarter of an hour. Cap it
+# so the histogram scorer takes over instead. 0 disables the cap; pre-download
+# with `clip-setup`, which is deliberately not capped.
+: "${CLIP_TIMEOUT:=120}"
+# Written when CLIP times out, read to skip it outright on later runs. Without
+# this every apply pays CLIP_TIMEOUT again for a model that is still not there.
+# `clip-setup` clears it.
+: "${CLIP_SKIP_FILE:=$STATE_DIR/clip-unavailable}"
 
 # =============================================================================
 # Lock & State Files

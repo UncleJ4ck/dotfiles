@@ -589,7 +589,7 @@ update_regreet_background_config() {
 }
 
 apply_regreet_background() {
-  local wall="$1"
+  local wall="$1" root_fails_before=$_ROOT_FAILS
   [[ -f "$REGREET_CONFIG" ]] || {
     dbg "ReGreet config not found"
     return 0
@@ -670,6 +670,12 @@ apply_regreet_background() {
   fi
 
   update_regreet_background_config "$dest"
+  # Same reason as install_system_icons: a stamped key after a refused root op
+  # makes the next run skip the work and keep the old greeter background.
+  if ((_ROOT_FAILS != root_fails_before)); then
+    warn "ReGreet background not installed (root refused); leaving the state unmarked"
+    return 1
+  fi
   write_state "$STATE_REGREET_BG_FILE" "$state_key"
   echo "$dest"
 }

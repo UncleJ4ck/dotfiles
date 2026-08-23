@@ -3,15 +3,15 @@
 # Regenerates on every wallpaper change via hypr-themectl.
 
 # Material-You roles (hex, no leading '#' needed for zsh styles)
-export ZSH_COLOR_PRIMARY='#92cef6'
-export ZSH_COLOR_ON_PRIMARY='#00344c'
-export ZSH_COLOR_PRIMARY_CONTAINER='#004c6c'
-export ZSH_COLOR_ON_PRIMARY_CONTAINER='#c7e7ff'
-export ZSH_COLOR_SURFACE='#101417'
-export ZSH_COLOR_ON_SURFACE='#dfe3e7'
-export ZSH_COLOR_ON_SURFACE_VARIANT='#c1c7ce'
+export ZSH_COLOR_PRIMARY='#ffb4aa'
+export ZSH_COLOR_ON_PRIMARY='#561e18'
+export ZSH_COLOR_PRIMARY_CONTAINER='#73342d'
+export ZSH_COLOR_ON_PRIMARY_CONTAINER='#ffdad5'
+export ZSH_COLOR_SURFACE='#1a1110'
+export ZSH_COLOR_ON_SURFACE='#f1dedc'
+export ZSH_COLOR_ON_SURFACE_VARIANT='#d8c2bf'
 export ZSH_COLOR_ERROR='#ffb4ab'
 export ZSH_COLOR_ON_ERROR='#690005'
 export ZSH_COLOR_ERROR_CONTAINER='#93000a'
 export ZSH_COLOR_ON_ERROR_CONTAINER='#ffdad6'
-export ZSH_COLOR_OUTLINE_VARIANT='#41484d'
+export ZSH_COLOR_OUTLINE_VARIANT='#534341'

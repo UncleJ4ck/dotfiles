@@ -193,22 +193,22 @@ main() {
     run_matugen "$wall"
 
     PROFILE_PICKER_FORCE=1 apply_profile_picture "$wall"
-    apply_icons "$wall" || warn "icon theming skipped (deps offline?)"
-    install_system_icons
+    stage icons apply_icons "$wall"
+    stage system-icons install_system_icons
 
     if [[ -f "$REGREET_CONFIG" ]]; then
-      update_regreet_icon_theme
-      update_regreet_power_commands
-      write_regreet_style_css
-      ensure_greetd_uses_regreet_style
+      stage regreet-icons update_regreet_icon_theme
+      stage regreet-power update_regreet_power_commands
+      stage regreet-css write_regreet_style_css
+      stage greetd-style ensure_greetd_uses_regreet_style
       apply_regreet_background "$wall" >/dev/null || true
     fi
 
     # Plymouth must NOT depend on ReGreet existing
-    update_plymouth_theme "$wall"
+    stage plymouth update_plymouth_theme "$wall"
 
-    update_grub_theme "$wall"
-    reload_desktop
+    stage grub update_grub_theme "$wall"
+    stage reload reload_desktop
     themectl_stamp_apply
     ;;
 
@@ -263,6 +263,7 @@ main() {
     write_regreet_style_css
     ensure_greetd_uses_regreet_style
     apply_regreet_background "$wall" >/dev/null || true
+    themectl_stamp_apply
     ;;
 
   plymouth)
@@ -272,6 +273,7 @@ main() {
     info "Wallpaper: $wall"
     run_matugen "$wall"
     update_plymouth_theme "$wall"
+    themectl_stamp_apply
     ;;
 
   grub)
@@ -280,6 +282,7 @@ main() {
     wall="$(resolve_wall_from_mode)"
     info "Wallpaper: $wall"
     update_grub_theme "$wall"
+    themectl_stamp_apply
     ;;
 
   reload)
@@ -405,8 +408,12 @@ except Exception: pass' >"$MATUGEN_JSON_FILE" 2>/dev/null
       --setup
     )
     ((DEBUG)) && clip_setup_args+=(--debug)
-    "${clip_setup_args[@]}" 2>&"$LOG_FD"
-    info "CLIP model ready"
+    if "${clip_setup_args[@]}" 2>&"$LOG_FD"; then
+      rm -f "$CLIP_SKIP_FILE"
+      info "CLIP model ready"
+    else
+      die "CLIP model download failed (see $LOG_FILE). Profile matching stays on the histogram scorer."
+    fi
     ;;
 
   break-lock)
@@ -419,7 +426,12 @@ except Exception: pass' >"$MATUGEN_JSON_FILE" 2>/dev/null
   esac
 
   ((DEBUG)) && dbg "==================== END ===================="
-  info "Done!"
+  if stage_report; then
+    info "Done!"
+  else
+    warn "Done, but the theme is only partly applied. Fix the stage above and re-run."
+    exit 1
+  fi
 }
 
 main "$@"

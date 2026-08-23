@@ -606,18 +606,16 @@ _rebuild_ukis() {
   # Watchdog: tail the log for ~120s; if we see 'Image generation successful'
   # for every kernel, return 0. If we time out or see 'ERROR', return 1.
   info "Plymouth UKI rebuild queued (background, ~30-60s, log: $rebuild_log)"
-  local watchdog_pid_file
-  watchdog_pid_file="$(mktemp --tmpdir hypr-themectl-watchdog-XXXXXX.pid)"
-  : > "$watchdog_pid_file"
-
-  # Launch the rebuild in the background.
+  # No pid file here on purpose. It used to be an mktemp under /tmp, written by
+  # the root block and read by nobody, and with fs.protected_regular=1 the
+  # kernel refuses root that write (user-owned file, sticky world-writable dir),
+  # so its only effect was a "Permission denied" on every apply. The log below
+  # is the progress signal.
   if ! root_exec bash -c "
     setsid bash -c \"$wrapper\" </dev/null >/dev/null 2>&1 &
-    echo \$! > '$watchdog_pid_file'
     disown 2>/dev/null || true
-  " 2>/dev/null; then
-    warn "Failed to spawn UKI rebuild — Plymouth state will NOT be marked"
-    rm -f "$watchdog_pid_file" 2>/dev/null || true
+  " 2>&"$LOG_FD"; then
+    warn "Failed to spawn the initramfs rebuild, Plymouth state will NOT be marked"
     return 1
   fi
 
@@ -645,14 +643,19 @@ _rebuild_ukis() {
   seen_error=0
   for ((t = 0; t < 240; t++)); do
     if [[ -s "$rebuild_log" ]]; then
-      seen_success="$(grep -ciE 'Unified kernel image generation successful' "$rebuild_log" 2>/dev/null)" || seen_success=0
+      # This box boots GRUB with a plain initramfs, so mkinitcpio prints
+      # "==> Initcpio image generation successful"; the UKI phrasing never
+      # appears. Matching only the latter made the watchdog burn its full 240s
+      # and then call an already-finished rebuild a failure, which is why the
+      # Plymouth state never converged. The ^==> anchor stops the per-kernel
+      # "-> Early uncompressed CPIO ... successful" lines from double-counting.
+      seen_success="$(grep -cE '^==> (Initcpio|Unified kernel) image generation successful' "$rebuild_log" 2>/dev/null)" || seen_success=0
       seen_error="$(grep -cE '^==> ERROR|Image generation failed' "$rebuild_log" 2>/dev/null)" || seen_error=0
       ((seen_error > 0)) && break
       ((seen_success >= kernels_count)) && break
     fi
     sleep 1
   done
-  rm -f "$watchdog_pid_file" 2>/dev/null || true
 
   if ((seen_error > 0)); then
     warn "UKI rebuild reported errors ($seen_error). Plymouth state will NOT be marked. Inspect: $rebuild_log"

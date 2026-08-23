@@ -173,7 +173,10 @@ ensure_papirus_folders_bin() {
   fi
 
   info "Installing papirus-folders helper"
-  if ! curl -fsSL "https://raw.githubusercontent.com/PapirusDevelopmentTeam/papirus-folders/master/papirus-folders" \
+  # A blackholed route (VPN killswitch, captive portal) hangs curl instead of
+  # refusing it, and the offline branch below never runs.
+  if ! curl -fsSL --connect-timeout 5 --max-time 60 \
+      "https://raw.githubusercontent.com/PapirusDevelopmentTeam/papirus-folders/master/papirus-folders" \
       -o "$PAPIRUS_FOLDERS_BIN"; then
     warn "papirus-folders download failed (offline?); skipping icon recolor"
     return 1
@@ -196,11 +199,11 @@ ensure_catpp_repo() {
       fi
     fi
     dbg "Updating catppuccin-papirus-folders"
-    git -C "$CATPP_REPO_DIR" pull --ff-only >/dev/null 2>&1 || true
+    timeout 60 git -C "$CATPP_REPO_DIR" pull --ff-only >/dev/null 2>&1 || true
     printf '%s\n' "$now" > "$marker"
   else
     info "Cloning catppuccin-papirus-folders"
-    git clone --depth 1 "https://github.com/catppuccin/papirus-folders.git" "$CATPP_REPO_DIR" >/dev/null \
+    timeout 180 git clone --depth 1 "https://github.com/catppuccin/papirus-folders.git" "$CATPP_REPO_DIR" >/dev/null \
       || { warn "catppuccin clone failed (offline?); skipping folder recolor"; return 1; }
   fi
 }
@@ -417,10 +420,17 @@ install_system_icons() {
   fi
 
   info "Installing system icons: $dst"
+  local root_fails_before=$_ROOT_FAILS
   root_exec mkdir -p "$dst"
   root_exec rsync -a --delete "$THEME_DIR/" "$dst/"
   is_cmd gtk-update-icon-cache && root_exec gtk-update-icon-cache -f -t "$dst" 2>/dev/null || true
 
+  # Stamping the key after a refused root op makes every later run take the
+  # skip branch above and keep the stale system theme forever.
+  if ((_ROOT_FAILS != root_fails_before)); then
+    warn "system icons not installed (root refused); leaving the state unmarked so the next run retries"
+    return 1
+  fi
   write_state "$state_file" "$color_key"
 }
 
