@@ -218,10 +218,12 @@ recover_after_change() {
   #    On S3 resume a monitor may still be in a disabled/recovering state.
   wait_for_all_monitors_active
 
-  # 5. Rebuild waybar. reload (SIGUSR2, ExecReload) recreates the bars in place and
-  #    re-attaches output surfaces without a full process + GTK cold start, so the bar
-  #    comes back roughly twice as fast on resume. Falls back to restart if not running.
-  systemctl --user reload-or-restart waybar.service 2>/dev/null || true
+  # 5. Rebuild waybar with a FULL restart, not SIGUSR2 reload. A reload recreates the
+  #    bars in place but does NOT reconnect waybar's Hyprland socket2 event stream, so
+  #    after a split-monitor-workspaces config reload the hyprland/workspaces module
+  #    desyncs and the workspace numbers freeze. A full restart reconnects the socket.
+  #    The GTK cold start costs ~0.5s more; a working workspace indicator is worth it.
+  systemctl --user restart waybar.service 2>/dev/null || true
   sleep 0.5
 
   # 6. Ensure awww-daemon is running (it may have exited cleanly during S3).
