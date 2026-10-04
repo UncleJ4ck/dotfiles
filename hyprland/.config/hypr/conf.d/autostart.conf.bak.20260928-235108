@@ -1,0 +1,39 @@
+# Autostart Applications
+# Programs that launch when Hyprland starts
+
+# Make DBus/systemd user session aware of Wayland session env (run first, sequentially)
+exec-once = dbus-update-activation-environment --systemd --all && systemctl --user import-environment WAYLAND_DISPLAY XDG_CURRENT_DESKTOP=Hyprland
+
+# XDG user directories
+exec-once = xdg-user-dirs-update
+
+# Start laptop backlight at full brightness
+exec-once = brightnessctl -d intel_backlight set 100%
+
+# Start lid manager + load plugins (systemd user services)
+exec-once = systemctl --user start hypr-lid-manager.service
+# split-monitor-workspaces rides hyprpm again as of 2026-08-03. The manual
+# `hyprctl plugin load` of ~/.config/hypr/plugins/libsplit-monitor-workspaces.so
+# is gone: that .so was built 2026-06-12 against libhyprutils.so.12, hyprutils
+# 0.14.0 moved to .so.13, and the load has been failing silently ever since,
+# which is what killed the split-* dispatchers.
+exec-once = hyprpm reload
+exec-once = systemctl --user start awww-daemon.service
+exec-once = systemctl --user start battery-notify.service
+
+exec-once = uwsm app -- swaync
+
+# Theme/Wallpaper apply runs as a systemd user unit (themectl-reapply.service)
+# ordered After awww-daemon.service and hyprpolkitagent.service so root_exec
+# finds the polkit agent and awww has a socket. Enable once with:
+#   systemctl --user enable --now themectl-reapply.service
+
+# Clipboard management
+exec-once = uwsm app -- wl-paste --type text --watch timeout 5 cliphist store
+exec-once = uwsm app -- wl-paste --type image --watch timeout 5 cliphist store
+
+# Notejot scratchpad: start hidden on special:notes (toggle with Super+Alt+N)
+exec-once = [workspace special:notes silent] sh -c 'for b in notejot com.github.lainsce.notejot io.github.lainsce.Notejot; do command -v "$b" >/dev/null 2>&1 && exec "$b"; done; flatpak run io.github.lainsce.Notejot 2>/dev/null'
+
+# Idle management
+exec-once = uwsm app -- hypridle
