@@ -167,6 +167,13 @@ update_grub_theme() {
   #    GRUB draws at runtime (selected_item_pixmap_style); the card is baked into the bg above.
   _grub_9slice "$cmd" "$tmp" sel "rgba(${prim_rgb},0.46)" "rgba(${prim_rgb},0.85)" 40 8 || true
 
+  # 2b. terminal box: the moment you press Enter, GRUB prints "Loading Linux ..." in its
+  #     command-line terminal (same window used by e/c). With no terminal-box themed it fills
+  #     a small centred rectangle with opaque black, which reads as a glitch over the frosted
+  #     menu. Give it the card's frosted slices so that beat matches the theme; fill is a step
+  #     more opaque than the card (0.82 vs 0.66) so GRUB's light terminal text stays legible.
+  _grub_9slice "$cmd" "$tmp" term "rgba(${surf_rgb},0.82)" "rgba(${prim_rgb},0.55)" 48 16 || true
+
   # 4. Arch logo recoloured to the matugen primary, with a soft primary glow
   if [[ -f "$ARCH_SVG" ]]; then
     "$cmd" -background none "$ARCH_SVG" -colorspace sRGB -fill "$primary" -colorize 100 \
@@ -203,6 +210,12 @@ title-text: ""
 desktop-image: "background.png"
 desktop-color: "$bg"
 terminal-font: "JetBrains Mono Regular 16"
+terminal-box: "term_*.png"
+terminal-border: "14"
+terminal-left: "15%"
+terminal-top: "62%"
+terminal-width: "70%"
+terminal-height: "30%"
 
 ${logo_block}+ label {
     top = 27% left = 0 width = 100% height = 34

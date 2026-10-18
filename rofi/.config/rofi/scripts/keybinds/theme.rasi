@@ -3,7 +3,7 @@
 
 /* ── Compact keybind viewer ────────────────────────────────────────── */
 window {
-  width: 50%;
+  width: 65%;
   padding: 0px;
   border: 2px;
   border-color: var(primary);

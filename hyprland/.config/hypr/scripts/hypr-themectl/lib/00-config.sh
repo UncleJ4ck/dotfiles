@@ -104,8 +104,10 @@ set -Eeuo pipefail
 # 0 = solid matugen backdrop (no wallpaper image), palette stays dynamic.
 : "${PLYMOUTH_USE_WALLPAPER:=1}"
 # LUKS background art: radial / gradient / aurora / solid / photo.
-# radial/gradient/aurora generate a clean matugen gradient PNG each apply (no smear).
-: "${PLYMOUTH_BG_STYLE:=radial}"
+# solid + PLYMOUTH_USE_WALLPAPER=1 = the real wallpaper, blurred + matugen-tinted (the
+# desktop look). radial/gradient/aurora paint a clean matugen gradient instead, which
+# dodges the blur smear on busy photos but no longer tracks the wallpaper.
+: "${PLYMOUTH_BG_STYLE:=solid}"
 : "${PLYMOUTH_BG_FORMAT:=png}"
 # Slightly less aggressive than Limine — Plymouth shows for several seconds
 # while typing a password, so a hint of wallpaper structure is welcome.

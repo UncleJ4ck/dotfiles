@@ -67,13 +67,34 @@ _render_profile_for_hyprlock() {
 # =============================================================================
 # Profile Scoring (CLIP via uv)
 # =============================================================================
+# True when CLIP_MODEL's weights are present in the HF hub cache.
+_clip_model_cached() {
+  local hub="${HF_HUB_CACHE:-${HF_HOME:+$HF_HOME/hub}}"
+  hub="${hub:-${XDG_CACHE_HOME:-$HOME/.cache}/huggingface/hub}"
+  compgen -G "$hub/models--${CLIP_MODEL//\//--}/snapshots/*/config.json" >/dev/null 2>&1
+}
+
 _select_best_profile_clip() {
   local wall="$1"
   is_cmd uv || return 1
 
-  if [[ -f "$CLIP_SKIP_FILE" ]] && [[ "$(<"$CLIP_SKIP_FILE")" == "$CLIP_MODEL" ]]; then
-    dbg "CLIP skipped: $CLIP_MODEL marked unavailable (run clip-setup to re-enable)"
-    return 1
+  # The skip marker is "<model> <state>". state=cached means loading the present
+  # model blew the cap (genuinely too slow on this box), a real persistent skip.
+  # Anything else (nocache from a download timeout, or a legacy stateless marker)
+  # is stale the moment the model lands in the cache, so clear it and let CLIP
+  # run. That is what the cold-install download-timeout left behind here.
+  if [[ -f "$CLIP_SKIP_FILE" ]]; then
+    local skip_model skip_state
+    read -r skip_model skip_state <"$CLIP_SKIP_FILE"
+    if [[ "$skip_model" == "$CLIP_MODEL" ]]; then
+      if [[ "$skip_state" != cached ]] && _clip_model_cached; then
+        dbg "CLIP skip marker is stale (model now cached); clearing and retrying"
+        rm -f "$CLIP_SKIP_FILE"
+      else
+        dbg "CLIP skipped: $CLIP_MODEL marked unavailable (run clip-setup to re-enable)"
+        return 1
+      fi
+    fi
   fi
 
   local -a clip_args=(
@@ -96,7 +117,10 @@ _select_best_profile_clip() {
   local result rc=0
   result="$("${clip_args[@]}" 2>&"$LOG_FD")" || rc=$?
   if ((rc == 124)); then
-    printf '%s\n' "$CLIP_MODEL" >"$CLIP_SKIP_FILE"
+    # Tag the marker with the cache state so a download timeout (nocache) self-heals
+    # once the model lands, while a load timeout on a present model (cached) stays.
+    local state=nocache; _clip_model_cached && state=cached
+    printf '%s %s\n' "$CLIP_MODEL" "$state" >"$CLIP_SKIP_FILE"
     warn "CLIP scoring timed out after ${CLIP_TIMEOUT}s, skipping it from now on (run: hypr-themectl.sh clip-setup)"
     return 1
   fi

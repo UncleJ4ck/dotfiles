@@ -1,0 +1,1 @@
+{"action": "create", "reason": "Repo-specific operational knowledge for hypr-themectl that was learned the hard way: the lock fd leak hypothesis with its disproof, the root session fallback signal, and the forced rebuild recipe. No existing skill covers hypr-themectl internals; rice-debug is general.", "evidence": "references/evidence-6433c135.md"}

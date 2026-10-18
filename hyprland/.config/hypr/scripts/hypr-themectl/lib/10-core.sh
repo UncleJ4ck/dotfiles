@@ -192,6 +192,15 @@ _polkit_agent_ready() {
 root_exec() {
   ((EUID == 0)) && { "$@"; return $?; }
 
+  # A single-auth session (root_session_begin) routes every call through one
+  # long-lived pkexec instead of spawning a fresh one per command. The command
+  # still runs immediately, so the verify-then-commit logic in the modules is
+  # unchanged; only the polkit prompt count drops to one.
+  if ((${_ROOT_SESSION:-0})); then
+    _root_session_run "$@"
+    return $?
+  fi
+
   local rc=0
   if is_cmd pkexec; then
     # Wait for the polkit auth agent before the first pkexec to avoid the
@@ -223,6 +232,60 @@ root_exec() {
     warn "sudo failed (exit $rc)"
   fi
   return $rc
+}
+
+# =============================================================================
+# Single-auth root session
+# =============================================================================
+# One pkexec keeps a root bash alive on a pipe; root_exec streams each command
+# to it, so an apply authenticates once instead of once per file. The command
+# runs immediately (module verify-then-commit logic is unchanged); its own
+# output goes to fd2 and only an exit-status marker returns on the control pipe,
+# so the channel never desyncs on command output, and </dev/null stops a command
+# swallowing the next one. Begin no-ops (leaving root_exec on its per-call path)
+# when already root, when pkexec is absent, or when the auth is declined.
+_ROOT_SESSION=0
+
+root_session_begin() {
+  ((EUID == 0)) && return 0
+  is_cmd pkexec || return 0
+  ((_ROOT_SESSION)) && return 0
+
+  _polkit_agent_ready || true
+  trap '' PIPE                       # a dead worker must fail the write, not kill us
+  coproc _ROOTW { exec pkexec bash --norc -s; }
+  _ROOT_SESSION_WR=${_ROOTW[1]}
+  _ROOT_SESSION_RD=${_ROOTW[0]}
+  _ROOT_SESSION_PID=$_ROOTW_PID
+  _ROOT_SESSION=1
+
+  if ! _root_session_run true; then  # proves the auth took; a cancel lands here
+    warn "single-auth session unavailable; using per-command pkexec"
+    root_session_end
+  fi
+}
+
+root_session_end() {
+  ((_ROOT_SESSION)) || return 0
+  _ROOT_SESSION=0
+  # `|| true` is load-bearing: the worker exits with its last command's status,
+  # so `wait` (and a double close) routinely return non-zero, which would trip
+  # set -e / the ERR trap and abort the apply before reload_desktop + the stamp.
+  [[ -n "${_ROOT_SESSION_WR:-}" ]] && { exec {_ROOT_SESSION_WR}>&- ; } 2>/dev/null || true
+  [[ -n "${_ROOT_SESSION_PID:-}" ]] && wait "$_ROOT_SESSION_PID" 2>/dev/null || true
+  _ROOT_SESSION_WR= _ROOT_SESSION_RD= _ROOT_SESSION_PID=
+  trap - PIPE
+}
+
+_root_session_run() {  # returns the command's own exit status
+  local marker="@@TRC_${RANDOM}_${RANDOM}@@" cmd line rc=
+  printf -v cmd '%q ' "$@"
+  printf '{ %s ; } </dev/null 1>&2; printf "%s:%%d\n" "$?"\n' "$cmd" "$marker" \
+    >&"$_ROOT_SESSION_WR" || return 127
+  while IFS= read -r line <&"$_ROOT_SESSION_RD"; do
+    [[ "$line" == "$marker:"* ]] && { rc="${line##*:}"; break; }
+  done
+  return "${rc:-127}"
 }
 
 # Atomically install a file to a (possibly root-owned) destination: stage to a

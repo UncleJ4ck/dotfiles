@@ -194,6 +194,11 @@ main() {
 
     PROFILE_PICKER_FORCE=1 apply_profile_picture "$wall"
     stage icons apply_icons "$wall"
+
+    # Everything below writes to /boot, /usr, or /etc. Open one pkexec session so
+    # the whole root phase authenticates once instead of once per file.
+    root_session_begin
+
     stage system-icons install_system_icons
 
     if [[ -f "$REGREET_CONFIG" ]]; then
@@ -208,6 +213,7 @@ main() {
     stage plymouth update_plymouth_theme "$wall"
 
     stage grub update_grub_theme "$wall"
+    root_session_end
     stage reload reload_desktop
     themectl_stamp_apply
     ;;

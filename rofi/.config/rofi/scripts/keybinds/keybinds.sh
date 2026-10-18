@@ -25,13 +25,14 @@ KEYMAP_CACHE=$(mktemp) || exit 1
 trap 'rm -f -- "$KEYMAP_CACHE"' EXIT INT TERM HUP
 
 # ==============================================================================
-# Step 1: pick source (compact 2-row picker)
+# Step 1: pick source (All / Hyprland / Kitty)
 # ==============================================================================
-PICK=$(printf ' Hyprland\n Kitty\n' |
-  rofi -dmenu -i -p "Keybinds" \
+PICK=$(printf ' All\n Hyprland\n Kitty\n' |
+  rofi -dmenu -i -matching normal -p "Keybinds" \
     -config "$HOME/.config/rofi/scripts/keybinds/picker.rasi") || exit 0
 
 case "$PICK" in
+  *All*)      SOURCE="all"   ;;
   *Hyprland*) SOURCE="hypr"  ;;
   *Kitty*)    SOURCE="kitty" ;;
   *)          exit 0 ;;
@@ -164,16 +165,24 @@ case "$SOURCE" in
     LIST=$(build_kitty_list)
     PROMPT="Kitty"
     ;;
+  all)
+    # Both sources in one searchable list. Hyprland rows stay executable (they
+    # carry the trailing dispatcher/arg fields); Kitty rows are informational.
+    LIST=$(printf '%s\n%s\n' "$(build_hypr_list)" "$(build_kitty_list)")
+    PROMPT="Keybinds"
+    ;;
 esac
 
 [[ -z "${LIST:-}" ]] && exit 0
 
 SELECTED=$(printf '%s\n' "$LIST" |
-  rofi -dmenu -i -markup-rows -p "$PROMPT" \
+  rofi -dmenu -i -matching normal -markup-rows -p "$PROMPT" \
     -config "$MENU_CONFIG" -format s) || exit 0
 
-# Only Hyprland binds are executable. Extract dispatcher + arg from the line.
-if [[ "$SOURCE" == "hypr" && -n "$SELECTED" ]]; then
+# Only Hyprland binds are executable, in hypr or all mode. A Hyprland row carries
+# the trailing DELIM dispatcher/arg fields; a Kitty row does not, so a Kitty pick
+# in all-mode falls through without dispatching.
+if [[ ("$SOURCE" == "hypr" || "$SOURCE" == "all") && -n "$SELECTED" ]]; then
   IFS="$DELIM" read -r _ disp arg <<< "$SELECTED"
   [[ -n "${disp:-}" ]] || exit 0
   if [[ -n "${arg:-}" ]]; then

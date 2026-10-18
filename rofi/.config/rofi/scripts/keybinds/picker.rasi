@@ -11,11 +11,11 @@ configuration {
 
 @theme "~/.config/rofi/scripts/keybinds/theme.rasi"
 
-/* Compact picker — only 2 rows */
+/* Compact picker — All / Hyprland / Kitty */
 window {
   width: 14em;
 }
 listview {
-  lines: 2;
+  lines: 3;
   fixed-height: false;
 }

@@ -34,49 +34,49 @@ $battery"""
 # Matugen-driven palette
 # --------------------------------------------------------------------
 [palettes.matugen]
-bg        = "#18120b"
-fg        = "#ede0d4"
-muted     = "#d3c4b4"
-primary   = "#f3bd6e"
-secondary = "#ddc2a1"
-tertiary  = "#b7cea2"
+bg        = "#111318"
+fg        = "#e2e2e9"
+muted     = "#c4c6cf"
+primary   = "#a8c8ff"
+secondary = "#bdc7dc"
+tertiary  = "#dbbce1"
 error     = "#ffb4ab"
 
-warning   = "#edc06c"
-info      = "#b8c4ff"
-success   = "#b1d18a"
+warning   = "#d5c871"
+info      = "#a8c8ff"
+success   = "#91d5ad"
 
 # Light-ish bubble backgrounds (Matugen will keep them coherent)
-id_bg        = "#251f17"
-dir_bg       = "#2f2921"
-git_bg       = "#251f17"
-git_status_bg= "#2f2921"
-lang_bg      = "#2f2921"
-cloud_bg     = "#251f17"
-runtime_bg   = "#251f17"
-time_bg      = "#2f2921"
-battery_bg   = "#2f2921"
+id_bg        = "#1d2024"
+dir_bg       = "#282a2f"
+git_bg       = "#1d2024"
+git_status_bg= "#282a2f"
+lang_bg      = "#282a2f"
+cloud_bg     = "#1d2024"
+runtime_bg   = "#1d2024"
+time_bg      = "#282a2f"
+battery_bg   = "#282a2f"
 
 # Bubble text colors
-id_fg   = "#ede0d4"
-dir_fg  = "#ede0d4"
-git_fg  = "#ede0d4"
-lang_fg = "#ede0d4"
+id_fg   = "#e2e2e9"
+dir_fg  = "#e2e2e9"
+git_fg  = "#e2e2e9"
+lang_fg = "#e2e2e9"
 
 # Accents inside bubbles
-dir_icon     = "#f3bd6e"
-dir_repo_fg  = "#f3bd6e"
-git_icon     = "#ddc2a1"
+dir_icon     = "#a8c8ff"
+dir_repo_fg  = "#a8c8ff"
+git_icon     = "#bdc7dc"
 
 # Status / character bubbles
 status_bg    = "#93000a"
 status_fg    = "#ffdad6"
-char_bg      = "#f3bd6e"
-char_fg      = "#442b00"
+char_bg      = "#a8c8ff"
+char_fg      = "#06305f"
 char_err_bg  = "#93000a"
 char_err_fg  = "#ffdad6"
-char_vim_bg  = "#b7cea2"
-char_vim_fg  = "#243516"
+char_vim_bg  = "#dbbce1"
+char_vim_fg  = "#3e2845"
 
 
 # --------------------------------------------------------------------

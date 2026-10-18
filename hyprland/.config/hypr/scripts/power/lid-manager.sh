@@ -4,6 +4,17 @@ set -euo pipefail
 LID="eDP-1"
 LID_DISABLE_AT="${LID_DISABLE_AT:-4}"
 LOCKFILE="${XDG_RUNTIME_DIR:-/tmp}/hypr-lid-manager.lock"
+# Self-event guard. rebind_secondary_outputs() issues disable/re-add, which emits
+# socket2 monitoraddedv2/monitorremoved events. Without this, source 2 re-queues
+# those self-inflicted events and recovery loops forever (modeset storm, dark
+# screens). While this file exists, the socket2 reader ignores monitor events.
+REBIND_GUARD="${XDG_RUNTIME_DIR:-/tmp}/hypr-lid-manager.rebinding"
+# A full recover_after_change (rebind both DPs, waybar restart, wallpaper reapply)
+# runs several seconds, and Hyprland can emit the rebind's monitor events after a
+# short TTL has already expired, which re-triggers recovery. Cover the whole pass.
+GUARD_TTL=12  # seconds a fresh guard suppresses self-inflicted monitor events
+RECOVERY_COOLDOWN=3   # after a pass, swallow dock enumeration flaps for this long
+RECOVERY_LOG="${XDG_RUNTIME_DIR:-/tmp}/hypr-lid-manager.log"
 
 lid_is_open() {
   ! grep -q closed /proc/acpi/button/lid/*/state 2>/dev/null
@@ -204,7 +215,34 @@ wait_for_all_monitors_active() {
   return 0  # Proceed even if we timed out
 }
 
+rebind_secondary_outputs() {
+  # Dark-screen workaround for the dock on hybrid Intel+NVIDIA. The DP outputs
+  # live on NVIDIA card0, aquamarine's scanout to the secondary card registers
+  # the monitor enabled with DPMS on while delivering no frames. The disable +
+  # full re-add forces the output pipeline to rebuild, which is the step that
+  # actually rescues the screens (verified 2026-10-13). The pre-rebuild DPMS
+  # off/on cycle was removed 2026-10-14: the fix memory shows it did NOT rescue
+  # the DP on its own, so it only added a second black flash per screen at
+  # connect. If DP-3 ever shows link-training pixel noise after a reconnect,
+  # one manual `hyprctl dispatch dpms off DP-3; dpms on DP-3` clears it.
+  # See ~/.claude/projects/-home-j4kuuu/memory/dell-wd25tb4-dock-dark-dp-fix.md
+  local names m
+  names=$(hyprctl monitors -j 2>/dev/null | jq -r \
+    '[.[] | select(.name | startswith("DP-"))] | .[].name' 2>/dev/null) || return 0
+  [[ -z "$names" ]] && return 0
+  while IFS= read -r m; do
+    [[ -e "/sys/class/drm/card0-$m" ]] || continue   # only card0 (NVIDIA) DPs
+    hyprctl keyword monitor "$m,disable" >/dev/null 2>&1 || true
+    hyprctl keyword monitor "$m,preferred,auto,1" >/dev/null 2>&1 || true
+  done <<< "$names"
+  sleep 0.5
+}
+
 recover_after_change() {
+  # 0. Force a scanout rebuild on NVIDIA-side DP outputs before anything else,
+  #    so the rest of recovery sees them actually delivering frames.
+  rebind_secondary_outputs
+
   # 1. Consolidate orphaned windows (single-fetch, validated)
   consolidate_windows
 
@@ -242,9 +280,16 @@ run_recovery() {
   # flock -n fails immediately if another instance holds the lock.
   (
     flock -n 9 || { return 0; }
+    printf '%(%Y-%m-%d %H:%M:%S)T run_recovery\n' -1 >>"$RECOVERY_LOG" 2>/dev/null || true
+    # Hold the self-event guard across the whole mutating pass. The touch
+    # refreshes its mtime; source 2 treats a guard younger than GUARD_TTL as
+    # active. mtime-based so a one-shot run that exits mid-recovery cannot leave
+    # a stale guard that deafens the daemon: it simply ages out.
+    : > "$REBIND_GUARD"
     manage_lid
     fix_monitor_priority
     recover_after_change
+    : > "$REBIND_GUARD"   # refresh mtime after the mutating pass completes
   ) 9>"$LOCKFILE"
 }
 
@@ -273,7 +318,15 @@ case "${1:-}" in
     SOCKET="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
     socat -U - "UNIX-CONNECT:$SOCKET" | while IFS= read -r line; do
       case "$line" in
-        monitoraddedv2*|monitorremoved*) printf '\n' > "$FIFO" ;;
+        monitoraddedv2*|monitorremoved*)
+          # Skip events we caused ourselves (guard fresh within GUARD_TTL), else
+          # the rebind's own monitor events re-trigger recovery and it loops.
+          if [[ -e "$REBIND_GUARD" ]] && \
+             (( $(date +%s) - $(stat -c %Y "$REBIND_GUARD" 2>/dev/null || echo 0) < GUARD_TTL )); then
+            :  # self-inflicted, ignore
+          else
+            printf '\n' > "$FIFO"
+          fi ;;
       esac
     done &
 
@@ -282,6 +335,12 @@ case "${1:-}" in
       while IFS= read -t 0.5 -r _ <&3; do :; done  # debounce burst
       sleep 0.5  # Let Hyprland finish configuring outputs
       run_recovery
+      # Coalesce a dock's enumeration flaps into this one pass. A connect makes
+      # DP-2/DP-3 announce, link-train, and re-announce over a few seconds; each
+      # flap would otherwise queue another heavy recovery (the "keeps reloading"
+      # storm). Swallow everything that lands during the cooldown.
+      sleep "$RECOVERY_COOLDOWN"
+      while IFS= read -t 0.1 -r _ <&3; do :; done
     done
     ;;
   *)

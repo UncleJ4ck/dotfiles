@@ -26,11 +26,14 @@ reload_desktop() {
     dbg "SwayNC reloaded"
   fi
 
-  # Thunar - GTK3 doesn't hot-reload imported CSS; restart daemon
+  # Thunar - GTK3 doesn't hot-reload imported CSS; restart daemon.
+  # 8>&- drops themectl's flock fd (acquire_lock uses fd 8, which is not
+  # close-on-exec): without it the long-lived daemon inherits and holds the lock,
+  # so the next apply blocks for LOCK_WAIT_SECONDS and then dies.
   if is_cmd thunar && pgrep -x thunar &>/dev/null; then
     thunar -q 2>/dev/null || true
     sleep 0.3
-    thunar --daemon &
+    thunar --daemon 8>&- &
     disown
     dbg "Thunar restarted"
   fi
