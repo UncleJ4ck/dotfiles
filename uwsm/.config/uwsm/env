@@ -39,3 +39,7 @@ export MESA_SHADER_CACHE_DIR="$XDG_CACHE_HOME/mesa_shader_cache"
 # OpenCL
 export RUSTICL_ENABLE=iris
 
+
+export NLTK_DATA="$HOME/.local/share/nltk_data"
+
+export PAPER_HUNT_LIB="$HOME/.cache/paper-hunt"

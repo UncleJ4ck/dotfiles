@@ -7,3 +7,7 @@ path=(
   "$HOME/.cargo/bin"
   $path
 )
+
+export NLTK_DATA="$HOME/.local/share/nltk_data"
+
+export PAPER_HUNT_LIB="$HOME/.cache/paper-hunt"

@@ -1,0 +1,37 @@
+{
+  "run_id": "ff035c1c-5a10-4512-9edb-cb7f6a20928a-10",
+  "verdicts": [
+    {
+      "action": "patch",
+      "name": "rice-debug",
+      "ok": false,
+      "findings": [
+        "structure",
+        "structure",
+        "structure",
+        "structure",
+        "structure",
+        "structure",
+        "structure",
+        "self_produced"
+      ],
+      "notes": []
+    },
+    {
+      "action": "patch",
+      "name": "rice-debug",
+      "ok": false,
+      "findings": [
+        "structure",
+        "structure",
+        "structure",
+        "structure",
+        "structure",
+        "structure",
+        "structure",
+        "self_produced"
+      ],
+      "notes": []
+    }
+  ]
+}
